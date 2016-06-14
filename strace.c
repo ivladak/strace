@@ -757,6 +757,8 @@ droptcb(struct tcb *tcp)
 		unwind_tcb_fin(tcp);
 	}
 #endif
+	if (tcp->drop_syscall_name)
+		free((char *) tcp->syscall_name);
 
 	nprocs--;
 	if (debug_flag)

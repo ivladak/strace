@@ -739,6 +739,26 @@ syscall_name(long scno)
 	}
 }
 
+const char *
+get_syscall_name(struct tcb *tcp)
+{
+	if (tcp->drop_syscall_name) {
+		free((char *) tcp->syscall_name);
+		tcp->drop_syscall_name = false;
+	}
+	if (SCNO_IS_VALID(tcp->scno)) {
+		tcp->syscall_name = sysent[tcp->scno].sys_name;
+	} else {
+		char *buf;
+		if (asprintf(&buf, "syscall_%lu", shuffle_scno(tcp->scno)) == -1) {
+			die_out_of_memory();
+		}
+		tcp->syscall_name = buf;
+		tcp->drop_syscall_name = true;
+	}
+	return tcp->syscall_name;
+}
+
 static long get_regs_error;
 
 void
@@ -830,7 +850,7 @@ trace_syscall_entering(struct tcb *tcp)
 #endif
 
 	printleader(tcp);
-	tprintf("%s(", syscall_name(tcp->scno));
+	tprintf("%s(", get_syscall_name(tcp));
 	if ((tcp->qual_flg & QUAL_RAW) && SEN_exit != tcp->s_ent->sen)
 		res = printargs(tcp);
 	else
@@ -891,7 +911,7 @@ trace_syscall_exiting(struct tcb *tcp)
 	if ((followfork < 2 && printing_tcp != tcp) || (tcp->flags & TCB_REPRINT)) {
 		tcp->flags &= ~TCB_REPRINT;
 		printleader(tcp);
-		tprintf("<... %s resumed> ", syscall_name(tcp->scno));
+		tprintf("<... %s resumed> ", tcp->syscall_name);
 	}
 	printing_tcp = tcp;
 

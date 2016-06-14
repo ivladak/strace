@@ -308,6 +308,8 @@ struct tcb {
 	int curcol;		/* Output column for this process */
 	FILE *outf;		/* Output file for this process */
 	const char *auxstr;	/* Auxiliary info from syscall (see RVAL_STR) */
+	const char *syscall_name;		/* Syscall name */
+	bool drop_syscall_name;		/* Whether or not syscall name needs to be free()d */
 	const struct_sysent *s_ent; /* sysent[scno] or dummy struct for bad scno */
 	const struct_sysent *s_prev_ent; /* for "resuming interrupted SYSCALL" msg */
 	struct timeval stime;	/* System time usage as of last process wait */
