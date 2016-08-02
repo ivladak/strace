@@ -2,20 +2,21 @@
 #define STRACE_STRUCTURED_H
 
 typedef enum {
-S_TYPE_d,
-S_TYPE_ld,
-S_TYPE_lld,
-S_TYPE_u,
-S_TYPE_lu,
-S_TYPE_llu,
+	S_TYPE_char,
+	S_TYPE_int,
+	S_TYPE_long,
+	S_TYPE_longlong,
+	S_TYPE_unsigned,
+	S_TYPE_unsigned_long,
+	S_TYPE_unsigned_longlong,
 
-S_TYPE_o,
-S_TYPE_lo,
-S_TYPE_llo,
+	S_TYPE_int_octal,
+	S_TYPE_long_octal,
+	S_TYPE_longlong_octal,
 
-S_TYPE_addr,
-S_TYPE_path,
-S_TYPE_flags,
+	S_TYPE_addr,
+	S_TYPE_path,
+	S_TYPE_flags,
 } s_type_t;
 
 /* syscall */
