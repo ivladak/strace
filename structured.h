@@ -7,6 +7,10 @@ S_TYPE_unsigned,
 S_TYPE_unsigned_long,
 S_TYPE_unsigned_longlong,
 
+S_TYPE_int_octal,
+S_TYPE_long_octal,
+S_TYPE_longlong_octal,
+
 S_TYPE_addr,
 S_TYPE_path,
 S_TYPE_flags,

@@ -21,6 +21,13 @@ case S_TYPE_ ## ENUM : tprintf("%" PR, (INT) arg->value_int); break;
 	S_MACRO(unsigned long long, unsigned_longlong, "llu")
 #undef S_MACRO
 
+#define S_MACRO(INT, ENUM, PR) \
+case S_TYPE_ ## ENUM : tprintf("%#" PR, (INT) arg->value_int); break;
+	S_MACRO(int, int_octal, "o")
+	S_MACRO(long, long_octal, "lo")
+	S_MACRO(long long, longlong_octal, "llo")
+#undef S_MACRO
+
 	case S_TYPE_addr:
 		printaddr((long) arg->value_int);
 		break;

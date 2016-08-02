@@ -8,6 +8,10 @@ S_MACRO(unsigned, unsigned)
 S_MACRO(unsigned long, unsigned_long)
 S_MACRO(unsigned long long, unsigned_longlong)
 
+S_MACRO(int, int_octal)
+S_MACRO(long, long_octal)
+S_MACRO(long long, longlong_octal)
+
 S_MACRO(long, addr)
 
 #undef S_MACRO
