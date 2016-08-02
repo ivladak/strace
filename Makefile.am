@@ -218,6 +218,8 @@ strace_SOURCES =	\
 	statfs.c	\
 	statfs.h	\
 	strace.c	\
+	structured.c	\
+	structured-inlines.c	\
 	swapon.c	\
 	syscall.c	\
 	sysctl.c	\

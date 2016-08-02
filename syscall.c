@@ -849,8 +849,12 @@ trace_syscall_entering(struct tcb *tcp)
 	tprintf("%s(", tcp->s_ent->sys_name);
 	if ((tcp->qual_flg & QUAL_RAW) && SEN_exit != tcp->s_ent->sen)
 		res = printargs(tcp);
-	else
+	else {
+		s_syscall = s_syscall_new(tcp);
 		res = tcp->s_ent->sys_func(tcp);
+		s_syscall_print(s_syscall);
+		s_syscall_free(s_syscall);
+	}
 
 	fflush(tcp->outf);
  ret:
@@ -941,8 +945,12 @@ trace_syscall_exiting(struct tcb *tcp)
 			goto ret;	/* ignore failed syscalls */
 		if (tcp->sys_func_rval & RVAL_DECODED)
 			sys_res = tcp->sys_func_rval;
-		else
+		else {
+			s_syscall = s_syscall_new(tcp);
 			sys_res = tcp->s_ent->sys_func(tcp);
+			s_syscall_print(s_syscall);
+			s_syscall_free(s_syscall);
+		}
 	}
 
 	tprints(") ");
