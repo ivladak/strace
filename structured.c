@@ -24,6 +24,9 @@ case S_TYPE_ ## ENUM : tprintf("%" PR, (INT) arg->value_int); break;
 	case S_TYPE_addr:
 		printaddr((long) arg->value_int);
 		break;
+	case S_TYPE_path:
+		printpathcur((long) arg->value_int);
+		break;
 	default:
 		tprints(".., ");
 		break;

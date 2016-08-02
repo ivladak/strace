@@ -11,3 +11,5 @@ S_MACRO(unsigned long long, unsigned_longlong)
 S_MACRO(long, addr)
 
 #undef S_MACRO
+
+extern void s_push_path(long addr);

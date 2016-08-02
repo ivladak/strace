@@ -8,6 +8,7 @@ S_TYPE_unsigned_long,
 S_TYPE_unsigned_longlong,
 
 S_TYPE_addr,
+S_TYPE_path,
 } s_type_t;
 
 /* syscall */

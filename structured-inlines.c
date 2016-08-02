@@ -28,3 +28,9 @@ S_MACRO(unsigned long long, unsigned_longlong)
 S_MACRO(long, addr)
 
 #undef S_MACRO
+
+inline void
+s_push_path (long addr)
+{
+	s_push_value_int(S_TYPE_path, (uint64_t) addr);
+}
