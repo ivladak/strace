@@ -50,7 +50,7 @@ s_val_print(s_arg_t *arg)
 }
 
 void
-s_val_free (s_arg_t *arg)
+s_val_free(s_arg_t *arg)
 {
 	switch (arg->type) {
 	case S_TYPE_flags:
@@ -63,7 +63,7 @@ s_val_free (s_arg_t *arg)
 /* syscall representation */
 
 s_arg_t *
-s_arg_new (s_syscall_t *syscall, s_type_t type)
+s_arg_new(s_syscall_t *syscall, s_type_t type)
 {
 	s_arg_t *arg = malloc(sizeof(s_arg_t));
 	arg->type = type;
@@ -74,7 +74,7 @@ s_arg_new (s_syscall_t *syscall, s_type_t type)
 }
 
 s_syscall_t *
-s_syscall_new (struct tcb *tcb)
+s_syscall_new(struct tcb *tcb)
 {
 	s_syscall_t *syscall = malloc(sizeof(s_syscall_t));
 	syscall->tcb = tcb;
@@ -88,7 +88,7 @@ s_syscall_new (struct tcb *tcb)
 }
 
 void
-s_syscall_free (s_syscall_t *syscall)
+s_syscall_free(s_syscall_t *syscall)
 {
 	s_arg_t *next = syscall->head;
 	s_arg_t *head;
@@ -102,7 +102,7 @@ s_syscall_free (s_syscall_t *syscall)
 }
 
 void
-s_syscall_print (s_syscall_t *syscall)
+s_syscall_print(s_syscall_t *syscall)
 {
 	s_arg_t *head = syscall->head;
 	s_arg_t *next = head->next;
@@ -119,7 +119,7 @@ s_syscall_print (s_syscall_t *syscall)
 
 /*
 void
-s_field_push (s_struct_t *s_struct, const char *name,
+s_field_push(s_struct_t *s_struct, const char *name,
 	s_type_t type, void *value)
 {
 	s_arg_t *field = malloc(sizeof(s_arg_t));
