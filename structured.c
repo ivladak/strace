@@ -74,10 +74,10 @@ s_arg_new(s_syscall_t *syscall, s_type_t type)
 }
 
 s_syscall_t *
-s_syscall_new(struct tcb *tcb)
+s_syscall_new(struct tcb *tcp)
 {
 	s_syscall_t *syscall = malloc(sizeof(s_syscall_t));
-	syscall->tcb = tcb;
+	syscall->tcp = tcp;
 	s_arg_t *dummy = malloc(sizeof(s_arg_t));
 	dummy->value_int = 0;
 	dummy->name = NULL;
