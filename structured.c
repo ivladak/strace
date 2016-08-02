@@ -27,6 +27,10 @@ case S_TYPE_ ## ENUM : tprintf("%" PR, (INT) arg->value_int); break;
 	case S_TYPE_path:
 		printpathcur((long) arg->value_int);
 		break;
+	case S_TYPE_flags: ;
+		s_flags_t *p = arg->value_p;
+		printflags64(p->x, p->flags, p->dflt);
+		break;
 	default:
 		tprints(".., ");
 		break;
@@ -37,6 +41,8 @@ void
 s_val_free (s_arg_t *arg)
 {
 	switch (arg->type) {
+	case S_TYPE_flags:
+		free(arg->value_p);
 	default:
 		break;
 	}

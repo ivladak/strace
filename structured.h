@@ -9,6 +9,7 @@ S_TYPE_unsigned_longlong,
 
 S_TYPE_addr,
 S_TYPE_path,
+S_TYPE_flags,
 } s_type_t;
 
 /* syscall */
@@ -37,6 +38,14 @@ typedef struct s_struct {
 	s_arg_t *tail;
 } s_struct_t;
 
+
+/* complex arguments */
+
+typedef struct s_flags {
+	const struct xlat *x;
+	uint64_t flags;
+	const char *dflt;
+} s_flags_t;
 
 /* prototypes */
 

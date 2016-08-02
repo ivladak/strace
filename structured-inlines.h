@@ -13,3 +13,12 @@ S_MACRO(long, addr)
 #undef S_MACRO
 
 extern void s_push_path(long addr);
+
+#define S_MACRO(NAME, TYPE) \
+extern void s_push_flags_ ## NAME (const struct xlat *, TYPE, const char *);
+
+S_MACRO(int, unsigned)
+S_MACRO(long, long)
+S_MACRO(64, uint64_t)
+
+#undef S_MACRO

@@ -34,3 +34,29 @@ s_push_path (long addr)
 {
 	s_push_value_int(S_TYPE_path, (uint64_t) addr);
 }
+
+inline void
+s_push_flags (const struct xlat *x, uint64_t flags, const char *dflt)
+{
+	s_arg_t *arg = s_arg_new(s_syscall, S_TYPE_flags);
+	arg->value_p = malloc(sizeof(s_flags_t));
+	s_flags_t *p = arg->value_p;
+	p->x = x;
+	p->flags = flags;
+	p->dflt = dflt;
+}
+
+#define S_MACRO(NAME, TYPE) \
+inline void \
+s_push_flags_ ## NAME (const struct xlat *x, TYPE flags, \
+			  const char *dflt) \
+{ \
+	s_push_flags(x, flags, dflt); \
+}
+
+S_MACRO(int, unsigned)
+S_MACRO(long, unsigned long)
+S_MACRO(64, uint64_t)
+
+#undef S_MACRO
+
