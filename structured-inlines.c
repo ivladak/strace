@@ -25,4 +25,6 @@ S_MACRO(unsigned, unsigned)
 S_MACRO(unsigned long, unsigned_long)
 S_MACRO(unsigned long long, unsigned_longlong)
 
+S_MACRO(long, addr)
+
 #undef S_MACRO
