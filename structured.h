@@ -1,7 +1,7 @@
 #ifndef STRACE_STRUCTURED_H
 #define STRACE_STRUCTURED_H
 
-typedef enum {
+typedef enum s_type {
 	S_TYPE_char,
 	S_TYPE_int,
 	S_TYPE_long,
