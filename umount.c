@@ -3,9 +3,8 @@
 
 SYS_FUNC(umount2)
 {
-	printpath(tcp, tcp->u_arg[0]);
-	tprints(", ");
-	printflags(umount_flags, tcp->u_arg[1], "MNT_???");
+	s_push_path(tcp->u_arg[0]);
+	s_push_flags_int(umount_flags, tcp->u_arg[1], "MNT_???");
 
 	return RVAL_DECODED;
 }
