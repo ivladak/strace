@@ -155,7 +155,7 @@ static char *outfname = NULL;
 static FILE *shared_log;
 
 struct tcb *printing_tcp = NULL;
-static struct tcb *current_tcp;
+struct tcb *current_tcp;
 
 static struct tcb **tcbtab;
 static unsigned int nprocs, tcbtabsize;

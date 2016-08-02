@@ -598,6 +598,7 @@ extern bool printpair_int(struct tcb *, long, const char *)
 extern bool printpair_int64(struct tcb *, long, const char *)
 	ATTRIBUTE_FORMAT((printf, 3, 0));
 extern void printpath(struct tcb *, long);
+extern void printpathcur(long);
 extern void printpathn(struct tcb *, long, unsigned int);
 #define TIMESPEC_TEXT_BUFSIZE \
 		(sizeof(intmax_t)*3 * 2 + sizeof("{tv_sec=%jd, tv_nsec=%jd}"))
@@ -713,6 +714,7 @@ printxval_long(const struct xlat *x, const unsigned long val, const char *dflt)
  * strace -oLOG -f[f] -p "`pidof web_browser`"
  */
 extern struct tcb *printing_tcp;
+extern struct tcb *current_tcp;
 extern void printleader(struct tcb *);
 extern void line_ended(void);
 extern void tabto(void);

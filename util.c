@@ -789,6 +789,13 @@ printpath(struct tcb *tcp, long addr)
 	printpathn(tcp, addr, PATH_MAX);
 }
 
+void
+printpathcur(long addr)
+{
+	/* Size must correspond to char path[] size in printpathn */
+	printpathn(current_tcp, addr, PATH_MAX);
+}
+
 /*
  * Print string specified by address `addr' and length `len'.
  * If `len' < 0, treat the string as a NUL-terminated string.
