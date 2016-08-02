@@ -1,28 +1,28 @@
-#define S_MACRO(INT, ENUM) extern void s_push_int_ ## ENUM (INT value);
+#define DECL_PUSH_INT(TYPE, ENUM) extern void s_push_int_ ## ENUM(TYPE value)
 
-S_MACRO(char, char)
-S_MACRO(int, int)
-S_MACRO(long, long)
-S_MACRO(long long, longlong)
-S_MACRO(unsigned, unsigned)
-S_MACRO(unsigned long, unsigned_long)
-S_MACRO(unsigned long long, unsigned_longlong)
+DECL_PUSH_INT(int, d);
+DECL_PUSH_INT(long, ld);
+DECL_PUSH_INT(long long, lld);
 
-S_MACRO(int, int_octal)
-S_MACRO(long, long_octal)
-S_MACRO(long long, longlong_octal)
+DECL_PUSH_INT(unsigned, u);
+DECL_PUSH_INT(unsigned long, lu);
+DECL_PUSH_INT(unsigned long long, llu);
 
-S_MACRO(long, addr)
+DECL_PUSH_INT(int, o);
+DECL_PUSH_INT(long, lo);
+DECL_PUSH_INT(long long, llo);
 
-#undef S_MACRO
+#undef DECL_PUSH_INT
+
+extern void s_push_addr(long value);
 
 extern void s_push_path(long addr);
 
-#define S_MACRO(NAME, TYPE) \
-extern void s_push_flags_ ## NAME (const struct xlat *, TYPE, const char *);
+#define DECL_PUSH_FLAGS(TYPE, ENUM) \
+	extern void s_push_flags_ ## ENUM(const struct xlat *, TYPE, const char *)
 
-S_MACRO(int, unsigned)
-S_MACRO(long, long)
-S_MACRO(64, uint64_t)
+DECL_PUSH_FLAGS(unsigned, int);
+DECL_PUSH_FLAGS(unsigned long, long);
+DECL_PUSH_FLAGS(uint64_t, 64);
 
-#undef S_MACRO
+#undef DECL_PUSH_FLAGS

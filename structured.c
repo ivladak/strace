@@ -7,26 +7,30 @@
 /* printing and freeing values (args and struct fields) */
 
 void
-s_val_print (s_arg_t *arg)
+s_val_print(s_arg_t *arg)
 {
 	switch (arg->type) {
-#define S_MACRO(INT, ENUM, PR) \
-case S_TYPE_ ## ENUM : tprintf("%" PR, (INT) arg->value_int); break;
-	S_MACRO(char, char, "c")
-	S_MACRO(int, int, "d")
-	S_MACRO(long, long, "ld")
-	S_MACRO(long long, longlong, "lld")
-	S_MACRO(unsigned, unsigned, "u")
-	S_MACRO(unsigned long, unsigned_long, "lu")
-	S_MACRO(unsigned long long, unsigned_longlong, "llu")
-#undef S_MACRO
+#define PRINT_INT(TYPE, ENUM, PR) \
+	case S_TYPE_ ## ENUM : tprintf("%" PR, (TYPE) arg->value_int); break
 
-#define S_MACRO(INT, ENUM, PR) \
-case S_TYPE_ ## ENUM : tprintf("%#" PR, (INT) arg->value_int); break;
-	S_MACRO(int, int_octal, "o")
-	S_MACRO(long, long_octal, "lo")
-	S_MACRO(long long, longlong_octal, "llo")
-#undef S_MACRO
+	PRINT_INT(int, d, "d");
+	PRINT_INT(long, ld, "ld");
+	PRINT_INT(long long, lld, "lld");
+
+	PRINT_INT(unsigned, u, "u");
+	PRINT_INT(unsigned long, lu, "lu");
+	PRINT_INT(unsigned long long, llu, "llu");
+
+#undef PRINT_INT
+
+#define PRINT_ALT_INT(TYPE, ENUM, PR) \
+	case S_TYPE_ ## ENUM : tprintf("%#" PR, (TYPE) arg->value_int); break
+
+	PRINT_ALT_INT(int, o, "o");
+	PRINT_ALT_INT(long, lo, "lo");
+	PRINT_ALT_INT(long long, llo, "llo");
+
+#undef PRINT_ALT_INT
 
 	case S_TYPE_addr:
 		printaddr((long) arg->value_int);
@@ -38,8 +42,9 @@ case S_TYPE_ ## ENUM : tprintf("%#" PR, (INT) arg->value_int); break;
 		s_flags_t *p = arg->value_p;
 		printflags64(p->x, p->flags, p->dflt);
 		break;
+
 	default:
-		tprints(".., ");
+		tprints(">:[ , ");
 		break;
 	}
 }

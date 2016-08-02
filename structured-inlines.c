@@ -3,44 +3,48 @@
 s_syscall_t *s_syscall;
 
 inline void
-s_push_value_int (s_type_t type, uint64_t value)
+s_push_value_int(s_type_t type, uint64_t value)
 {
 	s_arg_t *arg = s_arg_new(s_syscall, type);
 	arg->value_int = value;
 }
 
 
-#define S_MACRO(INT, ENUM) \
-inline void \
-s_push_int_ ## ENUM (INT value) \
-{ \
-	s_push_value_int(S_TYPE_ ## ENUM, (uint64_t) value); \
-}
+#define DEF_PUSH_INT(TYPE, ENUM) \
+	inline void \
+	s_push_int_ ## ENUM(TYPE value) \
+	{ \
+		s_push_value_int(S_TYPE_ ## ENUM, (uint64_t) value); \
+	}
 
-S_MACRO(char, char)
-S_MACRO(int, int)
-S_MACRO(long, long)
-S_MACRO(long long, longlong)
-S_MACRO(unsigned, unsigned)
-S_MACRO(unsigned long, unsigned_long)
-S_MACRO(unsigned long long, unsigned_longlong)
+DEF_PUSH_INT(int, d)
+DEF_PUSH_INT(long, ld)
+DEF_PUSH_INT(long long, lld)
 
-S_MACRO(int, int_octal)
-S_MACRO(long, long_octal)
-S_MACRO(long long, longlong_octal)
+DEF_PUSH_INT(unsigned, u)
+DEF_PUSH_INT(unsigned long, lu)
+DEF_PUSH_INT(unsigned long long, llu)
 
-S_MACRO(long, addr)
+DEF_PUSH_INT(int, o)
+DEF_PUSH_INT(long, lo)
+DEF_PUSH_INT(long long, llo)
 
-#undef S_MACRO
+#undef DEF_PUSH_INT
 
 inline void
-s_push_path (long addr)
+s_push_addr(long value)
+{
+	s_push_value_int(S_TYPE_addr, (uint64_t) value);
+}
+
+inline void
+s_push_path(long addr)
 {
 	s_push_value_int(S_TYPE_path, (uint64_t) addr);
 }
 
 inline void
-s_push_flags (const struct xlat *x, uint64_t flags, const char *dflt)
+s_push_flags(const struct xlat *x, uint64_t flags, const char *dflt)
 {
 	s_arg_t *arg = s_arg_new(s_syscall, S_TYPE_flags);
 	arg->value_p = malloc(sizeof(s_flags_t));
@@ -50,17 +54,16 @@ s_push_flags (const struct xlat *x, uint64_t flags, const char *dflt)
 	p->dflt = dflt;
 }
 
-#define S_MACRO(NAME, TYPE) \
-inline void \
-s_push_flags_ ## NAME (const struct xlat *x, TYPE flags, \
-			  const char *dflt) \
-{ \
-	s_push_flags(x, flags, dflt); \
-}
+#define DEF_PUSH_FLAGS(TYPE, ENUM) \
+	inline void \
+	s_push_flags_ ## ENUM(const struct xlat *x, TYPE flags, \
+				  const char *dflt) \
+	{ \
+		s_push_flags(x, flags, dflt); \
+	}
 
-S_MACRO(int, unsigned)
-S_MACRO(long, unsigned long)
-S_MACRO(64, uint64_t)
+DEF_PUSH_FLAGS(unsigned, int)
+DEF_PUSH_FLAGS(unsigned long, long)
+DEF_PUSH_FLAGS(uint64_t, 64)
 
-#undef S_MACRO
-
+#undef DEF_PUSH_FLAGS
