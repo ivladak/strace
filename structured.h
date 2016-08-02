@@ -1,3 +1,6 @@
+#ifndef STRACE_STRUCTURED_H
+#define STRACE_STRUCTURED_H
+
 typedef enum {
 S_TYPE_d,
 S_TYPE_ld,
@@ -61,3 +64,5 @@ extern void s_syscall_free (s_syscall_t *syscall);
 extern void s_syscall_print (s_syscall_t *syscall);
 
 extern s_syscall_t *s_syscall;
+
+#endif /* #ifndef STRACE_STRUCTURED_H */
