@@ -1430,12 +1430,12 @@ printargs(struct tcb *tcp)
 #if HAVE_STRUCT_TCB_EXT_ARG
 # if SUPPORTED_PERSONALITIES > 1
 			if (current_personality == 1)
-				tprintf("%s%#lx", i ? ", " : "", tcp->u_arg[i]);
+				s_push_int_lx(tcp->u_arg[i]);
 			else
 # endif
-			tprintf("%s%#llx", i ? ", " : "", tcp->ext_arg[i]);
+			s_push_int_llx(tcp->ext_arg[i]);
 #else
-			tprintf("%s%#lx", i ? ", " : "", tcp->u_arg[i]);
+			s_push_int_lx(tcp->u_arg[i]);
 #endif
 		}
 	}
@@ -1448,8 +1448,7 @@ printargs_u(struct tcb *tcp)
 	const int n = tcp->s_ent->nargs;
 	int i;
 	for (i = 0; i < n; ++i)
-		tprintf("%s%u", i ? ", " : "",
-			(unsigned int) tcp->u_arg[i]);
+		s_push_int_u(tcp->u_arg[i]);
 	return RVAL_DECODED;
 }
 
@@ -1459,8 +1458,7 @@ printargs_d(struct tcb *tcp)
 	const int n = tcp->s_ent->nargs;
 	int i;
 	for (i = 0; i < n; ++i)
-		tprintf("%s%d", i ? ", " : "",
-			(int) tcp->u_arg[i]);
+		s_push_int_d(tcp->u_arg[i]);
 	return RVAL_DECODED;
 }
 
