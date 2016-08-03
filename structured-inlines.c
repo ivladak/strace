@@ -69,3 +69,29 @@ DEF_PUSH_FLAGS(unsigned long, long)
 DEF_PUSH_FLAGS(uint64_t, 64)
 
 #undef DEF_PUSH_FLAGS
+
+inline void
+s_push_str(long addr, long len)
+{
+	s_arg_t *arg = s_arg_new(current_tcp, S_TYPE_str);
+	s_str_t *p = malloc(sizeof(s_str_t));
+
+	p->addr = addr;
+	p->str = NULL;
+	p->valid = false;
+	if (!addr) {
+		return;
+	}
+
+	unsigned int outstr_size = 4 * max_strlen + /*for quotes and NUL:*/ 3;
+	if (outstr_size / 4 != max_strlen)
+		die_out_of_memory();
+	char *outstr = xmalloc(outstr_size);
+
+	if (getstr(current_tcp, addr, len, outstr)) {
+		p->valid = true;
+		p->str = outstr;
+	}
+
+	arg->value_p = p;
+}

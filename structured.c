@@ -36,6 +36,16 @@ s_val_print(s_arg_t *arg)
 
 #undef PRINT_ALT_INT
 
+	case S_TYPE_str: ;
+		s_str_t *s_p = arg->value_p;
+		if (!s_p->str) {
+			tprints("NULL");
+		} else if (!s_p->valid) {
+			printaddr(s_p->addr);
+		} else {
+			tprints(s_p->str);
+		}
+		break;
 	case S_TYPE_addr:
 		printaddr((long) arg->value_int);
 		break;
@@ -43,8 +53,8 @@ s_val_print(s_arg_t *arg)
 		printpathcur((long) arg->value_int);
 		break;
 	case S_TYPE_flags: ;
-		s_flags_t *p = arg->value_p;
-		printflags64(p->x, p->flags, p->dflt);
+		s_flags_t *f_p = arg->value_p;
+		printflags64(f_p->x, f_p->flags, f_p->dflt);
 		break;
 
 	default:
@@ -59,6 +69,13 @@ s_val_free(s_arg_t *arg)
 	switch (arg->type) {
 	case S_TYPE_flags:
 		free(arg->value_p);
+		break;
+	case S_TYPE_str: ;
+		s_str_t *s_p = arg->value_p;
+		if (s_p->str)
+			free(s_p->str);
+		free(s_p);
+		break;
 	default:
 		break;
 	}

@@ -19,6 +19,8 @@ typedef enum s_type {
 	S_TYPE_lo,
 	S_TYPE_llo,
 
+	S_TYPE_str,
+
 	S_TYPE_addr,
 	S_TYPE_path,
 	S_TYPE_flags,
@@ -58,6 +60,12 @@ typedef struct s_flags {
 	uint64_t flags;
 	const char *dflt;
 } s_flags_t;
+
+typedef struct s_str {
+	bool valid; /* if 0 -- print addr instead of str */
+	char *str;
+	long addr;
+} s_str_t;
 
 /* prototypes */
 

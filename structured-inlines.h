@@ -30,3 +30,5 @@ DECL_PUSH_FLAGS(unsigned long, long);
 DECL_PUSH_FLAGS(uint64_t, 64);
 
 #undef DECL_PUSH_FLAGS
+
+extern void s_push_str(long addr, long len);
