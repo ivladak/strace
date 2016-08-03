@@ -27,6 +27,10 @@ DEF_PUSH_INT(int, o)
 DEF_PUSH_INT(long, lo)
 DEF_PUSH_INT(long long, llo)
 
+DEF_PUSH_INT(int, x)
+DEF_PUSH_INT(long, lx)
+DEF_PUSH_INT(long long, llx)
+
 #undef DEF_PUSH_INT
 
 inline void

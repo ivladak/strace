@@ -12,6 +12,10 @@ DECL_PUSH_INT(int, o);
 DECL_PUSH_INT(long, lo);
 DECL_PUSH_INT(long long, llo);
 
+DECL_PUSH_INT(int, x);
+DECL_PUSH_INT(long, lx);
+DECL_PUSH_INT(long long, llx);
+
 #undef DECL_PUSH_INT
 
 extern void s_push_addr(long value);

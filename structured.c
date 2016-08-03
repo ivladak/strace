@@ -26,6 +26,10 @@ s_val_print(s_arg_t *arg)
 #define PRINT_ALT_INT(TYPE, ENUM, PR) \
 	case S_TYPE_ ## ENUM : tprintf("%#" PR, (TYPE) arg->value_int); break
 
+	PRINT_ALT_INT(unsigned, x, "x");
+	PRINT_ALT_INT(unsigned long, lx, "lx");
+	PRINT_ALT_INT(unsigned long long, llx, "llx");
+
 	PRINT_ALT_INT(int, o, "o");
 	PRINT_ALT_INT(long, lo, "lo");
 	PRINT_ALT_INT(long long, llo, "llo");

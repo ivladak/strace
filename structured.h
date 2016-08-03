@@ -6,9 +6,14 @@ typedef enum s_type {
 	S_TYPE_d,
 	S_TYPE_ld,
 	S_TYPE_lld,
+
 	S_TYPE_u,
 	S_TYPE_lu,
 	S_TYPE_llu,
+
+	S_TYPE_x,
+	S_TYPE_lx,
+	S_TYPE_llx,
 
 	S_TYPE_o,
 	S_TYPE_lo,
