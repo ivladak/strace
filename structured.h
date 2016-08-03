@@ -1,6 +1,8 @@
 #ifndef STRACE_STRUCTURED_H
 #define STRACE_STRUCTURED_H
 
+#include "queue.h"
+
 typedef enum s_type {
 	S_TYPE_c,
 	S_TYPE_d,
@@ -35,21 +37,22 @@ typedef struct s_arg {
 		void *value_p;
 		uint64_t value_int;
 	};
-	struct s_arg *next;
+
+	STAILQ_ENTRY(s_arg) entry;
 } s_arg_t;
+
+STAILQ_HEAD(args_queue, s_arg);
 
 typedef struct s_syscall {
 	struct tcb *tcp;
-	s_arg_t *head;
-	s_arg_t *tail;
+	struct args_queue args;
 	s_type_t ret_type;
 } s_syscall_t;
 
 /* struct */
 
 typedef struct s_struct {
-	s_arg_t *head;
-	s_arg_t *tail;
+	struct args_queue args;
 } s_struct_t;
 
 

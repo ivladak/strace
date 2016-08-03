@@ -3,6 +3,7 @@
  */
 
 #include "defs.h"
+#include "structured.h"
 
 /* printing and freeing values (args and struct fields) */
 
@@ -91,9 +92,9 @@ s_arg_new(struct tcb *tcp, s_type_t type)
 	s_syscall_t *syscall = tcp->s_syscall;
 	s_arg_t *arg = malloc(sizeof(s_arg_t));
 	arg->type = type;
-	arg->next = NULL;
-	syscall->tail->next = arg;
-	syscall->tail = arg;
+
+	STAILQ_INSERT_TAIL(&syscall->args, arg, entry);
+
 	return arg;
 }
 
@@ -103,12 +104,9 @@ s_syscall_new(struct tcb *tcp)
 	s_syscall_t *syscall = malloc(sizeof(s_syscall_t));
 	syscall->tcp = tcp;
 	tcp->s_syscall = syscall;
-	s_arg_t *dummy = malloc(sizeof(s_arg_t));
-	dummy->value_int = 0;
-	dummy->name = NULL;
-	dummy->next = NULL;
-	syscall->head = dummy;
-	syscall->tail = dummy;
+
+	STAILQ_INIT(&syscall->args);
+
 	return syscall;
 }
 
@@ -116,13 +114,12 @@ void
 s_syscall_free(struct tcb *tcp)
 {
 	s_syscall_t *syscall = tcp->s_syscall;
-	s_arg_t *next = syscall->head;
-	s_arg_t *head;
-	while (next) {
-		head = next;
-		next = head->next;
-		s_val_free(head);
-		free(head);
+	struct s_arg *arg;
+	struct s_arg *tmp;
+
+	STAILQ_FOREACH_SAFE(arg, &syscall->args, entry, tmp) {
+		s_val_free(arg);
+		free(arg);
 	}
 	free(syscall);
 }
@@ -131,13 +128,13 @@ void
 s_syscall_print(struct tcb *tcp)
 {
 	s_syscall_t *syscall = tcp->s_syscall;
-	s_arg_t *head = syscall->head;
-	s_arg_t *next = head->next;
-	while (next) {
-		head = next;
-		next = head->next;
-		s_val_print(head);
-		if (next)
+	struct s_arg *arg;
+	struct s_arg *tmp;
+
+	STAILQ_FOREACH_SAFE(arg, &syscall->args, entry, tmp) {
+		s_val_print(arg);
+
+		if (tmp)
 			tprints(", ");
 	}
 }
