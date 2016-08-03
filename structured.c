@@ -60,7 +60,7 @@ s_val_print(s_arg_t *arg)
 		break;
 
 	default:
-		tprints(">:[ , ");
+		tprints("[!!! unknown value type]");
 		break;
 	}
 }
