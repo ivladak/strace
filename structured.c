@@ -63,8 +63,9 @@ s_val_free(s_arg_t *arg)
 /* syscall representation */
 
 s_arg_t *
-s_arg_new(s_syscall_t *syscall, s_type_t type)
+s_arg_new(struct tcb *tcp, s_type_t type)
 {
+	s_syscall_t *syscall = tcp->s_syscall;
 	s_arg_t *arg = malloc(sizeof(s_arg_t));
 	arg->type = type;
 	arg->next = NULL;
@@ -78,6 +79,7 @@ s_syscall_new(struct tcb *tcp)
 {
 	s_syscall_t *syscall = malloc(sizeof(s_syscall_t));
 	syscall->tcp = tcp;
+	tcp->s_syscall = syscall;
 	s_arg_t *dummy = malloc(sizeof(s_arg_t));
 	dummy->value_int = 0;
 	dummy->name = NULL;
@@ -88,8 +90,9 @@ s_syscall_new(struct tcb *tcp)
 }
 
 void
-s_syscall_free(s_syscall_t *syscall)
+s_syscall_free(struct tcb *tcp)
 {
+	s_syscall_t *syscall = tcp->s_syscall;
 	s_arg_t *next = syscall->head;
 	s_arg_t *head;
 	while (next) {
@@ -102,8 +105,9 @@ s_syscall_free(s_syscall_t *syscall)
 }
 
 void
-s_syscall_print(s_syscall_t *syscall)
+s_syscall_print(struct tcb *tcp)
 {
+	s_syscall_t *syscall = tcp->s_syscall;
 	s_arg_t *head = syscall->head;
 	s_arg_t *next = head->next;
 	while (next) {

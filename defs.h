@@ -218,6 +218,9 @@ typedef struct ioctlent {
 # define HAVE_STRUCT_TCB_EXT_ARG 0
 #endif
 
+#include "structured.h"
+#include "structured-inlines.h"
+
 /* Trace Control Block */
 struct tcb {
 	int flags;		/* See below for TCB_ values */
@@ -245,6 +248,7 @@ struct tcb {
 	struct timeval stime;	/* System time usage as of last process wait */
 	struct timeval dtime;	/* Delta for system time usage */
 	struct timeval etime;	/* Syscall entry time */
+	s_syscall_t *s_syscall; /* Structured output's list's head */
 
 #ifdef USE_LIBUNWIND
 	struct UPT_info* libunwind_ui;
@@ -845,6 +849,4 @@ extern unsigned num_quals;
 #define PRI__u64 PRI__64"u"
 #define PRI__x64 PRI__64"x"
 
-#include "structured.h"
-#include "structured-inlines.h"
 #endif /* !STRACE_DEFS_H */

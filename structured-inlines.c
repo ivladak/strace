@@ -1,11 +1,9 @@
 #include "defs.h"
 
-s_syscall_t *s_syscall;
-
 inline void
 s_push_value_int(s_type_t type, uint64_t value)
 {
-	s_arg_t *arg = s_arg_new(s_syscall, type);
+	s_arg_t *arg = s_arg_new(current_tcp, type);
 	arg->value_int = value;
 }
 
@@ -46,7 +44,7 @@ s_push_path(long addr)
 inline void
 s_push_flags(const struct xlat *x, uint64_t flags, const char *dflt)
 {
-	s_arg_t *arg = s_arg_new(s_syscall, S_TYPE_flags);
+	s_arg_t *arg = s_arg_new(current_tcp, S_TYPE_flags);
 	arg->value_p = malloc(sizeof(s_flags_t));
 	s_flags_t *p = arg->value_p;
 	p->x = x;
