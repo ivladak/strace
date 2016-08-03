@@ -91,6 +91,7 @@ s_arg_new(struct tcb *tcp, s_type_t type)
 {
 	s_syscall_t *syscall = tcp->s_syscall;
 	s_arg_t *arg = malloc(sizeof(s_arg_t));
+
 	arg->type = type;
 
 	STAILQ_INSERT_TAIL(&syscall->args, arg, entry);
@@ -102,6 +103,7 @@ s_syscall_t *
 s_syscall_new(struct tcb *tcp)
 {
 	s_syscall_t *syscall = malloc(sizeof(s_syscall_t));
+
 	syscall->tcp = tcp;
 	tcp->s_syscall = syscall;
 
@@ -121,6 +123,7 @@ s_syscall_free(struct tcb *tcp)
 		s_val_free(arg);
 		free(arg);
 	}
+
 	free(syscall);
 }
 
