@@ -796,32 +796,16 @@ printpathcur(long addr)
 	printpathn(current_tcp, addr, PATH_MAX);
 }
 
-/*
- * Print string specified by address `addr' and length `len'.
- * If `len' < 0, treat the string as a NUL-terminated string.
- * If string length exceeds `max_strlen', append `...' to the output.
- */
-void
-printstr(struct tcb *tcp, long addr, long len)
+bool
+getstr(struct tcb *tcp, long addr, long len, char *outstr)
 {
 	static char *str = NULL;
-	static char *outstr;
 	unsigned int size;
 	unsigned int style;
 	int ellipsis;
 
-	if (!addr) {
-		tprints("NULL");
-		return;
-	}
-	/* Allocate static buffers if they are not allocated yet. */
 	if (!str) {
-		unsigned int outstr_size = 4 * max_strlen + /*for quotes and NUL:*/ 3;
-
-		if (outstr_size / 4 != max_strlen)
-			die_out_of_memory();
 		str = xmalloc(max_strlen + 1);
-		outstr = xmalloc(outstr_size);
 	}
 
 	size = max_strlen;
@@ -831,8 +815,7 @@ printstr(struct tcb *tcp, long addr, long len)
 		 * because string_quote may look one byte ahead.
 		 */
 		if (umovestr(tcp, addr, size + 1, str) < 0) {
-			printaddr(addr);
-			return;
+			return 0;
 		}
 		style = QUOTE_0_TERMINATED;
 	}
@@ -840,8 +823,7 @@ printstr(struct tcb *tcp, long addr, long len)
 		if (size > (unsigned long)len)
 			size = (unsigned long)len;
 		if (umoven(tcp, addr, size, str) < 0) {
-			printaddr(addr);
-			return;
+			return 0;
 		}
 		style = 0;
 	}
@@ -852,9 +834,40 @@ printstr(struct tcb *tcp, long addr, long len)
 	ellipsis = (string_quote(str, outstr, size, style) &&
 			(len < 0 || (unsigned long) len > max_strlen));
 
-	tprints(outstr);
 	if (ellipsis)
-		tprints("...");
+		strcat(outstr, "...");
+
+	return 1;
+}
+
+/*
+ * Print string specified by address `addr' and length `len'.
+ * If `len' < 0, treat the string as a NUL-terminated string.
+ * If string length exceeds `max_strlen', append `...' to the output.
+ */
+void
+printstr(struct tcb *tcp, long addr, long len)
+{
+	static char *outstr = NULL;
+	if (!addr) {
+		tprints("NULL");
+		return;
+	}
+
+	/* Allocate static buffers if they are not allocated yet. */
+	if (!outstr) {
+		unsigned int outstr_size = 4 * max_strlen + /*for quotes and NUL:*/ 3;
+
+		if (outstr_size / 4 != max_strlen)
+			die_out_of_memory();
+		outstr = xmalloc(outstr_size);
+	}
+
+	if (!getstr(tcp, addr, len, outstr)) {
+		printaddr(addr);
+	} else {
+		tprints(outstr);
+	}
 }
 
 void

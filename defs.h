@@ -564,6 +564,7 @@ extern void dumpiov_upto(struct tcb *, int, long, unsigned long);
 	dumpiov_upto((tcp), (len), (addr), (unsigned long) -1L)
 extern void dumpstr(struct tcb *, long, int);
 extern void printstr(struct tcb *, long, long);
+extern bool getstr(struct tcb *, long, long, char *);
 extern bool printnum_short(struct tcb *, long, const char *)
 	ATTRIBUTE_FORMAT((printf, 3, 0));
 extern bool printnum_int(struct tcb *, long, const char *)
