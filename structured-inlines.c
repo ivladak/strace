@@ -78,18 +78,18 @@ s_push_str(long addr, long len)
 
 	p->addr = addr;
 	p->str = NULL;
-	p->valid = false;
+
 	if (!addr) {
 		return;
 	}
 
-	unsigned int outstr_size = 4 * max_strlen + /*for quotes and NUL:*/ 3;
-	if (outstr_size / 4 != max_strlen)
-		die_out_of_memory();
-	char *outstr = xmalloc(outstr_size);
+	char *outstr;
+	outstr = alloc_outstr();
 
-	if (getstr(current_tcp, addr, len, outstr)) {
-		p->valid = true;
+	if (!fetchstr(current_tcp, addr, len, outstr)) {
+		free(outstr);
+		outstr = NULL;
+	} else {
 		p->str = outstr;
 	}
 

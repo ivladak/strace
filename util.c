@@ -796,16 +796,34 @@ printpathcur(long addr)
 	printpathn(current_tcp, addr, PATH_MAX);
 }
 
+char *
+alloc_outstr(void)
+{
+		unsigned int outstr_size = 4 * max_strlen + /*for quotes, "..." and NUL:*/ 6;
+
+		if (outstr_size / 4 != max_strlen + 1)
+			die_out_of_memory();
+		return xmalloc(outstr_size);
+}
+/*
+ * Fetch string specified by address `addr' and length `len'.
+ * If `len' < 0, treat the string as a NUL-terminated string.
+ * If string length exceeds `max_strlen', append `...' to the output.
+ */
 bool
-getstr(struct tcb *tcp, long addr, long len, char *outstr)
+fetchstr(struct tcb *tcp, long addr, long len, char *outstr)
 {
 	static char *str = NULL;
 	unsigned int size;
 	unsigned int style;
 	int ellipsis;
 
+	/* Allocate buffers if they are not allocated yet. */
 	if (!str) {
 		str = xmalloc(max_strlen + 1);
+	}
+	if (!outstr) {
+		outstr = alloc_outstr();
 	}
 
 	size = max_strlen;
@@ -815,7 +833,7 @@ getstr(struct tcb *tcp, long addr, long len, char *outstr)
 		 * because string_quote may look one byte ahead.
 		 */
 		if (umovestr(tcp, addr, size + 1, str) < 0) {
-			return 0;
+			return false;
 		}
 		style = QUOTE_0_TERMINATED;
 	}
@@ -823,7 +841,7 @@ getstr(struct tcb *tcp, long addr, long len, char *outstr)
 		if (size > (unsigned long)len)
 			size = (unsigned long)len;
 		if (umoven(tcp, addr, size, str) < 0) {
-			return 0;
+			return false;
 		}
 		style = 0;
 	}
@@ -837,7 +855,7 @@ getstr(struct tcb *tcp, long addr, long len, char *outstr)
 	if (ellipsis)
 		strcat(outstr, "...");
 
-	return 1;
+	return true;
 }
 
 /*
@@ -854,16 +872,12 @@ printstr(struct tcb *tcp, long addr, long len)
 		return;
 	}
 
-	/* Allocate static buffers if they are not allocated yet. */
+	/* Allocate static buffer if it is not allocated yet. */
 	if (!outstr) {
-		unsigned int outstr_size = 4 * max_strlen + /*for quotes and NUL:*/ 3;
-
-		if (outstr_size / 4 != max_strlen)
-			die_out_of_memory();
-		outstr = xmalloc(outstr_size);
+		outstr = alloc_outstr();
 	}
 
-	if (!getstr(tcp, addr, len, outstr)) {
+	if (!fetchstr(tcp, addr, len, outstr)) {
 		printaddr(addr);
 	} else {
 		tprints(outstr);

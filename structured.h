@@ -62,7 +62,6 @@ typedef struct s_flags {
 } s_flags_t;
 
 typedef struct s_str {
-	bool valid; /* if 0 -- print addr instead of str */
 	char *str;
 	long addr;
 } s_str_t;

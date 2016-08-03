@@ -39,9 +39,11 @@ s_val_print(s_arg_t *arg)
 	case S_TYPE_str: ;
 		s_str_t *s_p = arg->value_p;
 		if (!s_p->str) {
-			tprints("NULL");
-		} else if (!s_p->valid) {
-			printaddr(s_p->addr);
+			if (s_p->addr) {
+				printaddr(s_p->addr);
+			} else {
+				tprints("NULL");
+			}
 		} else {
 			tprints(s_p->str);
 		}
