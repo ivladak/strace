@@ -222,7 +222,6 @@ typedef struct ioctlent {
 #endif
 
 #include "structured.h"
-#include "structured-inlines.h"
 
 /* Trace Control Block */
 struct tcb {
@@ -854,4 +853,5 @@ extern unsigned num_quals;
 #define PRI__u64 PRI__64"u"
 #define PRI__x64 PRI__64"x"
 
+#include "structured-inlines.h"
 #endif /* !STRACE_DEFS_H */

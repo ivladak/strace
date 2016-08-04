@@ -1,34 +1,95 @@
-#define DECL_PUSH_INT(TYPE, ENUM) extern void s_push_int_ ## ENUM(TYPE value)
+static inline void
+s_push_value_int(s_type_t type, uint64_t value)
+{
+	s_arg_t *arg = s_arg_new(current_tcp, type);
+	arg->value_int = value;
+}
 
-DECL_PUSH_INT(int, d);
-DECL_PUSH_INT(long, ld);
-DECL_PUSH_INT(long long, lld);
 
-DECL_PUSH_INT(unsigned, u);
-DECL_PUSH_INT(unsigned long, lu);
-DECL_PUSH_INT(unsigned long long, llu);
+#define DEF_PUSH_INT(TYPE, ENUM) \
+	static inline void \
+	s_push_int_ ## ENUM(TYPE value) \
+	{ \
+		s_push_value_int(S_TYPE_ ## ENUM, (uint64_t) value); \
+	}
 
-DECL_PUSH_INT(int, o);
-DECL_PUSH_INT(long, lo);
-DECL_PUSH_INT(long long, llo);
+DEF_PUSH_INT(int, d)
+DEF_PUSH_INT(long, ld)
+DEF_PUSH_INT(long long, lld)
 
-DECL_PUSH_INT(int, x);
-DECL_PUSH_INT(long, lx);
-DECL_PUSH_INT(long long, llx);
+DEF_PUSH_INT(unsigned, u)
+DEF_PUSH_INT(unsigned long, lu)
+DEF_PUSH_INT(unsigned long long, llu)
 
-#undef DECL_PUSH_INT
+DEF_PUSH_INT(int, o)
+DEF_PUSH_INT(long, lo)
+DEF_PUSH_INT(long long, llo)
 
-extern void s_push_addr(long value);
+DEF_PUSH_INT(int, x)
+DEF_PUSH_INT(long, lx)
+DEF_PUSH_INT(long long, llx)
 
-extern void s_push_path(long addr);
+#undef DEF_PUSH_INT
 
-#define DECL_PUSH_FLAGS(TYPE, ENUM) \
-	extern void s_push_flags_ ## ENUM(const struct xlat *, TYPE, const char *)
+static inline void
+s_push_addr(long value)
+{
+	s_push_value_int(S_TYPE_addr, (uint64_t) value);
+}
 
-DECL_PUSH_FLAGS(unsigned, int);
-DECL_PUSH_FLAGS(unsigned long, long);
-DECL_PUSH_FLAGS(uint64_t, 64);
+static inline void
+s_push_path(long addr)
+{
+	s_push_value_int(S_TYPE_path, (uint64_t) addr);
+}
 
-#undef DECL_PUSH_FLAGS
+static inline void
+s_push_flags(const struct xlat *x, uint64_t flags, const char *dflt)
+{
+	s_arg_t *arg = s_arg_new(current_tcp, S_TYPE_flags);
+	arg->value_p = malloc(sizeof(s_flags_t));
+	s_flags_t *p = arg->value_p;
+	p->x = x;
+	p->flags = flags;
+	p->dflt = dflt;
+}
 
-extern void s_push_str(long addr, long len);
+#define DEF_PUSH_FLAGS(TYPE, ENUM) \
+	static inline void \
+	s_push_flags_ ## ENUM(const struct xlat *x, TYPE flags, \
+				  const char *dflt) \
+	{ \
+		s_push_flags(x, flags, dflt); \
+	}
+
+DEF_PUSH_FLAGS(unsigned, int)
+DEF_PUSH_FLAGS(unsigned long, long)
+DEF_PUSH_FLAGS(uint64_t, 64)
+
+#undef DEF_PUSH_FLAGS
+
+static inline void
+s_push_str(long addr, long len)
+{
+	s_arg_t *arg = s_arg_new(current_tcp, S_TYPE_str);
+	s_str_t *p = malloc(sizeof(s_str_t));
+
+	p->addr = addr;
+	p->str = NULL;
+
+	if (!addr) {
+		return;
+	}
+
+	char *outstr;
+	outstr = alloc_outstr();
+
+	if (!fetchstr(current_tcp, addr, len, outstr)) {
+		free(outstr);
+		outstr = NULL;
+	} else {
+		p->str = outstr;
+	}
+
+	arg->value_p = p;
+}
