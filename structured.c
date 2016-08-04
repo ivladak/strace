@@ -110,8 +110,10 @@ s_syscall_new(struct tcb *tcp)
 {
 	s_syscall_t *syscall = malloc(sizeof(s_syscall_t));
 
-	syscall->tcp = tcp;
 	tcp->s_syscall = syscall;
+
+	syscall->tcp = tcp;
+	syscall->cur_arg = 0;
 
 	STAILQ_INIT(&syscall->args);
 

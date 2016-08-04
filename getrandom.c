@@ -5,11 +5,12 @@ SYS_FUNC(getrandom)
 {
 	if (exiting(tcp)) {
 		if (syserror(tcp))
-			s_push_addr(tcp->u_arg[0]);
+			s_push_addr();
 		else
-			s_push_str(tcp->u_arg[0], tcp->u_rval);
-		s_push_int_lu(tcp->u_arg[1]);
-		s_push_flags_int(getrandom_flags, tcp->u_arg[2], "GRND_???");
+			s_push_str(tcp->u_rval);
+
+		s_push_lu();
+		s_push_flags_int(getrandom_flags, "GRND_???");
 	}
 	return 0;
 }

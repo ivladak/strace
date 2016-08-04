@@ -49,6 +49,7 @@ STAILQ_HEAD(args_queue, s_arg);
 
 typedef struct s_syscall {
 	struct tcb *tcp;
+	int cur_arg;
 	struct args_queue args;
 	s_type_t ret_type;
 } s_syscall_t;
