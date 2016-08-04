@@ -30,7 +30,10 @@ typedef enum s_type {
 
 /* syscall */
 
+struct s_syscall;
+
 typedef struct s_arg {
+	struct s_syscall *syscall;
 	const char *name; /* if is a field of a struct */
 	s_type_t type;
 	union {

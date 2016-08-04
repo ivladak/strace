@@ -94,6 +94,7 @@ s_arg_new(struct tcb *tcp, s_type_t type)
 	s_syscall_t *syscall = tcp->s_syscall;
 	s_arg_t *arg = malloc(sizeof(s_arg_t));
 
+	arg->syscall = syscall;
 	arg->type = type;
 
 	STAILQ_INSERT_TAIL(&syscall->args, arg, entry);
