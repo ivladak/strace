@@ -1,3 +1,6 @@
+#ifndef STRACE_STRUCTURED_INLINES_H
+#define STRACE_STRUCTURED_INLINES_H
+
 static inline void
 s_push_value_int(s_type_t type, uint64_t value)
 {
@@ -93,3 +96,5 @@ s_push_str(long addr, long len)
 
 	arg->value_p = p;
 }
+
+#endif /* #ifndef STRACE_STRUCTURED_INLINES_H */
