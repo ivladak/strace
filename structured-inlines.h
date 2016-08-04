@@ -42,6 +42,16 @@ s_push_arg(s_type_t type)
 		s_push_value_int(S_TYPE_ ## ENUM, (uint64_t) value); \
 	} \
 	\
+	static inline bool \
+	s_push_num_ ## ENUM(const long addr) \
+	{ \
+		TYPE num; \
+		if (umove_or_printaddr(current_tcp, addr, &num)) \
+			return false; \
+		s_push_int_ ## ENUM(num); \
+		return true; \
+	} \
+	\
 	static inline void \
 	s_push_ ## ENUM(void) \
 	{ \
