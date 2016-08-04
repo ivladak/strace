@@ -163,4 +163,10 @@ s_push_str(long len)
 		len);
 }
 
+static inline void
+s_push_fd(void)
+{
+	s_push_arg(S_TYPE_fd); \
+}
+
 #endif /* #ifndef STRACE_STRUCTURED_INLINES_H */
