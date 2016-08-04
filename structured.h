@@ -24,6 +24,7 @@ typedef enum s_type {
 	S_TYPE_str,
 
 	S_TYPE_addr,
+	S_TYPE_fd,
 	S_TYPE_path,
 	S_TYPE_flags,
 } s_type_t;

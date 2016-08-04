@@ -53,6 +53,9 @@ s_val_print(s_arg_t *arg)
 	case S_TYPE_addr:
 		printaddr((long) arg->value_int);
 		break;
+	case S_TYPE_fd:
+		printfd(arg->syscall->tcp, (int) arg->value_int);
+		break;
 	case S_TYPE_path:
 		printpathcur((long) arg->value_int);
 		break;
