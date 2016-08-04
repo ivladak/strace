@@ -2,11 +2,9 @@
 
 SYS_FUNC(readahead)
 {
-	int argn;
-
-	printfd(tcp, tcp->u_arg[0]);
-	argn = printllval(tcp, ", %lld", 1);
-	tprintf(", %lu", tcp->u_arg[argn]);
+	s_push_fd();
+	s_push_lld();
+	s_push_lu();
 
 	return RVAL_DECODED;
 }
