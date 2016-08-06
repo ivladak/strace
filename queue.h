@@ -145,6 +145,56 @@ struct qm_trace {
 #define	TRASHIT(x)
 #endif	/* QUEUE_MACRO_DEBUG */
 
+/*
+ * Macro to test if we're using a specific version of gcc or later.
+ */
+#if defined(__GNUC__) && !defined(__INTEL_COMPILER)
+#define	__GNUC_PREREQ__(ma, mi)	\
+	(__GNUC__ > (ma) || __GNUC__ == (ma) && __GNUC_MINOR__ >= (mi))
+#else
+#define	__GNUC_PREREQ__(ma, mi)	0
+#endif
+
+#ifndef	__DEQUALIFY
+#define	__DEQUALIFY(type, var)	((type)(uintptr_t)(const volatile void *)(var))
+#endif
+
+/*
+ * We define this here since <stddef.h>, <sys/queue.h>, and <sys/types.h>
+ * require it.
+ */
+#if __GNUC_PREREQ__(4, 1)
+#define	__offsetof(type, field)	 __builtin_offsetof(type, field)
+#else
+#ifndef __cplusplus
+#define	__offsetof(type, field) \
+	((__size_t)(uintptr_t)((const volatile void *)&((type *)0)->field))
+#else
+#define	__offsetof(type, field)					\
+  (__offsetof__ (reinterpret_cast <__size_t>			\
+                 (&reinterpret_cast <const volatile char &>	\
+                  (static_cast<type *> (0)->field))))
+#endif
+#endif
+
+#ifndef __containerof
+/*
+ * Given the pointer x to the member m of the struct s, return
+ * a pointer to the containing structure.  When using GCC, we first
+ * assign pointer x to a local variable, to check that its type is
+ * compatible with member m.
+ */
+#if __GNUC_PREREQ__(3, 1)
+#define	__containerof(x, s, m) ({					\
+	const volatile __typeof(((s *)0)->m) *__x = (x);		\
+	__DEQUALIFY(s *, (const volatile char *)__x - __offsetof(s, m));\
+})
+#else
+#define	__containerof(x, s, m)						\
+	__DEQUALIFY(s *, (const volatile char *)(x) - __offsetof(s, m))
+#endif
+#endif /* #ifndef __containerof */
+
 #ifdef __cplusplus
 /*
  * In C++ there can be structure lists and class lists:
