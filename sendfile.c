@@ -52,21 +52,21 @@ SYS_FUNC(sendfile64)
 SYS_FUNC(sendfile)
 {
 	if (entering(tcp)) {
-		printfd(tcp, tcp->u_arg[0]);
-		tprints(", ");
-		printfd(tcp, tcp->u_arg[1]);
-		tprints(", ");
-		if (!printnum_ulong(tcp, tcp->u_arg[2])
-		    || !tcp->u_arg[3]) {
-			tprintf(", %lu", tcp->u_arg[3]);
+		s_push_fd();
+		s_push_fd();
+		if (!s_push_num_lu(tcp->u_arg[2])
+			|| !tcp->u_arg[3]) {
+			s_push_lu();
+			s_changeable();
 			return RVAL_DECODED;
 		}
 	} else {
 		if (!syserror(tcp) && tcp->u_rval) {
-			tprints(" => ");
-			printnum_ulong(tcp, tcp->u_arg[2]);
+			s_push_num_lu(tcp->u_arg[2]);
+		} else {
+			s_changeable_void();
 		}
-		tprintf(", %lu", tcp->u_arg[3]);
+		s_push_lu();
 	}
 
 	return 0;

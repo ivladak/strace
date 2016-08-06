@@ -27,6 +27,9 @@ typedef enum s_type {
 	S_TYPE_fd,
 	S_TYPE_path,
 	S_TYPE_flags,
+
+	S_TYPE_changeable,
+	S_TYPE_changeable_void, /* the value didn't change */
 } s_type_t;
 
 /* syscall */
@@ -43,14 +46,18 @@ typedef struct s_arg {
 	};
 
 	STAILQ_ENTRY(s_arg) entry;
+	STAILQ_ENTRY(s_arg) chg_entry;
 } s_arg_t;
 
 STAILQ_HEAD(args_queue, s_arg);
+STAILQ_HEAD(changeable_queue, s_arg);
 
 typedef struct s_syscall {
 	struct tcb *tcp;
 	int cur_arg;
+	s_arg_t *last_changeable;
 	struct args_queue args;
+	struct changeable_queue changeable_args;
 	s_type_t ret_type;
 } s_syscall_t;
 
@@ -59,7 +66,6 @@ typedef struct s_syscall {
 typedef struct s_struct {
 	struct args_queue args;
 } s_struct_t;
-
 
 /* complex arguments */
 
@@ -74,12 +80,20 @@ typedef struct s_str {
 	long addr;
 } s_str_t;
 
+typedef struct s_changeable {
+	s_arg_t *entering;
+	s_arg_t *exiting;
+} s_changeable_t;
+
 /* prototypes */
 
 extern void s_val_free(s_arg_t *arg);
 extern s_arg_t *s_arg_new(struct tcb *tcp, s_type_t type);
+extern s_arg_t *s_arg_next(struct tcb *tcp, s_type_t type);
 extern s_syscall_t *s_syscall_new(struct tcb *tcp);
+extern void s_last_is_changeable(struct tcb *tcp);
 extern void s_syscall_free(struct tcb *tcp);
-extern void s_syscall_print(struct tcb *tcp);
+extern void s_syscall_print_entering(struct tcb *tcp);
+extern void s_syscall_print_exiting(struct tcb *tcp);
 
 #endif /* #ifndef STRACE_STRUCTURED_H */

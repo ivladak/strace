@@ -853,9 +853,7 @@ trace_syscall_entering(struct tcb *tcp)
 	else {
 		res = tcp->s_ent->sys_func(tcp);
 	}
-	s_syscall_print(tcp);
-	s_syscall_free(tcp);
-	/* TODO: we shouldn't create, print and free s_syscall twice */
+	s_syscall_print_entering(tcp);
 
 	fflush(tcp->outf);
  ret:
@@ -931,7 +929,6 @@ trace_syscall_exiting(struct tcb *tcp)
 	tcp->s_prev_ent = tcp->s_ent;
 
 	sys_res = 0;
-	s_syscall_new(tcp);
 	if (tcp->qual_flg & QUAL_RAW) {
 		/* sys_res = printargs(tcp); - but it's nop on sysexit */
 	} else {
@@ -951,7 +948,7 @@ trace_syscall_exiting(struct tcb *tcp)
 			sys_res = tcp->s_ent->sys_func(tcp);
 		}
 	}
-	s_syscall_print(tcp);
+	s_syscall_print_exiting(tcp);
 	s_syscall_free(tcp);
 
 	tprints(") ");

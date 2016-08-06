@@ -4,7 +4,7 @@
 static inline void
 s_push_value_int(s_type_t type, uint64_t value)
 {
-	s_arg_t *arg = s_arg_new(current_tcp, type);
+	s_arg_t *arg = s_arg_next(current_tcp, type);
 	arg->value_int = value;
 }
 
@@ -49,6 +49,7 @@ s_push_arg(s_type_t type)
 		if (umove_or_printaddr(current_tcp, addr, &num)) \
 			return false; \
 		s_push_int_ ## ENUM(num); \
+		current_tcp->s_syscall->cur_arg++; \
 		return true; \
 	} \
 	\
@@ -103,7 +104,7 @@ s_push_path_val(long addr)
 static inline void
 s_push_flags_val(const struct xlat *x, uint64_t flags, const char *dflt)
 {
-	s_arg_t *arg = s_arg_new(current_tcp, S_TYPE_flags);
+	s_arg_t *arg = s_arg_next(current_tcp, S_TYPE_flags);
 	arg->value_p = malloc(sizeof(s_flags_t));
 	s_flags_t *p = arg->value_p;
 	p->x = x;
@@ -143,7 +144,7 @@ DEF_PUSH_FLAGS(uint64_t, 64)
 static inline void
 s_push_str_val(long addr, long len)
 {
-	s_arg_t *arg = s_arg_new(current_tcp, S_TYPE_str);
+	s_arg_t *arg = s_arg_next(current_tcp, S_TYPE_str);
 	s_str_t *p = malloc(sizeof(s_str_t));
 
 	p->addr = addr;
@@ -176,7 +177,21 @@ s_push_str(long len)
 static inline void
 s_push_fd(void)
 {
-	s_push_arg(S_TYPE_fd); \
+	s_push_arg(S_TYPE_fd);
 }
+
+static inline void
+s_changeable(void)
+{
+	s_last_is_changeable(current_tcp);
+}
+
+static inline void
+s_changeable_void(void)
+{
+	s_arg_next(current_tcp, S_TYPE_changeable_void);
+	current_tcp->s_syscall->cur_arg++;
+}
+
 
 #endif /* #ifndef STRACE_STRUCTURED_INLINES_H */

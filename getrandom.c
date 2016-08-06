@@ -3,14 +3,17 @@
 
 SYS_FUNC(getrandom)
 {
-	if (exiting(tcp)) {
+	if (entering(tcp)) {
+		s_changeable_void();
+		s_changeable();
+		s_push_lu();
+		s_push_flags_int(getrandom_flags, "GRND_???");
+	} else {
 		if (syserror(tcp))
 			s_push_addr();
 		else
-			s_push_str(tcp->u_rval);
+			s_push_str_val(tcp->u_arg[0], tcp->u_rval);
 
-		s_push_lu();
-		s_push_flags_int(getrandom_flags, "GRND_???");
 	}
 	return 0;
 }
