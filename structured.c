@@ -22,8 +22,10 @@ s_val_free(s_arg_t *arg)
 		break;
 	case S_TYPE_str: {
 		s_str_t *s_p = arg->value_p;
+
 		if (s_p->str)
 			free(s_p->str);
+
 		free(s_p);
 		break;
 	}

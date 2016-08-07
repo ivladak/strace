@@ -93,11 +93,14 @@ struct s_printer {
 /* prototypes */
 
 extern void s_val_free(s_arg_t *arg);
+
 extern s_arg_t *s_arg_new(struct tcb *tcp, s_type_t type);
 extern s_arg_t *s_arg_next(struct tcb *tcp, s_type_t type);
+
 extern s_syscall_t *s_syscall_new(struct tcb *tcp);
 extern void s_last_is_changeable(struct tcb *tcp);
 extern void s_syscall_free(struct tcb *tcp);
+
 extern void s_syscall_print_entering(struct tcb *tcp);
 extern void s_syscall_print_exiting(struct tcb *tcp);
 
