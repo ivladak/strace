@@ -250,7 +250,7 @@ struct tcb {
 	struct timeval stime;	/* System time usage as of last process wait */
 	struct timeval dtime;	/* Delta for system time usage */
 	struct timeval etime;	/* Syscall entry time */
-	s_syscall_t *s_syscall; /* Structured output's list's head */
+	struct s_syscall *s_syscall; /* Structured output's list's head */
 
 #ifdef USE_LIBUNWIND
 	struct UPT_info* libunwind_ui;

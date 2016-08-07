@@ -3,7 +3,7 @@
 #include "structured_fmt_text.h"
 
 void
-s_val_print(s_arg_t *arg)
+s_val_print(struct s_arg *arg)
 {
 	switch (arg->type) {
 #define PRINT_INT(TYPE, ENUM, PR) \
@@ -36,7 +36,7 @@ s_val_print(s_arg_t *arg)
 		tprints("[x]");
 		break;
 	case S_TYPE_changeable: {
-		s_changeable_t *s_ch = arg->value_p;
+		struct s_changeable *s_ch = arg->value_p;
 		s_val_print(s_ch->entering);
 		if (s_ch->exiting->type != S_TYPE_changeable_void) {
 			tprints(" => ");
@@ -45,7 +45,7 @@ s_val_print(s_arg_t *arg)
 		break;
 	}
 	case S_TYPE_str: {
-		s_str_t *s_p = arg->value_p;
+		struct s_str *s_p = arg->value_p;
 		if (!s_p->str) {
 			if (s_p->addr) {
 				printaddr(s_p->addr);
@@ -67,7 +67,7 @@ s_val_print(s_arg_t *arg)
 		printpathcur((long) arg->value_int);
 		break;
 	case S_TYPE_flags: {
-		s_flags_t *f_p = arg->value_p;
+		struct s_flags *f_p = arg->value_p;
 		printflags64(f_p->x, f_p->flags, f_p->dflt);
 		break;
 	}
@@ -87,7 +87,7 @@ s_syscall_text_print_entering(struct tcb *tcp)
 void
 s_syscall_text_print_exiting(struct tcb *tcp)
 {
-	s_syscall_t *syscall = tcp->s_syscall;
+	struct s_syscall *syscall = tcp->s_syscall;
 	struct s_arg *arg;
 	struct s_arg *tmp;
 

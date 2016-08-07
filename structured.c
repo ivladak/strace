@@ -14,14 +14,14 @@ static struct s_printer *s_printers[] = {
 };
 
 void
-s_val_free(s_arg_t *arg)
+s_val_free(struct s_arg *arg)
 {
 	switch (arg->type) {
 	case S_TYPE_flags:
 		free(arg->value_p);
 		break;
 	case S_TYPE_str: {
-		s_str_t *s_p = arg->value_p;
+		struct s_str *s_p = arg->value_p;
 
 		if (s_p->str)
 			free(s_p->str);
@@ -36,11 +36,11 @@ s_val_free(s_arg_t *arg)
 
 /* syscall representation */
 
-s_arg_t *
-s_arg_new(struct tcb *tcp, s_type_t type)
+struct s_arg *
+s_arg_new(struct tcb *tcp, enum s_type type)
 {
-	s_syscall_t *syscall = tcp->s_syscall;
-	s_arg_t *arg = malloc(sizeof(s_arg_t));
+	struct s_syscall *syscall = tcp->s_syscall;
+	struct s_arg *arg = malloc(sizeof(struct s_arg));
 
 	arg->syscall = syscall;
 	arg->type = type;
@@ -53,31 +53,31 @@ s_arg_new(struct tcb *tcp, s_type_t type)
 	return arg;
 }
 
-s_arg_t *
-s_arg_next(struct tcb *tcp, s_type_t type)
+struct s_arg *
+s_arg_next(struct tcb *tcp, enum s_type type)
 {
 	if (entering(tcp)) {
 		return s_arg_new(current_tcp, type);
 	} else {
-		s_syscall_t *syscall = tcp->s_syscall;
-		s_arg_t *arg = malloc(sizeof(s_arg_t));
+		struct s_syscall *syscall = tcp->s_syscall;
+		struct s_arg *arg = malloc(sizeof(struct s_arg));
 
 		arg->syscall = syscall;
 		arg->type = type;
 
-		s_arg_t *chg = syscall->last_changeable;
+		struct s_arg *chg = syscall->last_changeable;
 		syscall->last_changeable = STAILQ_NEXT(chg, chg_entry);
-		s_changeable_t *s_ch = chg->value_p;
+		struct s_changeable *s_ch = chg->value_p;
 		s_ch->exiting = arg;
 
 		return arg;
 	}
 }
 
-s_syscall_t *
+struct s_syscall *
 s_syscall_new(struct tcb *tcp)
 {
-	s_syscall_t *syscall = malloc(sizeof(s_syscall_t));
+	struct s_syscall *syscall = malloc(sizeof(struct s_syscall));
 
 	tcp->s_syscall = syscall;
 
@@ -93,12 +93,12 @@ s_syscall_new(struct tcb *tcp)
 void
 s_last_is_changeable(struct tcb *tcp)
 {
-	s_syscall_t *syscall = tcp->s_syscall;
-	s_arg_t *last_arg = STAILQ_LAST(&syscall->args, s_arg, entry);
+	struct s_syscall *syscall = tcp->s_syscall;
+	struct s_arg *last_arg = STAILQ_LAST(&syscall->args, s_arg, entry);
 	STAILQ_REMOVE(&syscall->args, last_arg, s_arg, entry);
 
-	s_arg_t *chg = s_arg_new(tcp, S_TYPE_changeable);
-	s_changeable_t *p = malloc(sizeof(s_changeable_t));
+	struct s_arg *chg = s_arg_new(tcp, S_TYPE_changeable);
+	struct s_changeable *p = malloc(sizeof(struct s_changeable));
 	chg->value_p = p;
 	p->entering = last_arg;
 	p->exiting = NULL;
@@ -107,7 +107,7 @@ s_last_is_changeable(struct tcb *tcp)
 void
 s_syscall_free(struct tcb *tcp)
 {
-	s_syscall_t *syscall = tcp->s_syscall;
+	struct s_syscall *syscall = tcp->s_syscall;
 	struct s_arg *arg;
 	struct s_arg *tmp;
 
@@ -142,9 +142,9 @@ s_syscall_print_exiting(struct tcb *tcp)
 /*
 void
 s_field_push(s_struct_t *s_struct, const char *name,
-	s_type_t type, void *value)
+	enum s_type type, void *value)
 {
-	s_arg_t *field = malloc(sizeof(s_arg_t));
+	struct s_arg *field = malloc(sizeof(struct s_arg));
 	field->name = name;
 	field->type = type;
 	s_val_push(field, type, value);
@@ -158,7 +158,7 @@ s_struct_t *
 s_struct_new (void)
 {
 	s_struct_t *s_struct = malloc(sizeof(s_struct_t));
-	s_arg_t *dummy = malloc(sizeof(s_arg_t));
+	struct s_arg *dummy = malloc(sizeof(struct s_arg));
 	dummy->value_int = 0;
 	dummy->name = NULL;
 	dummy->next = NULL;
@@ -170,8 +170,8 @@ s_struct_new (void)
 void
 s_struct_free (s_struct_t *s_struct)
 {
-	s_arg_t *next = s_struct->head;
-	s_arg_t *head;
+	struct s_arg *next = s_struct->head;
+	struct s_arg *head;
 	while (next) {
 		head = next;
 		next = head->next;
@@ -184,8 +184,8 @@ s_struct_free (s_struct_t *s_struct)
 void
 s_struct_print (s_struct_t *s_struct)
 {
-	s_arg_t *head = s_struct->head;
-	s_arg_t *next = head->next;
+	struct s_arg *head = s_struct->head;
+	struct s_arg *next = head->next;
 	tprints("{");
 	while (next) {
 		head = next;

@@ -2,14 +2,14 @@
 #define STRACE_STRUCTURED_INLINES_H
 
 static inline void
-s_push_value_int(s_type_t type, uint64_t value)
+s_push_value_int(enum s_type type, uint64_t value)
 {
-	s_arg_t *arg = s_arg_next(current_tcp, type);
+	struct s_arg *arg = s_arg_new(current_tcp, type);
 	arg->value_int = value;
 }
 
 static inline bool
-s_push_arg(s_type_t type, bool printnum)
+s_push_arg(enum s_type type, bool printnum)
 {
 	struct s_syscall *syscall = current_tcp->s_syscall;
 	unsigned long long val;
@@ -118,9 +118,9 @@ s_push_path_val(long addr)
 static inline void
 s_push_flags_val(const struct xlat *x, uint64_t flags, const char *dflt)
 {
-	s_arg_t *arg = s_arg_next(current_tcp, S_TYPE_flags);
-	arg->value_p = malloc(sizeof(s_flags_t));
-	s_flags_t *p = arg->value_p;
+	struct s_arg *arg = s_arg_new(current_tcp, S_TYPE_flags);
+	arg->value_p = malloc(sizeof(struct s_flags));
+	struct s_flags *p = arg->value_p;
 	p->x = x;
 	p->flags = flags;
 	p->dflt = dflt;
@@ -158,8 +158,8 @@ DEF_PUSH_FLAGS(uint64_t, 64)
 static inline void
 s_push_str_val(long addr, long len)
 {
-	s_arg_t *arg = s_arg_next(current_tcp, S_TYPE_str);
-	s_str_t *p = malloc(sizeof(s_str_t));
+	struct s_arg *arg = s_arg_new(current_tcp, S_TYPE_str);
+	struct s_str *p = malloc(sizeof(struct s_str));
 
 	p->addr = addr;
 	p->str = NULL;

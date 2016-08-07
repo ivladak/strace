@@ -3,7 +3,7 @@
 
 #include "queue.h"
 
-typedef enum s_type {
+enum s_type {
 	S_TYPE_c,
 	S_TYPE_d,
 	S_TYPE_ld,
@@ -30,16 +30,16 @@ typedef enum s_type {
 
 	S_TYPE_changeable,
 	S_TYPE_changeable_void, /* the value didn't change */
-} s_type_t;
+};
 
 /* syscall */
 
 struct s_syscall;
 
-typedef struct s_arg {
+struct s_arg {
 	struct s_syscall *syscall;
 	const char *name; /* if is a field of a struct */
-	s_type_t type;
+	enum s_type type;
 	union {
 		void *value_p;
 		uint64_t value_int;
@@ -47,43 +47,44 @@ typedef struct s_arg {
 
 	STAILQ_ENTRY(s_arg) entry;
 	STAILQ_ENTRY(s_arg) chg_entry;
-} s_arg_t;
+};
 
 STAILQ_HEAD(args_queue, s_arg);
 STAILQ_HEAD(changeable_queue, s_arg);
 
-typedef struct s_syscall {
+struct s_syscall {
 	struct tcb *tcp;
 	int cur_arg;
-	s_arg_t *last_changeable;
+	struct s_arg *last_changeable;
 	struct args_queue args;
 	struct changeable_queue changeable_args;
-	s_type_t ret_type;
-} s_syscall_t;
+	enum s_type ret_type;
+};
 
 /* struct */
 
-typedef struct s_struct {
+struct s_struct {
 	struct args_queue args;
-} s_struct_t;
+};
 
 /* complex arguments */
 
-typedef struct s_flags {
+struct s_flags {
+	enum s_type type;
 	const struct xlat *x;
 	uint64_t flags;
 	const char *dflt;
-} s_flags_t;
+};
 
-typedef struct s_str {
+struct s_str {
 	char *str;
 	long addr;
-} s_str_t;
+};
 
-typedef struct s_changeable {
-	s_arg_t *entering;
-	s_arg_t *exiting;
-} s_changeable_t;
+struct s_changeable {
+	struct s_arg *entering;
+	struct s_arg *exiting;
+};
 
 struct s_printer {
 	void (*print_entering)(struct tcb *tcp);
@@ -92,12 +93,12 @@ struct s_printer {
 
 /* prototypes */
 
-extern void s_val_free(s_arg_t *arg);
+extern void s_val_free(struct s_arg *arg);
 
-extern s_arg_t *s_arg_new(struct tcb *tcp, s_type_t type);
-extern s_arg_t *s_arg_next(struct tcb *tcp, s_type_t type);
+extern struct s_arg *s_arg_new(struct tcb *tcp, enum s_type type);
+extern struct s_arg *s_arg_next(struct tcb *tcp, enum s_type type);
 
-extern s_syscall_t *s_syscall_new(struct tcb *tcp);
+extern struct s_syscall *s_syscall_new(struct tcb *tcp);
 extern void s_last_is_changeable(struct tcb *tcp);
 extern void s_syscall_free(struct tcb *tcp);
 
