@@ -107,6 +107,16 @@ s_arg_free(struct s_arg *arg)
 
 		break;
 	}
+	case S_TYPE_changeable: {
+		struct s_changeable *p = S_ARG_TO_TYPE(arg, changeable);
+
+		if (p->entering)
+			s_arg_free(p->entering);
+		if (p->exiting)
+			s_arg_free(p->exiting);
+
+		break;
+	}
 	default:
 		break;
 	}
