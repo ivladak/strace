@@ -191,6 +191,9 @@ s_changeable_void(void)
 {
 	s_arg_next(current_tcp, S_TYPE_changeable_void);
 	current_tcp->s_syscall->cur_arg++;
+	if (entering(current_tcp)) {
+		s_changeable();
+	}
 }
 
 
