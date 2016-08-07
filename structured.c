@@ -40,7 +40,7 @@ struct s_arg *
 s_arg_new(struct tcb *tcp, enum s_type type)
 {
 	struct s_syscall *syscall = tcp->s_syscall;
-	struct s_arg *arg = malloc(sizeof(struct s_arg));
+	struct s_arg *arg = malloc(sizeof(*arg));
 
 	arg->syscall = syscall;
 	arg->type = type;
@@ -60,7 +60,7 @@ s_arg_next(struct tcb *tcp, enum s_type type)
 		return s_arg_new(current_tcp, type);
 	} else {
 		struct s_syscall *syscall = tcp->s_syscall;
-		struct s_arg *arg = malloc(sizeof(struct s_arg));
+		struct s_arg *arg = malloc(sizeof(*arg));
 
 		arg->syscall = syscall;
 		arg->type = type;
@@ -77,7 +77,7 @@ s_arg_next(struct tcb *tcp, enum s_type type)
 struct s_syscall *
 s_syscall_new(struct tcb *tcp)
 {
-	struct s_syscall *syscall = malloc(sizeof(struct s_syscall));
+	struct s_syscall *syscall = malloc(sizeof(*syscall));
 
 	tcp->s_syscall = syscall;
 
@@ -98,7 +98,7 @@ s_last_is_changeable(struct tcb *tcp)
 	STAILQ_REMOVE(&syscall->args, last_arg, s_arg, entry);
 
 	struct s_arg *chg = s_arg_new(tcp, S_TYPE_changeable);
-	struct s_changeable *p = malloc(sizeof(struct s_changeable));
+	struct s_changeable *p = malloc(sizeof(*p));
 	chg->value_p = p;
 	p->entering = last_arg;
 	p->exiting = NULL;

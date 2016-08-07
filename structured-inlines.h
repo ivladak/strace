@@ -159,7 +159,7 @@ static inline void
 s_push_str_val(long addr, long len)
 {
 	struct s_arg *arg = s_arg_new(current_tcp, S_TYPE_str);
-	struct s_str *p = malloc(sizeof(struct s_str));
+	struct s_str *p = malloc(sizeof(*p));
 
 	p->addr = addr;
 	p->str = NULL;
