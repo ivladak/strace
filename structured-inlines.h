@@ -4,8 +4,7 @@
 static inline void
 s_push_value_int(enum s_type type, uint64_t value)
 {
-	struct s_arg *arg = s_arg_new(current_tcp, type);
-	arg->value_int = value;
+	s_num_new_and_push(type, value);
 }
 
 static inline bool
@@ -112,12 +111,7 @@ s_push_path_val(long addr)
 static inline void
 s_push_flags_val(const struct xlat *x, uint64_t flags, const char *dflt)
 {
-	struct s_arg *arg = s_arg_new(current_tcp, S_TYPE_flags);
-	arg->value_p = malloc(sizeof(struct s_flags));
-	struct s_flags *p = arg->value_p;
-	p->x = x;
-	p->flags = flags;
-	p->dflt = dflt;
+	s_flags_new_and_push(x, flags, dflt);
 }
 
 static inline void
@@ -152,27 +146,7 @@ DEF_PUSH_FLAGS(uint64_t, 64)
 static inline void
 s_push_str_val(long addr, long len)
 {
-	struct s_arg *arg = s_arg_new(current_tcp, S_TYPE_str);
-	struct s_str *p = malloc(sizeof(*p));
-
-	p->addr = addr;
-	p->str = NULL;
-
-	if (!addr) {
-		return;
-	}
-
-	char *outstr;
-	outstr = alloc_outstr();
-
-	if (!fetchstr(current_tcp, addr, len, outstr)) {
-		free(outstr);
-		outstr = NULL;
-	} else {
-		p->str = outstr;
-	}
-
-	arg->value_p = p;
+	s_str_new_and_push(addr, len);
 }
 
 static inline void

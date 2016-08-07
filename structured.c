@@ -2,6 +2,8 @@
  * output with new structured output subsystem
  */
 
+#include <assert.h>
+
 #include "defs.h"
 #include "structured.h"
 
@@ -16,66 +18,231 @@ static struct s_printer *s_printers[] = {
 
 /* syscall representation */
 
+#define S_TYPE_FUNC(S_TYPE_FUNC_NAME, S_TYPE_FUNC_ARG, S_TYPE_FUNC_RET, \
+    S_TYPE_SWITCH) \
+	S_TYPE_FUNC_RET \
+	S_TYPE_FUNC_NAME(S_TYPE_FUNC_ARG arg) \
+	{ \
+		switch (S_TYPE_KIND(S_TYPE_SWITCH)) { \
+		case S_TYPE_KIND_addr: \
+		case S_TYPE_KIND_fd: \
+		case S_TYPE_KIND_path: \
+		__ARG_TYPE_CASE(num); \
+		\
+		__ARG_TYPE_CASE(str); \
+		__ARG_TYPE_CASE(flags); \
+		\
+		case S_TYPE_KIND_changeable_void: \
+		__ARG_TYPE_CASE(changeable); \
+		\
+		default: \
+			assert(0); \
+		} \
+		\
+		return (S_TYPE_FUNC_RET)0; \
+	}
+
+#define __ARG_TYPE_CASE(_type) \
+	case S_TYPE_KIND_##_type: \
+		return S_ARG_TO_TYPE(arg, _type)
+
+S_TYPE_FUNC(s_arg_to_type, struct s_arg *, void *, arg->type)
+
+#undef __ARG_TYPE_CASE
+
+#define __ARG_TYPE_CASE(_type) \
+	case S_TYPE_KIND_##_type: \
+		return __offsetof(struct s_##_type, arg)
+
+S_TYPE_FUNC(s_type_offs, enum s_type, size_t, arg)
+
+#undef __ARG_TYPE_CASE
+
+#define __ARG_TYPE_CASE(_type) \
+	case S_TYPE_KIND_##_type: \
+		return sizeof(struct s_##_type)
+
+S_TYPE_FUNC(s_type_size, enum s_type, size_t, arg)
+
+#undef __ARG_TYPE_CASE
+
+struct s_arg *
+s_type_to_arg(void *p, enum s_type type)
+{
+	return (struct s_arg *)((char *)p + s_type_offs(type));
+}
+
+
 struct s_arg *
 s_arg_new(struct tcb *tcp, enum s_type type)
 {
 	struct s_syscall *syscall = tcp->s_syscall;
-	struct s_arg *arg = malloc(sizeof(*arg));
+	void *p = malloc(s_type_size(type));
+	struct s_arg *arg = s_type_to_arg(p, type);
 
 	arg->syscall = syscall;
 	arg->type = type;
 
+	return arg;
+}
+
+void
+s_arg_push(struct s_syscall *syscall, struct s_arg *arg)
+{
 	STAILQ_INSERT_TAIL(&syscall->args, arg, entry);
-	if (type == S_TYPE_changeable) {
+	if (arg->type == S_TYPE_changeable) {
 		STAILQ_INSERT_TAIL(&syscall->changeable_args, arg, chg_entry);
 	}
-
-	return arg;
 }
 
 void
 s_arg_free(struct s_arg *arg)
 {
 	switch (arg->type) {
-	case S_TYPE_flags:
-		free(arg->value_p);
-		break;
 	case S_TYPE_str: {
-		struct s_str *s_p = arg->value_p;
+		struct s_str *s_p = S_ARG_TO_TYPE(arg, str);
 
 		if (s_p->str)
 			free(s_p->str);
 
-		free(s_p);
 		break;
 	}
 	default:
 		break;
 	}
 
-	free(arg);
+	free(s_arg_to_type(arg));
 }
 
 struct s_arg *
 s_arg_next(struct tcb *tcp, enum s_type type)
 {
 	if (entering(tcp)) {
-		return s_arg_new(current_tcp, type);
+		struct s_arg *arg = s_arg_new(current_tcp, type);
+
+		s_arg_push(current_tcp->s_syscall, arg);
+
+		return arg;
 	} else {
 		struct s_syscall *syscall = tcp->s_syscall;
-		struct s_arg *arg = malloc(sizeof(*arg));
-
-		arg->syscall = syscall;
-		arg->type = type;
+		struct s_arg *arg = s_arg_new(tcp, type);
 
 		struct s_arg *chg = syscall->last_changeable;
 		syscall->last_changeable = STAILQ_NEXT(chg, chg_entry);
-		struct s_changeable *s_ch = chg->value_p;
+
+		struct s_changeable *s_ch = S_ARG_TO_TYPE(chg, changeable);
 		s_ch->exiting = arg;
 
 		return arg;
 	}
 }
+
+
+struct s_num *
+s_num_new(enum s_type type, uint64_t value)
+{
+	struct s_num *res = S_ARG_TO_TYPE(s_arg_new(current_tcp, type), num);
+
+	res->val = value;
+
+	return res;
+}
+
+struct s_str *
+s_str_new(long addr, long len)
+{
+	struct s_str *res = S_ARG_TO_TYPE(s_arg_new(current_tcp, S_TYPE_str),
+		str);
+
+	res->addr = addr;
+	res->str = NULL;
+
+	if (!addr)
+		return res;
+
+	char *outstr;
+	outstr = alloc_outstr();
+
+	if (!fetchstr(current_tcp, addr, len, outstr)) {
+		free(outstr);
+		outstr = NULL;
+	} else {
+		res->str = outstr;
+	}
+
+	return res;
+}
+
+struct s_flags *
+s_flags_new(const struct xlat *x, uint64_t flags, const char *dflt)
+{
+	struct s_flags *res = S_ARG_TO_TYPE(s_arg_new(current_tcp,
+		S_TYPE_flags), flags);
+
+	res->x = x;
+	res->flags = flags;
+	res->dflt = dflt;
+
+	return res;
+}
+
+struct s_changeable *
+s_changeable_new(struct s_arg *entering, struct s_arg *exiting)
+{
+	struct s_changeable *res = S_ARG_TO_TYPE(s_arg_new(current_tcp,
+		S_TYPE_changeable), changeable);
+
+	res->entering = entering;
+	res->exiting = exiting;
+
+	return res;
+}
+
+struct s_num *
+s_num_new_and_push(enum s_type type, uint64_t value)
+{
+	struct s_num *res;
+
+	s_arg_push(current_tcp->s_syscall,
+		&(res = s_num_new(type, value))->arg);
+
+	return res;
+}
+
+struct s_str *
+s_str_new_and_push(long addr, long len)
+{
+	struct s_str *res;
+
+	s_arg_push(current_tcp->s_syscall,
+		&(res = s_str_new(addr, len))->arg);
+
+	return res;
+}
+
+struct s_flags *
+s_flags_new_and_push(const struct xlat *x, uint64_t flags, const char *dflt)
+{
+	struct s_flags *res;
+
+	s_arg_push(current_tcp->s_syscall,
+		&(res = s_flags_new(x, flags, dflt))->arg);
+
+	return res;
+}
+
+extern struct s_changeable *s_changeable_new_and_push(struct s_arg *entering,
+	struct s_arg *exiting)
+{
+	struct s_changeable *res;
+
+	s_arg_push(current_tcp->s_syscall,
+		&(res = s_changeable_new(entering, exiting))->arg);
+
+	return res;
+}
+
+
 
 struct s_syscall *
 s_syscall_new(struct tcb *tcp)
@@ -100,11 +267,7 @@ s_last_is_changeable(struct tcb *tcp)
 	struct s_arg *last_arg = STAILQ_LAST(&syscall->args, s_arg, entry);
 	STAILQ_REMOVE(&syscall->args, last_arg, s_arg, entry);
 
-	struct s_arg *chg = s_arg_new(tcp, S_TYPE_changeable);
-	struct s_changeable *p = malloc(sizeof(*p));
-	chg->value_p = p;
-	p->entering = last_arg;
-	p->exiting = NULL;
+	s_changeable_new_and_push(last_arg, NULL);
 }
 
 void

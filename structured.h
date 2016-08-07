@@ -146,6 +146,9 @@ enum s_type {
 		S_TYPE_DEF(i,  implicit, default, changeable_void),
 };
 
+#define S_ARG_TO_TYPE(_arg, _type) __containerof(_arg, struct s_##_type, arg)
+
+
 /* syscall */
 
 struct s_syscall;
@@ -154,10 +157,6 @@ struct s_arg {
 	struct s_syscall *syscall;
 	const char *name; /* if is a field of a struct */
 	enum s_type type;
-	union {
-		void *value_p;
-		uint64_t value_int;
-	};
 
 	STAILQ_ENTRY(s_arg) entry;
 	STAILQ_ENTRY(s_arg) chg_entry;
@@ -182,19 +181,30 @@ struct s_struct {
 
 /* complex arguments */
 
+struct s_num {
+	struct s_arg arg;
+
+	uint64_t val;
+};
+
 struct s_flags {
-	enum s_type type;
+	struct s_arg arg;
+
 	const struct xlat *x;
 	uint64_t flags;
 	const char *dflt;
 };
 
 struct s_str {
+	struct s_arg arg;
+
 	char *str;
 	long addr;
 };
 
 struct s_changeable {
+	struct s_arg arg;
+
 	struct s_arg *entering;
 	struct s_arg *exiting;
 };
@@ -206,9 +216,26 @@ struct s_printer {
 
 /* prototypes */
 
+extern void *s_arg_to_type(struct s_arg *arg);
+
 extern struct s_arg *s_arg_new(struct tcb *tcp, enum s_type type);
 extern void s_arg_free(struct s_arg *arg);
 extern struct s_arg *s_arg_next(struct tcb *tcp, enum s_type type);
+extern void s_arg_push(struct s_syscall *syscall, struct s_arg *arg);
+
+extern struct s_num *s_num_new(enum s_type type, uint64_t value);
+extern struct s_str *s_str_new(long addr, long len);
+extern struct s_flags *s_flags_new(const struct xlat *x, uint64_t flags,
+	const char *dflt);
+extern struct s_changeable *s_changeable_new(struct s_arg *entering,
+	struct s_arg *exiting);
+
+extern struct s_num *s_num_new_and_push(enum s_type type, uint64_t value);
+extern struct s_str *s_str_new_and_push(long addr, long len);
+extern struct s_flags *s_flags_new_and_push(const struct xlat *x,
+	uint64_t flags, const char *dflt);
+extern struct s_changeable *s_changeable_new_and_push(struct s_arg *entering,
+	struct s_arg *exiting);
 
 extern struct s_syscall *s_syscall_new(struct tcb *tcp);
 extern void s_last_is_changeable(struct tcb *tcp);

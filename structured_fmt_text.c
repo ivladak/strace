@@ -7,7 +7,8 @@ s_val_print(struct s_arg *arg)
 {
 	switch (arg->type) {
 #define PRINT_INT(TYPE, ENUM, PR) \
-	case S_TYPE_ ## ENUM : tprintf("%" PR, (TYPE) arg->value_int); break
+	case S_TYPE_ ## ENUM : tprintf("%" PR, \
+		(TYPE)(((struct s_num *)s_arg_to_type(arg))->val)); break
 
 	PRINT_INT(int, d, "d");
 	PRINT_INT(long, ld, "ld");
@@ -20,7 +21,8 @@ s_val_print(struct s_arg *arg)
 #undef PRINT_INT
 
 #define PRINT_ALT_INT(TYPE, ENUM, PR) \
-	case S_TYPE_ ## ENUM : tprintf("%#" PR, (TYPE) arg->value_int); break
+	case S_TYPE_ ## ENUM : tprintf("%#" PR, \
+		(TYPE)(((struct s_num *)s_arg_to_type(arg))->val)); break
 
 	PRINT_ALT_INT(unsigned, x, "x");
 	PRINT_ALT_INT(unsigned long, lx, "lx");
@@ -36,7 +38,7 @@ s_val_print(struct s_arg *arg)
 		tprints("[x]");
 		break;
 	case S_TYPE_changeable: {
-		struct s_changeable *s_ch = arg->value_p;
+		struct s_changeable *s_ch = S_ARG_TO_TYPE(arg, changeable);
 		s_val_print(s_ch->entering);
 		if (s_ch->exiting->type != S_TYPE_changeable_void) {
 			tprints(" => ");
@@ -45,7 +47,7 @@ s_val_print(struct s_arg *arg)
 		break;
 	}
 	case S_TYPE_str: {
-		struct s_str *s_p = arg->value_p;
+		struct s_str *s_p = S_ARG_TO_TYPE(arg, str);
 		if (!s_p->str) {
 			if (s_p->addr) {
 				printaddr(s_p->addr);
@@ -58,16 +60,17 @@ s_val_print(struct s_arg *arg)
 		break;
 	}
 	case S_TYPE_addr:
-		printaddr((long) arg->value_int);
+		printaddr((long)(((struct s_num *)s_arg_to_type(arg))->val));
 		break;
 	case S_TYPE_fd:
-		printfd(arg->syscall->tcp, (int) arg->value_int);
+		printfd(arg->syscall->tcp,
+			(int)(((struct s_num *)s_arg_to_type(arg))->val));
 		break;
 	case S_TYPE_path:
-		printpathcur((long) arg->value_int);
+		printpathcur((long)(((struct s_num *)s_arg_to_type(arg))->val));
 		break;
 	case S_TYPE_flags: {
-		struct s_flags *f_p = arg->value_p;
+		struct s_flags *f_p = S_ARG_TO_TYPE(arg, flags);
 		printflags64(f_p->x, f_p->flags, f_p->dflt);
 		break;
 	}
