@@ -13,26 +13,6 @@ static struct s_printer *s_printers[] = {
 	NULL
 };
 
-void
-s_val_free(struct s_arg *arg)
-{
-	switch (arg->type) {
-	case S_TYPE_flags:
-		free(arg->value_p);
-		break;
-	case S_TYPE_str: {
-		struct s_str *s_p = arg->value_p;
-
-		if (s_p->str)
-			free(s_p->str);
-
-		free(s_p);
-		break;
-	}
-	default:
-		break;
-	}
-}
 
 /* syscall representation */
 
@@ -51,6 +31,29 @@ s_arg_new(struct tcb *tcp, enum s_type type)
 	}
 
 	return arg;
+}
+
+void
+s_arg_free(struct s_arg *arg)
+{
+	switch (arg->type) {
+	case S_TYPE_flags:
+		free(arg->value_p);
+		break;
+	case S_TYPE_str: {
+		struct s_str *s_p = arg->value_p;
+
+		if (s_p->str)
+			free(s_p->str);
+
+		free(s_p);
+		break;
+	}
+	default:
+		break;
+	}
+
+	free(arg);
 }
 
 struct s_arg *
@@ -112,8 +115,7 @@ s_syscall_free(struct tcb *tcp)
 	struct s_arg *tmp;
 
 	STAILQ_FOREACH_SAFE(arg, &syscall->args, entry, tmp) {
-		s_val_free(arg);
-		free(arg);
+		s_arg_free(arg);
 	}
 
 	free(syscall);
@@ -175,8 +177,7 @@ s_struct_free (s_struct_t *s_struct)
 	while (next) {
 		head = next;
 		next = head->next;
-		s_val_free(head);
-		free(head);
+		s_arg_free(head);
 	}
 	free(s_struct);
 }

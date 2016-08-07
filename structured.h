@@ -206,9 +206,8 @@ struct s_printer {
 
 /* prototypes */
 
-extern void s_val_free(struct s_arg *arg);
-
 extern struct s_arg *s_arg_new(struct tcb *tcp, enum s_type type);
+extern void s_arg_free(struct s_arg *arg);
 extern struct s_arg *s_arg_next(struct tcb *tcp, enum s_type type);
 
 extern struct s_syscall *s_syscall_new(struct tcb *tcp);
