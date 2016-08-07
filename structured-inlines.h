@@ -16,15 +16,9 @@ s_push_arg(enum s_type type, bool printnum)
 	int new_arg;
 
 	if (!printnum) {
-		switch (type) {
-		case S_TYPE_lld:
-		case S_TYPE_llu:
-		case S_TYPE_llx:
-		case S_TYPE_llo:
+		if (S_TYPE_SIZE(type) == S_TYPE_SIZE_ll) {
 			new_arg = getllval(current_tcp, &val, syscall->cur_arg);
-			break;
-
-		default:
+		} else {
 			new_arg = syscall->cur_arg + 1;
 			val = current_tcp->u_arg[syscall->cur_arg];
 		}
