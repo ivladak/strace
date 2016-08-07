@@ -29,7 +29,7 @@ enum s_type {
 	S_TYPE_flags,
 
 	S_TYPE_changeable,
-	S_TYPE_changeable_void, /* the value didn't change */
+	S_TYPE_changeable_void, /**< the value is write-only */
 };
 
 /* syscall */
