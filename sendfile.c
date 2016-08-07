@@ -54,7 +54,7 @@ SYS_FUNC(sendfile)
 	if (entering(tcp)) {
 		s_push_fd();
 		s_push_fd();
-		if (!s_push_num_lu(tcp->u_arg[2])
+		if (!s_push_num_lu()
 			|| !tcp->u_arg[3]) {
 			s_push_lu();
 			s_changeable();
@@ -62,7 +62,7 @@ SYS_FUNC(sendfile)
 		}
 	} else {
 		if (!syserror(tcp) && tcp->u_rval) {
-			s_push_num_lu(tcp->u_arg[2]);
+			s_push_int_num_lu(tcp->u_arg[2]);
 		} else {
 			s_changeable_void();
 		}

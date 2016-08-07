@@ -8,29 +8,38 @@ s_push_value_int(s_type_t type, uint64_t value)
 	arg->value_int = value;
 }
 
-static inline void
-s_push_arg(s_type_t type)
+static inline bool
+s_push_arg(s_type_t type, bool printnum)
 {
 	struct s_syscall *syscall = current_tcp->s_syscall;
 	unsigned long long val;
 	int new_arg;
 
-	switch (type) {
-	case S_TYPE_lld:
-	case S_TYPE_llu:
-	case S_TYPE_llx:
-	case S_TYPE_llo:
-		new_arg = getllval(current_tcp, &val, syscall->cur_arg);
-		break;
+	if (!printnum) {
+		switch (type) {
+		case S_TYPE_lld:
+		case S_TYPE_llu:
+		case S_TYPE_llx:
+		case S_TYPE_llo:
+			new_arg = getllval(current_tcp, &val, syscall->cur_arg);
+			break;
 
-	default:
+		default:
+			new_arg = syscall->cur_arg + 1;
+			val = current_tcp->u_arg[syscall->cur_arg];
+		}
+	} else {
 		new_arg = syscall->cur_arg + 1;
-		val = current_tcp->u_arg[syscall->cur_arg];
+		if (umove_or_printaddr(current_tcp,
+			current_tcp->u_arg[syscall->cur_arg], &val)
+		)
+			return false;
 	}
 
 	s_push_value_int(type, val);
 
 	syscall->cur_arg = new_arg;
+	return true;
 }
 
 
@@ -43,7 +52,12 @@ s_push_arg(s_type_t type)
 	} \
 	\
 	static inline bool \
-	s_push_num_ ## ENUM(const long addr) \
+	s_push_num_ ## ENUM(void) \
+	{ \
+		return s_push_arg(S_TYPE_ ## ENUM, true);\
+	} \
+	static inline bool \
+	s_push_int_num_ ## ENUM(const long addr) \
 	{ \
 		TYPE num; \
 		if (umove_or_printaddr(current_tcp, addr, &num)) \
@@ -56,7 +70,7 @@ s_push_arg(s_type_t type)
 	static inline void \
 	s_push_ ## ENUM(void) \
 	{ \
-		s_push_arg(S_TYPE_ ## ENUM); \
+		s_push_arg(S_TYPE_ ## ENUM, false); \
 	}
 
 DEF_PUSH_INT(int, d)
@@ -80,7 +94,7 @@ DEF_PUSH_INT(long long, llx)
 static inline void
 s_push_addr(void)
 {
-	s_push_arg(S_TYPE_addr);
+	s_push_arg(S_TYPE_addr, false);
 }
 
 static inline void
@@ -92,7 +106,7 @@ s_push_addr_val(long value)
 static inline void
 s_push_path(void)
 {
-	s_push_arg(S_TYPE_path);
+	s_push_arg(S_TYPE_path, false);
 }
 
 static inline void
@@ -177,7 +191,7 @@ s_push_str(long len)
 static inline void
 s_push_fd(void)
 {
-	s_push_arg(S_TYPE_fd);
+	s_push_arg(S_TYPE_fd, false);
 }
 
 static inline void
