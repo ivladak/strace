@@ -164,14 +164,13 @@ struct s_arg {
 };
 
 STAILQ_HEAD(args_queue, s_arg);
-STAILQ_HEAD(changeable_queue, s_arg);
 
 struct s_syscall {
 	struct tcb *tcp;
 	int cur_arg;
 	struct s_arg *last_changeable;
 	struct args_queue args;
-	struct changeable_queue changeable_args;
+	struct args_queue changeable_args;
 	enum s_type ret_type;
 };
 
