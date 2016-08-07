@@ -85,6 +85,11 @@ typedef struct s_changeable {
 	s_arg_t *exiting;
 } s_changeable_t;
 
+struct s_printer {
+	void (*print_entering)(struct tcb *tcp);
+	void (*print_exiting)(struct tcb *tcp);
+};
+
 /* prototypes */
 
 extern void s_val_free(s_arg_t *arg);

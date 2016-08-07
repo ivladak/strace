@@ -219,6 +219,8 @@ strace_SOURCES =	\
 	statfs.h	\
 	strace.c	\
 	structured.c	\
+	structured_fmt_text.c	\
+	structured_fmt_text.h	\
 	swapon.c	\
 	syscall.c	\
 	sysctl.c	\
