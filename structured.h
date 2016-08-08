@@ -219,6 +219,19 @@ struct s_printer {
 	void (*print_exiting)(struct tcb *tcp);
 };
 
+enum syscall_print_xlat_bits {
+	SPXF_FIRST_BIT,
+	SPXF_DEFAULT_BIT,
+};
+
+enum syscall_print_xlat_flags {
+	SPXF_FIRST    = POW2(SPXF_FIRST_BIT),
+	SPXF_DEFAULT  = POW2(SPXF_DEFAULT_BIT),
+};
+
+typedef void (*s_print_xlat_fn)(uint64_t value, uint64_t mask, const char *str,
+	uint32_t flags);
+
 /* prototypes */
 
 extern void *s_arg_to_type(struct s_arg *arg);
@@ -251,6 +264,8 @@ extern void s_syscall_free(struct tcb *tcp);
 
 extern int s_syscall_cur_arg_advance(struct s_syscall *syscall,
 	enum s_type type, unsigned long long *val);
+
+extern void s_process_xlat(struct s_xlat *arg, s_print_xlat_fn cb);
 
 extern void s_syscall_print_entering(struct tcb *tcp);
 extern void s_syscall_print_exiting(struct tcb *tcp);

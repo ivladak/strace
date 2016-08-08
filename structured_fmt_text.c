@@ -3,6 +3,29 @@
 #include "structured_fmt_text.h"
 
 void
+s_print_xlat_text(uint64_t value, uint64_t mask, const char *str,
+	uint32_t flags)
+{
+	/* Corner case */
+	if (!(flags & SPXF_FIRST) && (flags & SPXF_DEFAULT) && !value)
+		return;
+
+	if (!(flags & SPXF_FIRST))
+		tprints("|");
+
+	if (flags & SPXF_DEFAULT) {
+		tprintf("%#" PRIx64, value);
+		if (str && value)
+			tprintf(" /* %s */", str);
+	} else {
+		if (str)
+			tprintf("%s", str);
+		else
+			tprintf("%#" PRIx64, value);
+	}
+}
+
+void
 s_val_print(struct s_arg *arg)
 {
 	switch (arg->type) {
@@ -72,10 +95,7 @@ s_val_print(struct s_arg *arg)
 	case S_TYPE_xlat: {
 		struct s_xlat *f_p = S_ARG_TO_TYPE(arg, xlat);
 
-		if (f_p->flags)
-			printflags64(f_p->x, f_p->val, f_p->dflt);
-		else
-			printxval64(f_p->x, f_p->val, f_p->dflt);
+		s_process_xlat(f_p, s_print_xlat_text);
 
 		break;
 	}

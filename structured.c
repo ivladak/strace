@@ -335,6 +335,75 @@ s_syscall_cur_arg_advance(struct s_syscall *syscall, enum s_type type,
 	return syscall->cur_arg;
 }
 
+/* Similar to printxvals() */
+static int
+s_process_xlat_val(struct s_xlat *arg, s_print_xlat_fn cb, bool first)
+{
+	const char *str = arg->x ? xlookup(arg->x, arg->val) : NULL;
+
+	cb(arg->val, ~0, str ? str : arg->dflt,
+		(first ? SPXF_FIRST : 0) | ((str || !arg->x) ? 0 : SPXF_DEFAULT));
+
+	return 1;
+}
+
+/* Similar to printflags64() */
+static int
+s_process_xlat_flags(struct s_xlat *arg, s_print_xlat_fn cb, bool first)
+{
+	int n;
+	const struct xlat *xlat;
+	uint64_t flags;
+
+	if (arg->val == 0 && arg->x && arg->x->val == 0 && arg->x->str) {
+		cb(arg->val, 0, arg->x->str, first ? SPXF_FIRST : 0);
+		return 1;
+	}
+
+	if (!arg->x) {
+		cb(arg->val, ~0, arg->dflt,
+			(first ? SPXF_FIRST : 0) | SPXF_DEFAULT);
+		return 1;
+	}
+
+	xlat = arg->x;
+	flags = arg->val;
+
+	for (n = 0; xlat->str; xlat++) {
+		if (xlat->val && (flags & xlat->val) == xlat->val) {
+			cb(xlat->val, xlat->val, xlat->str,
+				first ? SPXF_FIRST : 0);
+			first = false;
+			flags &= ~xlat->val;
+			n++;
+		}
+	}
+
+	if (n) {
+		if (flags) {
+			cb(flags, ~0, NULL, 0);
+			n++;
+		}
+	} else {
+		cb(flags, ~0, arg->dflt,
+			(first ? SPXF_FIRST : 0) | SPXF_DEFAULT);
+	}
+
+	return n;
+}
+
+void
+s_process_xlat(struct s_xlat *arg, s_print_xlat_fn cb)
+{
+	bool first = true;
+
+	while (arg) {
+		first = !(arg->flags ? s_process_xlat_flags :
+			s_process_xlat_val)(arg, cb, first) && first;
+		arg = arg->next;
+	}
+}
+
 void
 s_syscall_print_entering(struct tcb *tcp)
 {
