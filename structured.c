@@ -77,7 +77,7 @@ struct s_arg *
 s_arg_new(struct tcb *tcp, enum s_type type)
 {
 	struct s_syscall *syscall = tcp->s_syscall;
-	void *p = malloc(s_type_size(type));
+	void *p = calloc(1, s_type_size(type));
 	struct s_arg *arg = s_type_to_arg(p, type);
 
 	arg->syscall = syscall;
