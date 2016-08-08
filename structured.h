@@ -241,6 +241,9 @@ extern struct s_syscall *s_syscall_new(struct tcb *tcp);
 extern void s_last_is_changeable(struct tcb *tcp);
 extern void s_syscall_free(struct tcb *tcp);
 
+extern int s_syscall_cur_arg_advance(struct s_syscall *syscall,
+	enum s_type type, unsigned long long *val);
+
 extern void s_syscall_print_entering(struct tcb *tcp);
 extern void s_syscall_print_exiting(struct tcb *tcp);
 

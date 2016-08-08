@@ -12,27 +12,18 @@ s_push_arg(enum s_type type, bool printnum)
 {
 	struct s_syscall *syscall = current_tcp->s_syscall;
 	unsigned long long val;
-	int new_arg;
 
 	if (!printnum) {
-		if (S_TYPE_SIZE(type) == S_TYPE_SIZE_ll) {
-			new_arg = getllval(current_tcp, &val, syscall->cur_arg);
-		} else {
-			new_arg = syscall->cur_arg + 1;
-			val = current_tcp->u_arg[syscall->cur_arg];
-		}
+		s_syscall_cur_arg_advance(syscall, type, &val);
+		s_push_value_int(type, val);
 	} else {
-		new_arg = syscall->cur_arg + 1;
 		if (umove_or_printaddr(current_tcp,
 			current_tcp->u_arg[syscall->cur_arg], &val)
 		)
-			return false;
+		syscall->cur_arg++;
 	}
 
-	s_push_value_int(type, val);
-
-	syscall->cur_arg = new_arg;
-	return true;
+	return !printnum;
 }
 
 
