@@ -106,13 +106,15 @@ s_push_flags_val(const struct xlat *x, uint64_t flags, const char *dflt)
 }
 
 static inline void
-s_push_flags(const struct xlat *x, const char *dflt)
+s_push_flags(const struct xlat *x, const char *dflt, enum s_type type)
 {
-	s_push_flags_val(x,
-		current_tcp->u_arg[current_tcp->s_syscall->cur_arg++], dflt);
+	unsigned long long val;
+
+	s_syscall_cur_arg_advance(current_tcp->s_syscall, type, &val);
+	s_push_flags_val(x, val, dflt);
 }
 
-#define DEF_PUSH_FLAGS(TYPE, ENUM) \
+#define DEF_PUSH_FLAGS(TYPE, ENUM, FLAGS_TYPE) \
 	static inline void \
 	s_push_flags_val_ ## ENUM(const struct xlat *x, TYPE flags, \
 	                      const char *dflt) \
@@ -123,14 +125,12 @@ s_push_flags(const struct xlat *x, const char *dflt)
 	static inline void \
 	s_push_flags_ ## ENUM(const struct xlat *x, const char *dflt) \
 	{ \
-		s_push_flags_val(x, \
-			current_tcp->u_arg[current_tcp->s_syscall->cur_arg++], \
-			dflt); \
+		s_push_flags(x, dflt, S_TYPE_ ## FLAGS_TYPE); \
 	}
 
-DEF_PUSH_FLAGS(unsigned, int)
-DEF_PUSH_FLAGS(unsigned long, long)
-DEF_PUSH_FLAGS(uint64_t, 64)
+DEF_PUSH_FLAGS(unsigned, int, flags)
+DEF_PUSH_FLAGS(unsigned long, long, flags_l)
+DEF_PUSH_FLAGS(uint64_t, 64, flags_ll)
 
 #undef DEF_PUSH_FLAGS
 
