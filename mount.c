@@ -56,31 +56,22 @@ SYS_FUNC(mount)
 			  | MS_PRIVATE | MS_SLAVE | MS_UNBINDABLE))
 		ignore_type = ignore_data = true;
 
-	printpath(tcp, tcp->u_arg[0]);
-	tprints(", ");
-
-	printpath(tcp, tcp->u_arg[1]);
-	tprints(", ");
+	s_push_path();
+	s_push_path();
 
 	if (ignore_type)
-		printaddr(tcp->u_arg[2]);
+		s_push_addr();
 	else
-		printstr(tcp, tcp->u_arg[2], -1);
-	tprints(", ");
+		s_push_str(-1);
 
-	if (old_magic) {
-		tprints("MS_MGC_VAL");
-		if (flags)
-			tprints("|");
-	}
-	if (flags || !old_magic)
-		printflags_long(mount_flags, flags, "MS_???");
-	tprints(", ");
+	if (old_magic)
+		s_push_xlat_val_long(NULL, MS_MGC_VAL, "MS_MGC_VAL");
+	s_append_flags_val_long(mount_flags, flags, "MS_???");
 
 	if (ignore_data)
-		printaddr(tcp->u_arg[4]);
+		s_push_addr_val(tcp->u_arg[4]);
 	else
-		printstr(tcp, tcp->u_arg[4], -1);
+		s_push_str_val(tcp->u_arg[4], -1);
 
 	return RVAL_DECODED;
 }
