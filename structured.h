@@ -194,6 +194,10 @@ struct s_xlat {
 	uint64_t val;
 	const char *dflt;
 	bool flags;
+
+	/* poor man's chaining in order to avoid creating separate list head. */
+	struct s_xlat *next;
+	struct s_xlat *last;
 };
 
 struct s_str {
@@ -237,6 +241,9 @@ extern struct s_xlat *s_xlat_new_and_push(const struct xlat *x,
 	uint64_t val, const char *dflt, bool flags);
 extern struct s_changeable *s_changeable_new_and_push(struct s_arg *entering,
 	struct s_arg *exiting);
+
+extern struct s_xlat *s_xlat_append(const struct xlat *x, uint64_t val,
+	const char *dflt, bool flags);
 
 extern struct s_syscall *s_syscall_new(struct tcb *tcp);
 extern void s_last_is_changeable(struct tcb *tcp);

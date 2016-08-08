@@ -254,6 +254,30 @@ extern struct s_changeable *s_changeable_new_and_push(struct s_arg *entering,
 	return res;
 }
 
+struct s_xlat *
+s_xlat_append(const struct xlat *x, uint64_t val, const char *dflt,
+	bool flags)
+{
+	struct s_arg *last_arg = STAILQ_LAST(&current_tcp->s_syscall->args,
+		s_arg, entry);
+	struct s_xlat *last_xlat;
+	struct s_xlat *res;
+
+	if (!last_arg || (S_TYPE_KIND(last_arg->type) != S_TYPE_KIND_xlat))
+		return s_xlat_new_and_push(x, val, dflt, flags);
+
+	res = s_xlat_new(x, val, dflt, flags);
+
+	last_xlat = S_ARG_TO_TYPE(last_arg, xlat);
+
+	if (last_xlat->last)
+		last_xlat->last->next = res;
+	else
+		last_xlat->next = res;
+
+	last_xlat->last = res;
+}
+
 
 
 struct s_syscall *

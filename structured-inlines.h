@@ -116,38 +116,60 @@ s_push_xlat(const struct xlat *x, const char *dflt, bool flags,
 	s_push_xlat_val(x, val, dflt, flags);
 }
 
-#define DEF_PUSH_XLAT(TYPE, ENUM, FLAGS_TYPE) \
+static inline void
+s_append_xlat_val(const struct xlat *x, uint64_t val, const char *dflt,
+	bool flags)
+{
+	s_xlat_append(x, val, dflt, flags);
+}
+
+static inline void
+s_append_xlat(const struct xlat *x, const char *dflt, bool flags,
+	enum s_type type)
+{
+	unsigned long long val;
+
+	s_syscall_cur_arg_advance(current_tcp->s_syscall, type, &val);
+	s_append_xlat_val(x, val, dflt, flags);
+}
+
+#define DEF_XLAT_FUNCS(ACT, TYPE, ENUM, FLAGS_TYPE) \
 	static inline void \
-	s_push_flags_val_ ## ENUM(const struct xlat *x, TYPE flags, \
+	s_##ACT##_flags_val_ ## ENUM(const struct xlat *x, TYPE flags, \
 	                      const char *dflt) \
 	{ \
-		s_push_xlat_val(x, flags, dflt, true); \
+		s_##ACT##_xlat_val(x, flags, dflt, true); \
 	} \
 	\
 	static inline void \
-	s_push_flags_ ## ENUM(const struct xlat *x, const char *dflt) \
+	s_##ACT##_flags_ ## ENUM(const struct xlat *x, const char *dflt) \
 	{ \
-		s_push_xlat(x, dflt, true, S_TYPE_ ## FLAGS_TYPE); \
+		s_##ACT##_xlat(x, dflt, true, S_TYPE_ ## FLAGS_TYPE); \
 	} \
 	\
 	static inline void \
-	s_push_xlat_val_ ## ENUM(const struct xlat *x, TYPE flags, \
+	s_##ACT##_xlat_val_ ## ENUM(const struct xlat *x, TYPE flags, \
 	                      const char *dflt) \
 	{ \
-		s_push_xlat_val(x, flags, dflt, false); \
+		s_##ACT##_xlat_val(x, flags, dflt, false); \
 	} \
 	\
 	static inline void \
-	s_push_xlat_ ## ENUM(const struct xlat *x, const char *dflt) \
+	s_##ACT##_xlat_ ## ENUM(const struct xlat *x, const char *dflt) \
 	{ \
-		s_push_xlat(x, dflt, false, S_TYPE_ ## FLAGS_TYPE); \
+		s_##ACT##_xlat(x, dflt, false, S_TYPE_ ## FLAGS_TYPE); \
 	}
 
-DEF_PUSH_XLAT(unsigned, int, xlat)
-DEF_PUSH_XLAT(unsigned long, long, xlat_l)
-DEF_PUSH_XLAT(uint64_t, 64, xlat_ll)
+#define DEF_XLAT(TYPE, ENUM, FLAGS_TYPE) \
+	DEF_XLAT_FUNCS(push, TYPE, ENUM, FLAGS_TYPE) \
+	DEF_XLAT_FUNCS(append, TYPE, ENUM, FLAGS_TYPE)
 
-#undef DEF_PUSH_XLAT
+DEF_XLAT(unsigned, int, xlat)
+DEF_XLAT(unsigned long, long, xlat_l)
+DEF_XLAT(uint64_t, 64, xlat_ll)
+
+#undef DEF_XLAT
+#undef DEF_XLAT_FUNCS
 
 static inline void
 s_push_str_val(long addr, long len)
