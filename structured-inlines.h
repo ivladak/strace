@@ -206,4 +206,12 @@ s_changeable_void(void)
 	}
 }
 
+static inline void
+s_push_empty(enum s_type type)
+{
+	unsigned long long val;
+
+	s_syscall_cur_arg_advance(current_tcp->s_syscall, type, &val);
+}
+
 #endif /* #ifndef STRACE_STRUCTURED_INLINES_H */

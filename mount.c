@@ -68,10 +68,12 @@ SYS_FUNC(mount)
 		s_push_xlat_val_long(NULL, MS_MGC_VAL, "MS_MGC_VAL");
 	s_append_flags_val_long(mount_flags, flags, "MS_???");
 
+	s_push_empty(S_TYPE_xlat_l);
+
 	if (ignore_data)
-		s_push_addr_val(tcp->u_arg[4]);
+		s_push_addr();
 	else
-		s_push_str_val(tcp->u_arg[4], -1);
+		s_push_str(-1);
 
 	return RVAL_DECODED;
 }
