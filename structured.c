@@ -277,6 +277,8 @@ s_xlat_append(const struct xlat *x, uint64_t val, const char *dflt,
 		last_xlat->next = res;
 
 	last_xlat->last = res;
+
+	return res;
 }
 
 
