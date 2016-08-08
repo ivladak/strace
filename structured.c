@@ -410,6 +410,9 @@ s_syscall_print_entering(struct tcb *tcp)
 {
 	struct s_printer **cur = s_printers;
 
+	tcp->s_syscall->last_changeable =
+		STAILQ_FIRST(&tcp->s_syscall->changeable_args);
+
 	for (; *cur; cur++)
 		(*cur)->print_entering(tcp);
 }

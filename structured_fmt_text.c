@@ -111,8 +111,6 @@ s_val_print(struct s_arg *arg)
 void
 s_syscall_text_print_entering(struct tcb *tcp)
 {
-	tcp->s_syscall->last_changeable =
-		STAILQ_FIRST(&tcp->s_syscall->changeable_args);
 }
 
 void
