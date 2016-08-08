@@ -184,7 +184,7 @@ s_str_new(long addr, long len)
 }
 
 struct s_xlat *
-s_xlat_new(const struct xlat *x, uint64_t val, const char *dflt)
+s_xlat_new(const struct xlat *x, uint64_t val, const char *dflt, bool flags)
 {
 	struct s_xlat *res = S_ARG_TO_TYPE(s_arg_new(current_tcp,
 		S_TYPE_xlat), xlat);
@@ -192,6 +192,7 @@ s_xlat_new(const struct xlat *x, uint64_t val, const char *dflt)
 	res->x = x;
 	res->val = val;
 	res->dflt = dflt;
+	res->flags = flags;
 
 	return res;
 }
@@ -231,12 +232,13 @@ s_str_new_and_push(long addr, long len)
 }
 
 struct s_xlat *
-s_xlat_new_and_push(const struct xlat *x, uint64_t val, const char *dflt)
+s_xlat_new_and_push(const struct xlat *x, uint64_t val, const char *dflt,
+	bool flags)
 {
 	struct s_xlat *res;
 
 	s_arg_push(current_tcp->s_syscall,
-		&(res = s_xlat_new(x, val, dflt))->arg);
+		&(res = s_xlat_new(x, val, dflt, flags))->arg);
 
 	return res;
 }

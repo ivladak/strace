@@ -71,7 +71,12 @@ s_val_print(struct s_arg *arg)
 		break;
 	case S_TYPE_xlat: {
 		struct s_xlat *f_p = S_ARG_TO_TYPE(arg, xlat);
-		printflags64(f_p->x, f_p->val, f_p->dflt);
+
+		if (f_p->flags)
+			printflags64(f_p->x, f_p->val, f_p->dflt);
+		else
+			printxval64(f_p->x, f_p->val, f_p->dflt);
+
 		break;
 	}
 	default:

@@ -100,39 +100,54 @@ s_push_path_val(long addr)
 }
 
 static inline void
-s_push_xlat_val(const struct xlat *x, uint64_t xlat, const char *dflt)
+s_push_xlat_val(const struct xlat *x, uint64_t val, const char *dflt,
+	bool flags)
 {
-	s_xlat_new_and_push(x, xlat, dflt);
+	s_xlat_new_and_push(x, val, dflt, flags);
 }
 
 static inline void
-s_push_xlat(const struct xlat *x, const char *dflt, enum s_type type)
+s_push_xlat(const struct xlat *x, const char *dflt, bool flags,
+	enum s_type type)
 {
 	unsigned long long val;
 
 	s_syscall_cur_arg_advance(current_tcp->s_syscall, type, &val);
-	s_push_xlat_val(x, val, dflt);
+	s_push_xlat_val(x, val, dflt, flags);
 }
 
-#define DEF_PUSH_FLAGS(TYPE, ENUM, FLAGS_TYPE) \
+#define DEF_PUSH_XLAT(TYPE, ENUM, FLAGS_TYPE) \
 	static inline void \
 	s_push_flags_val_ ## ENUM(const struct xlat *x, TYPE flags, \
 	                      const char *dflt) \
 	{ \
-		s_push_xlat_val(x, flags, dflt); \
+		s_push_xlat_val(x, flags, dflt, true); \
 	} \
 	\
 	static inline void \
 	s_push_flags_ ## ENUM(const struct xlat *x, const char *dflt) \
 	{ \
-		s_push_xlat(x, dflt, S_TYPE_ ## FLAGS_TYPE); \
+		s_push_xlat(x, dflt, true, S_TYPE_ ## FLAGS_TYPE); \
+	} \
+	\
+	static inline void \
+	s_push_xlat_val_ ## ENUM(const struct xlat *x, TYPE flags, \
+	                      const char *dflt) \
+	{ \
+		s_push_xlat_val(x, flags, dflt, false); \
+	} \
+	\
+	static inline void \
+	s_push_xlat_ ## ENUM(const struct xlat *x, const char *dflt) \
+	{ \
+		s_push_xlat(x, dflt, false, S_TYPE_ ## FLAGS_TYPE); \
 	}
 
-DEF_PUSH_FLAGS(unsigned, int, xlat)
-DEF_PUSH_FLAGS(unsigned long, long, xlat_l)
-DEF_PUSH_FLAGS(uint64_t, 64, xlat_ll)
+DEF_PUSH_XLAT(unsigned, int, xlat)
+DEF_PUSH_XLAT(unsigned long, long, xlat_l)
+DEF_PUSH_XLAT(uint64_t, 64, xlat_ll)
 
-#undef DEF_PUSH_FLAGS
+#undef DEF_PUSH_XLAT
 
 static inline void
 s_push_str_val(long addr, long len)
