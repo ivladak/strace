@@ -62,8 +62,11 @@ s_val_print(struct s_arg *arg)
 		break;
 	case S_TYPE_changeable: {
 		struct s_changeable *s_ch = S_ARG_TO_TYPE(arg, changeable);
-		s_val_print(s_ch->entering);
-		if (s_ch->exiting->type != S_TYPE_changeable_void) {
+		if (s_ch->entering)
+			s_val_print(s_ch->entering);
+		else
+			tprints("[x]");
+		if (s_ch->exiting) {
 			tprints(" => ");
 			s_val_print(s_ch->exiting);
 		}
