@@ -206,5 +206,4 @@ s_changeable_void(void)
 	}
 }
 
-
 #endif /* #ifndef STRACE_STRUCTURED_INLINES_H */

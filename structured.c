@@ -9,6 +9,7 @@
 
 #include "structured_fmt_text.h"
 
+
 /** List of printers used. */
 static struct s_printer *s_printers[] = {
 	&s_printer_text,
