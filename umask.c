@@ -2,7 +2,7 @@
 
 SYS_FUNC(umask)
 {
-	s_push_int_lo(tcp->u_arg[0]);
+	s_push_lo();
 
 	return RVAL_DECODED | RVAL_OCTAL;
 }
