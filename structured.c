@@ -30,7 +30,7 @@ static struct s_printer *s_printers[] = {
 		__ARG_TYPE_CASE(num); \
 		\
 		__ARG_TYPE_CASE(str); \
-		__ARG_TYPE_CASE(flags); \
+		__ARG_TYPE_CASE(xlat); \
 		\
 		case S_TYPE_KIND_changeable_void: \
 		__ARG_TYPE_CASE(changeable); \
@@ -183,14 +183,14 @@ s_str_new(long addr, long len)
 	return res;
 }
 
-struct s_flags *
-s_flags_new(const struct xlat *x, uint64_t flags, const char *dflt)
+struct s_xlat *
+s_xlat_new(const struct xlat *x, uint64_t val, const char *dflt)
 {
-	struct s_flags *res = S_ARG_TO_TYPE(s_arg_new(current_tcp,
-		S_TYPE_flags), flags);
+	struct s_xlat *res = S_ARG_TO_TYPE(s_arg_new(current_tcp,
+		S_TYPE_xlat), xlat);
 
 	res->x = x;
-	res->flags = flags;
+	res->val = val;
 	res->dflt = dflt;
 
 	return res;
@@ -230,13 +230,13 @@ s_str_new_and_push(long addr, long len)
 	return res;
 }
 
-struct s_flags *
-s_flags_new_and_push(const struct xlat *x, uint64_t flags, const char *dflt)
+struct s_xlat *
+s_xlat_new_and_push(const struct xlat *x, uint64_t val, const char *dflt)
 {
-	struct s_flags *res;
+	struct s_xlat *res;
 
 	s_arg_push(current_tcp->s_syscall,
-		&(res = s_flags_new(x, flags, dflt))->arg);
+		&(res = s_xlat_new(x, val, dflt))->arg);
 
 	return res;
 }

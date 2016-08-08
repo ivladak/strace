@@ -69,9 +69,9 @@ s_val_print(struct s_arg *arg)
 	case S_TYPE_path:
 		printpathcur((long)(((struct s_num *)s_arg_to_type(arg))->val));
 		break;
-	case S_TYPE_flags: {
-		struct s_flags *f_p = S_ARG_TO_TYPE(arg, flags);
-		printflags64(f_p->x, f_p->flags, f_p->dflt);
+	case S_TYPE_xlat: {
+		struct s_xlat *f_p = S_ARG_TO_TYPE(arg, xlat);
+		printflags64(f_p->x, f_p->val, f_p->dflt);
 		break;
 	}
 	default:

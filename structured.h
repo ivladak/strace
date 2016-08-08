@@ -89,7 +89,7 @@ enum s_type_kind {
 	S_TYPE_KIND_addr,
 	S_TYPE_KIND_fd,
 	S_TYPE_KIND_path,
-	S_TYPE_KIND_flags,
+	S_TYPE_KIND_xlat,
 	S_TYPE_KIND_changeable,
 	S_TYPE_KIND_changeable_void,
 
@@ -135,9 +135,9 @@ enum s_type {
 	S_TYPE_fd       = S_TYPE_DEF(i,  unsigned, default, fd),
 	S_TYPE_path     = S_TYPE_DEF(l,  unsigned, default, path),
 
-	S_TYPE_flags    = S_TYPE_DEF(i,  unsigned, default, flags),
-	S_TYPE_flags_l  = S_TYPE_DEF(l,  unsigned, default, flags),
-	S_TYPE_flags_ll = S_TYPE_DEF(ll, unsigned, default, flags),
+	S_TYPE_xlat     = S_TYPE_DEF(i,  unsigned, default, xlat),
+	S_TYPE_xlat_l   = S_TYPE_DEF(l,  unsigned, default, xlat),
+	S_TYPE_xlat_ll  = S_TYPE_DEF(ll, unsigned, default, xlat),
 
 	S_TYPE_changeable =
 		S_TYPE_DEF(i,  implicit, default, changeable),
@@ -187,11 +187,11 @@ struct s_num {
 	uint64_t val;
 };
 
-struct s_flags {
+struct s_xlat {
 	struct s_arg arg;
 
 	const struct xlat *x;
-	uint64_t flags;
+	uint64_t val;
 	const char *dflt;
 };
 
@@ -225,15 +225,15 @@ extern void s_arg_push(struct s_syscall *syscall, struct s_arg *arg);
 
 extern struct s_num *s_num_new(enum s_type type, uint64_t value);
 extern struct s_str *s_str_new(long addr, long len);
-extern struct s_flags *s_flags_new(const struct xlat *x, uint64_t flags,
+extern struct s_xlat *s_xlat_new(const struct xlat *x, uint64_t xlat,
 	const char *dflt);
 extern struct s_changeable *s_changeable_new(struct s_arg *entering,
 	struct s_arg *exiting);
 
 extern struct s_num *s_num_new_and_push(enum s_type type, uint64_t value);
 extern struct s_str *s_str_new_and_push(long addr, long len);
-extern struct s_flags *s_flags_new_and_push(const struct xlat *x,
-	uint64_t flags, const char *dflt);
+extern struct s_xlat *s_xlat_new_and_push(const struct xlat *x,
+	uint64_t val, const char *dflt);
 extern struct s_changeable *s_changeable_new_and_push(struct s_arg *entering,
 	struct s_arg *exiting);
 
