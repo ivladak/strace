@@ -78,7 +78,7 @@ struct s_arg *
 s_arg_new(struct tcb *tcp, enum s_type type)
 {
 	struct s_syscall *syscall = tcp->s_syscall;
-	void *p = calloc(1, s_type_size(type));
+	void *p = xcalloc(1, s_type_size(type));
 	struct s_arg *arg = s_type_to_arg(p, type);
 
 	arg->syscall = syscall;
@@ -286,7 +286,7 @@ s_xlat_append(const struct xlat *x, uint64_t val, const char *dflt,
 struct s_syscall *
 s_syscall_new(struct tcb *tcp)
 {
-	struct s_syscall *syscall = malloc(sizeof(*syscall));
+	struct s_syscall *syscall = xmalloc(sizeof(*syscall));
 
 	tcp->s_syscall = syscall;
 
