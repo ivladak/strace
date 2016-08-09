@@ -76,15 +76,15 @@ DEF_PUSH_INT(long long, llx)
 #undef DEF_PUSH_INT
 
 static inline void
-s_push_addr(void)
+s_push_addr_val(long value)
 {
-	s_push_arg(S_TYPE_addr, false);
+	s_addr_new_and_push(value, NULL);
 }
 
 static inline void
-s_push_addr_val(long value)
+s_push_addr(void)
 {
-	s_push_value_int(S_TYPE_addr, (uint64_t) value);
+	s_push_addr_val(current_tcp->u_arg[current_tcp->s_syscall->cur_arg++]);
 }
 
 static inline void
@@ -174,7 +174,7 @@ DEF_XLAT(uint64_t, 64, xlat_ll)
 static inline void
 s_push_str_val(long addr, long len)
 {
-	s_str_new_and_push(addr, len);
+	s_addr_new_and_push(addr, S_TYPE_TO_ARG(s_str_new(addr, len)));
 }
 
 static inline void

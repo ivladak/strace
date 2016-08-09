@@ -85,9 +85,15 @@ s_val_print(struct s_arg *arg)
 		}
 		break;
 	}
-	case S_TYPE_addr:
-		printaddr((long)(((struct s_num *)s_arg_to_type(arg))->val));
+	case S_TYPE_addr: {
+		struct s_addr *p = S_ARG_TO_TYPE(arg, addr);
+		if (p->val)
+			s_val_print(p->val);
+		else
+			printaddr(p->addr);
+
 		break;
+	}
 	case S_TYPE_fd:
 		printfd(arg->syscall->tcp,
 			(int)(((struct s_num *)s_arg_to_type(arg))->val));

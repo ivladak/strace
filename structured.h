@@ -147,7 +147,7 @@ enum s_type {
 };
 
 #define S_ARG_TO_TYPE(_arg, _type) __containerof(_arg, struct s_##_type, arg)
-
+#define S_TYPE_TO_ARG(_p) (&((_p)->arg))
 
 /* syscall */
 
@@ -207,6 +207,13 @@ struct s_str {
 	long addr;
 };
 
+struct s_addr {
+	struct s_arg arg;
+
+	unsigned long addr;
+	struct s_arg *val;
+};
+
 struct s_changeable {
 	struct s_arg arg;
 
@@ -243,13 +250,14 @@ extern void s_arg_push(struct s_syscall *syscall, struct s_arg *arg);
 
 extern struct s_num *s_num_new(enum s_type type, uint64_t value);
 extern struct s_str *s_str_new(long addr, long len);
+extern struct s_addr *s_addr_new(long addr, struct s_arg *arg);
 extern struct s_xlat *s_xlat_new(const struct xlat *x, uint64_t xlat,
 	const char *dflt, bool flags);
 extern struct s_changeable *s_changeable_new(struct s_arg *entering,
 	struct s_arg *exiting);
 
 extern struct s_num *s_num_new_and_push(enum s_type type, uint64_t value);
-extern struct s_str *s_str_new_and_push(long addr, long len);
+extern struct s_addr *s_addr_new_and_push(long addr, struct s_arg *arg);
 extern struct s_xlat *s_xlat_new_and_push(const struct xlat *x,
 	uint64_t val, const char *dflt, bool flags);
 extern struct s_changeable *s_changeable_new_and_push(struct s_arg *entering,

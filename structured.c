@@ -25,11 +25,11 @@ static struct s_printer *s_printers[] = {
 	S_TYPE_FUNC_NAME(S_TYPE_FUNC_ARG arg) \
 	{ \
 		switch (S_TYPE_KIND(S_TYPE_SWITCH)) { \
-		case S_TYPE_KIND_addr: \
 		case S_TYPE_KIND_fd: \
 		case S_TYPE_KIND_path: \
 		__ARG_TYPE_CASE(num); \
 		\
+		__ARG_TYPE_CASE(addr); \
 		__ARG_TYPE_CASE(str); \
 		__ARG_TYPE_CASE(xlat); \
 		\
@@ -105,6 +105,14 @@ s_arg_free(struct s_arg *arg)
 
 		if (s_p->str)
 			free(s_p->str);
+
+		break;
+	}
+	case S_TYPE_addr: {
+		struct s_addr *p = S_ARG_TO_TYPE(arg, addr);
+
+		if (p->val)
+			s_arg_free(p->val);
 
 		break;
 	}
@@ -184,6 +192,18 @@ s_str_new(long addr, long len)
 	return res;
 }
 
+struct s_addr *
+s_addr_new(long addr, struct s_arg *arg)
+{
+	struct s_addr *res = S_ARG_TO_TYPE(s_arg_new(current_tcp, S_TYPE_addr),
+		addr);
+
+	res->addr = addr;
+	res->val = arg;
+
+	return res;
+}
+
 struct s_xlat *
 s_xlat_new(const struct xlat *x, uint64_t val, const char *dflt, bool flags)
 {
@@ -221,13 +241,13 @@ s_num_new_and_push(enum s_type type, uint64_t value)
 	return res;
 }
 
-struct s_str *
-s_str_new_and_push(long addr, long len)
+struct s_addr *
+s_addr_new_and_push(long addr, struct s_arg *arg)
 {
-	struct s_str *res;
+	struct s_addr *res;
 
 	s_arg_push(current_tcp->s_syscall,
-		&(res = s_str_new(addr, len))->arg);
+		&(res = s_addr_new(addr, arg))->arg);
 
 	return res;
 }
