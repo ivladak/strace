@@ -90,6 +90,7 @@ enum s_type_kind {
 	S_TYPE_KIND_fd,
 	S_TYPE_KIND_path,
 	S_TYPE_KIND_xlat,
+	S_TYPE_KIND_struct,
 	S_TYPE_KIND_changeable,
 	S_TYPE_KIND_changeable_void,
 
@@ -139,6 +140,8 @@ enum s_type {
 	S_TYPE_xlat_l   = S_TYPE_DEF(l,  unsigned, default, xlat),
 	S_TYPE_xlat_ll  = S_TYPE_DEF(ll, unsigned, default, xlat),
 
+	S_TYPE_struct   = S_TYPE_DEF(i,  unsigned, default, struct),
+
 	S_TYPE_changeable =
 		S_TYPE_DEF(i,  implicit, default, changeable),
 	/** the value is write-only */
@@ -164,19 +167,30 @@ struct s_arg {
 
 STAILQ_HEAD(args_queue, s_arg);
 
+struct s_args {
+	struct args_queue args;
+	SLIST_ENTRY(s_args) entry;
+};
+
+SLIST_HEAD(s_args_list, s_args);
+
 struct s_syscall {
 	struct tcb *tcp;
 	int cur_arg;
 	struct s_arg *last_changeable;
-	struct args_queue args;
+	struct s_args args;
 	struct args_queue changeable_args;
 	enum s_type ret_type;
+
+	struct s_args_list insertion_stack;
 };
 
 /* struct */
 
 struct s_struct {
-	struct args_queue args;
+	struct s_arg arg;
+
+	struct s_args args;
 };
 
 /* complex arguments */
@@ -253,6 +267,7 @@ extern struct s_str *s_str_new(long addr, long len);
 extern struct s_addr *s_addr_new(long addr, struct s_arg *arg);
 extern struct s_xlat *s_xlat_new(const struct xlat *x, uint64_t xlat,
 	const char *dflt, bool flags);
+extern struct s_struct *s_struct_new(void);
 extern struct s_changeable *s_changeable_new(struct s_arg *entering,
 	struct s_arg *exiting);
 
@@ -265,6 +280,11 @@ extern struct s_changeable *s_changeable_new_and_push(struct s_arg *entering,
 
 extern struct s_xlat *s_xlat_append(const struct xlat *x, uint64_t val,
 	const char *dflt, bool flags);
+
+extern struct args_queue *s_struct_enter(struct s_struct *s);
+extern struct args_queue *s_syscall_insertion_point(struct s_syscall *s);
+extern struct args_queue *s_syscall_pop(struct s_syscall *s);
+extern struct args_queue *s_syscall_pop_all(struct s_syscall *s);
 
 extern struct s_syscall *s_syscall_new(struct tcb *tcp);
 extern void s_last_is_changeable(struct tcb *tcp);

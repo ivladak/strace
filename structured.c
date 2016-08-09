@@ -32,6 +32,7 @@ static struct s_printer *s_printers[] = {
 		__ARG_TYPE_CASE(addr); \
 		__ARG_TYPE_CASE(str); \
 		__ARG_TYPE_CASE(xlat); \
+		__ARG_TYPE_CASE(struct); \
 		\
 		case S_TYPE_KIND_changeable_void: \
 		__ARG_TYPE_CASE(changeable); \
@@ -90,7 +91,7 @@ s_arg_new(struct tcb *tcp, enum s_type type)
 void
 s_arg_push(struct s_syscall *syscall, struct s_arg *arg)
 {
-	STAILQ_INSERT_TAIL(&syscall->args, arg, entry);
+	STAILQ_INSERT_TAIL(s_syscall_insertion_point(syscall), arg, entry);
 	if (arg->type == S_TYPE_changeable) {
 		STAILQ_INSERT_TAIL(&syscall->changeable_args, arg, chg_entry);
 	}
@@ -113,6 +114,16 @@ s_arg_free(struct s_arg *arg)
 
 		if (p->val)
 			s_arg_free(p->val);
+
+		break;
+	}
+	case S_TYPE_struct: {
+		struct s_struct *p = S_ARG_TO_TYPE(arg, struct);
+		struct s_arg *arg;
+		struct s_arg *tmp;
+
+		STAILQ_FOREACH_SAFE(arg, &p->args.args, entry, tmp)
+			s_arg_free(arg);
 
 		break;
 	}
@@ -218,6 +229,17 @@ s_xlat_new(const struct xlat *x, uint64_t val, const char *dflt, bool flags)
 	return res;
 }
 
+struct s_struct *
+s_struct_new(void)
+{
+	struct s_struct *res = S_ARG_TO_TYPE(s_arg_new(current_tcp,
+		S_TYPE_struct), struct);
+
+	STAILQ_INIT(&res->args.args);
+
+	return res;
+}
+
 struct s_changeable *
 s_changeable_new(struct s_arg *entering, struct s_arg *exiting)
 {
@@ -279,7 +301,7 @@ struct s_xlat *
 s_xlat_append(const struct xlat *x, uint64_t val, const char *dflt,
 	bool flags)
 {
-	struct s_arg *last_arg = STAILQ_LAST(&current_tcp->s_syscall->args,
+	struct s_arg *last_arg = STAILQ_LAST(&current_tcp->s_syscall->args.args,
 		s_arg, entry);
 	struct s_xlat *last_xlat;
 	struct s_xlat *res;
@@ -301,6 +323,38 @@ s_xlat_append(const struct xlat *x, uint64_t val, const char *dflt,
 	return res;
 }
 
+struct args_queue *
+s_struct_enter(struct s_struct *s)
+{
+	SLIST_INSERT_HEAD(&s->arg.syscall->insertion_stack, &s->args, entry);
+
+	return &s->args.args;
+}
+
+struct args_queue *
+s_syscall_insertion_point(struct s_syscall *s)
+{
+	if (SLIST_EMPTY(&s->insertion_stack))
+		return &s->args.args;
+
+	return &(SLIST_FIRST(&s->insertion_stack)->args);
+}
+
+struct args_queue *
+s_syscall_pop(struct s_syscall *s)
+{
+	SLIST_REMOVE_HEAD(&s->insertion_stack, entry);
+
+	return s_syscall_insertion_point(s);
+}
+
+struct args_queue *
+s_syscall_pop_all(struct s_syscall *s)
+{
+	SLIST_INIT(&s->insertion_stack);
+
+	return &s->args.args;
+}
 
 
 struct s_syscall *
@@ -313,8 +367,9 @@ s_syscall_new(struct tcb *tcp)
 	syscall->tcp = tcp;
 	syscall->cur_arg = 0;
 
-	STAILQ_INIT(&syscall->args);
+	STAILQ_INIT(&syscall->args.args);
 	STAILQ_INIT(&syscall->changeable_args);
+	SLIST_INIT(&syscall->insertion_stack);
 
 	return syscall;
 }
@@ -323,8 +378,8 @@ void
 s_last_is_changeable(struct tcb *tcp)
 {
 	struct s_syscall *syscall = tcp->s_syscall;
-	struct s_arg *last_arg = STAILQ_LAST(&syscall->args, s_arg, entry);
-	STAILQ_REMOVE(&syscall->args, last_arg, s_arg, entry);
+	struct s_arg *last_arg = STAILQ_LAST(&syscall->args.args, s_arg, entry);
+	STAILQ_REMOVE(&syscall->args.args, last_arg, s_arg, entry);
 
 	s_changeable_new_and_push(last_arg, NULL);
 }
@@ -336,7 +391,7 @@ s_syscall_free(struct tcb *tcp)
 	struct s_arg *arg;
 	struct s_arg *tmp;
 
-	STAILQ_FOREACH_SAFE(arg, &syscall->args, entry, tmp) {
+	STAILQ_FOREACH_SAFE(arg, &syscall->args.args, entry, tmp) {
 		s_arg_free(arg);
 	}
 

@@ -13,6 +13,8 @@ s_push_arg(enum s_type type, bool printnum)
 	struct s_syscall *syscall = current_tcp->s_syscall;
 	unsigned long long val;
 
+	s_syscall_pop_all(syscall);
+
 	if (!printnum) {
 		s_syscall_cur_arg_advance(syscall, type, &val);
 		s_push_value_int(type, val);
@@ -82,14 +84,22 @@ s_push_addr_val(long value)
 }
 
 static inline void
+s_push_addr_arg(long value, struct s_arg *arg)
+{
+	s_addr_new_and_push(value, arg);
+}
+
+static inline void
 s_push_addr(void)
 {
+	s_syscall_pop_all(current_tcp->s_syscall);
 	s_push_addr_val(current_tcp->u_arg[current_tcp->s_syscall->cur_arg++]);
 }
 
 static inline void
 s_push_path(void)
 {
+	s_syscall_pop_all(current_tcp->s_syscall);
 	s_push_arg(S_TYPE_path, false);
 }
 
@@ -97,6 +107,31 @@ static inline void
 s_push_path_val(long addr)
 {
 	s_push_value_int(S_TYPE_path, (uint64_t) addr);
+}
+
+static inline void
+s_insert_struct(void)
+{
+	struct s_struct *s = s_struct_new();
+	s_struct_enter(s);
+}
+
+static inline void
+s_insert_struct_addr(long addr)
+{
+	struct s_struct *s;
+
+	s_push_addr_arg(addr, &((s = s_struct_new())->arg));
+	s_struct_enter(s);
+}
+
+/* Equivalent to s_push_struct_addr */
+static inline void
+s_push_struct(void)
+{
+	s_syscall_pop_all(current_tcp->s_syscall);
+	s_insert_struct_addr(
+		current_tcp->u_arg[current_tcp->s_syscall->cur_arg++]);
 }
 
 static inline void
@@ -112,6 +147,7 @@ s_push_xlat(const struct xlat *x, const char *dflt, bool flags,
 {
 	unsigned long long val;
 
+	s_syscall_pop_all(current_tcp->s_syscall);
 	s_syscall_cur_arg_advance(current_tcp->s_syscall, type, &val);
 	s_push_xlat_val(x, val, dflt, flags);
 }
@@ -180,6 +216,7 @@ s_push_str_val(long addr, long len)
 static inline void
 s_push_str(long len)
 {
+	s_syscall_pop_all(current_tcp->s_syscall);
 	s_push_str_val(current_tcp->u_arg[current_tcp->s_syscall->cur_arg++],
 		len);
 }
@@ -211,6 +248,7 @@ s_push_empty(enum s_type type)
 {
 	unsigned long long val;
 
+	s_syscall_pop_all(current_tcp->s_syscall);
 	s_syscall_cur_arg_advance(current_tcp->s_syscall, type, &val);
 }
 

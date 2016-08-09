@@ -126,7 +126,7 @@ s_syscall_text_print_exiting(struct tcb *tcp)
 	struct s_arg *arg;
 	struct s_arg *tmp;
 
-	STAILQ_FOREACH_SAFE(arg, &syscall->args, entry, tmp) {
+	STAILQ_FOREACH_SAFE(arg, &syscall->args.args, entry, tmp) {
 		s_val_print(arg);
 
 		if (tmp)
