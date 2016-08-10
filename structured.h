@@ -263,7 +263,7 @@ extern void *s_arg_to_type(struct s_arg *arg);
 extern struct s_arg *s_arg_new(struct tcb *tcp, enum s_type type);
 extern void s_arg_free(struct s_arg *arg);
 extern struct s_arg *s_arg_next(struct tcb *tcp, enum s_type type);
-extern void s_arg_push(struct s_syscall *syscall, struct s_arg *arg);
+extern void s_arg_insert(struct s_syscall *syscall, struct s_arg *arg);
 
 extern struct s_num *s_num_new(enum s_type type, uint64_t value);
 extern struct s_str *s_str_new(long addr, long len);
@@ -274,11 +274,11 @@ extern struct s_struct *s_struct_new(void);
 extern struct s_changeable *s_changeable_new(struct s_arg *entering,
 	struct s_arg *exiting);
 
-extern struct s_num *s_num_new_and_push(enum s_type type, uint64_t value);
-extern struct s_addr *s_addr_new_and_push(long addr, struct s_arg *arg);
-extern struct s_xlat *s_xlat_new_and_push(const struct xlat *x,
+extern struct s_num *s_num_new_and_insert(enum s_type type, uint64_t value);
+extern struct s_addr *s_addr_new_and_insert(long addr, struct s_arg *arg);
+extern struct s_xlat *s_xlat_new_and_insert(const struct xlat *x,
 	uint64_t val, const char *dflt, bool flags);
-extern struct s_changeable *s_changeable_new_and_push(struct s_arg *entering,
+extern struct s_changeable *s_changeable_new_and_insert(struct s_arg *entering,
 	struct s_arg *exiting);
 
 extern struct s_xlat *s_xlat_append(const struct xlat *x, uint64_t val,

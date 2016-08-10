@@ -4,7 +4,7 @@
 static inline void
 s_push_value_int(enum s_type type, uint64_t value)
 {
-	s_num_new_and_push(type, value);
+	s_num_new_and_insert(type, value);
 }
 
 static inline bool
@@ -80,13 +80,13 @@ DEF_PUSH_INT(long long, llx)
 static inline void
 s_push_addr_val(long value)
 {
-	s_addr_new_and_push(value, NULL);
+	s_addr_new_and_insert(value, NULL);
 }
 
 static inline void
 s_push_addr_arg(long value, struct s_arg *arg)
 {
-	s_addr_new_and_push(value, arg);
+	s_addr_new_and_insert(value, arg);
 }
 
 static inline void
@@ -138,7 +138,7 @@ static inline void
 s_push_xlat_val(const struct xlat *x, uint64_t val, const char *dflt,
 	bool flags)
 {
-	s_xlat_new_and_push(x, val, dflt, flags);
+	s_xlat_new_and_insert(x, val, dflt, flags);
 }
 
 static inline void
@@ -210,7 +210,7 @@ DEF_XLAT(uint64_t, 64, xlat_ll)
 static inline void
 s_push_str_val(long addr, long len)
 {
-	s_addr_new_and_push(addr, S_TYPE_TO_ARG(s_str_new(addr, len)));
+	s_addr_new_and_insert(addr, S_TYPE_TO_ARG(s_str_new(addr, len)));
 }
 
 static inline void

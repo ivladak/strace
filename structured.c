@@ -89,7 +89,7 @@ s_arg_new(struct tcb *tcp, enum s_type type)
 }
 
 void
-s_arg_push(struct s_syscall *syscall, struct s_arg *arg)
+s_arg_insert(struct s_syscall *syscall, struct s_arg *arg)
 {
 	STAILQ_INSERT_TAIL(s_syscall_insertion_point(syscall), arg, entry);
 	if (arg->type == S_TYPE_changeable) {
@@ -150,7 +150,7 @@ s_arg_next(struct tcb *tcp, enum s_type type)
 	if (entering(tcp)) {
 		struct s_arg *arg = s_arg_new(current_tcp, type);
 
-		s_arg_push(current_tcp->s_syscall, arg);
+		s_arg_insert(current_tcp->s_syscall, arg);
 
 		return arg;
 	} else {
@@ -253,45 +253,45 @@ s_changeable_new(struct s_arg *entering, struct s_arg *exiting)
 }
 
 struct s_num *
-s_num_new_and_push(enum s_type type, uint64_t value)
+s_num_new_and_insert(enum s_type type, uint64_t value)
 {
 	struct s_num *res;
 
-	s_arg_push(current_tcp->s_syscall,
+	s_arg_insert(current_tcp->s_syscall,
 		&(res = s_num_new(type, value))->arg);
 
 	return res;
 }
 
 struct s_addr *
-s_addr_new_and_push(long addr, struct s_arg *arg)
+s_addr_new_and_insert(long addr, struct s_arg *arg)
 {
 	struct s_addr *res;
 
-	s_arg_push(current_tcp->s_syscall,
+	s_arg_insert(current_tcp->s_syscall,
 		&(res = s_addr_new(addr, arg))->arg);
 
 	return res;
 }
 
 struct s_xlat *
-s_xlat_new_and_push(const struct xlat *x, uint64_t val, const char *dflt,
+s_xlat_new_and_insert(const struct xlat *x, uint64_t val, const char *dflt,
 	bool flags)
 {
 	struct s_xlat *res;
 
-	s_arg_push(current_tcp->s_syscall,
+	s_arg_insert(current_tcp->s_syscall,
 		&(res = s_xlat_new(x, val, dflt, flags))->arg);
 
 	return res;
 }
 
-extern struct s_changeable *s_changeable_new_and_push(struct s_arg *entering,
+extern struct s_changeable *s_changeable_new_and_insert(struct s_arg *entering,
 	struct s_arg *exiting)
 {
 	struct s_changeable *res;
 
-	s_arg_push(current_tcp->s_syscall,
+	s_arg_insert(current_tcp->s_syscall,
 		&(res = s_changeable_new(entering, exiting))->arg);
 
 	return res;
@@ -307,7 +307,7 @@ s_xlat_append(const struct xlat *x, uint64_t val, const char *dflt,
 	struct s_xlat *res;
 
 	if (!last_arg || (S_TYPE_KIND(last_arg->type) != S_TYPE_KIND_xlat))
-		return s_xlat_new_and_push(x, val, dflt, flags);
+		return s_xlat_new_and_insert(x, val, dflt, flags);
 
 	res = s_xlat_new(x, val, dflt, flags);
 
@@ -381,7 +381,7 @@ s_last_is_changeable(struct tcb *tcp)
 	struct s_arg *last_arg = STAILQ_LAST(&syscall->args.args, s_arg, entry);
 	STAILQ_REMOVE(&syscall->args.args, last_arg, s_arg, entry);
 
-	s_changeable_new_and_push(last_arg, NULL);
+	s_changeable_new_and_insert(last_arg, NULL);
 }
 
 void
