@@ -483,6 +483,15 @@ s_process_xlat(struct s_xlat *arg, s_print_xlat_fn cb)
 }
 
 void
+s_syscall_print_before(struct tcb *tcp)
+{
+	struct s_printer **cur = s_printers;
+
+	//for (; *cur; cur++)
+		(*cur)->print_before(tcp);
+}
+
+void
 s_syscall_print_entering(struct tcb *tcp)
 {
 	struct s_printer **cur = s_printers;
@@ -501,6 +510,15 @@ s_syscall_print_exiting(struct tcb *tcp)
 
 	for (; *cur; cur++)
 		(*cur)->print_exiting(tcp);
+}
+
+void
+s_syscall_print_after(struct tcb *tcp)
+{
+	struct s_printer **cur = s_printers;
+
+	//for (; *cur; cur++)
+		(*cur)->print_after(tcp);
 }
 
 /* struct representation */

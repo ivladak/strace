@@ -236,8 +236,10 @@ struct s_changeable {
 };
 
 struct s_printer {
+	void (*print_before)(struct tcb *tcp);
 	void (*print_entering)(struct tcb *tcp);
 	void (*print_exiting)(struct tcb *tcp);
+	void (*print_after)(struct tcb *tcp);
 };
 
 enum syscall_print_xlat_bits {
@@ -295,7 +297,9 @@ extern int s_syscall_cur_arg_advance(struct s_syscall *syscall,
 
 extern void s_process_xlat(struct s_xlat *arg, s_print_xlat_fn cb);
 
+extern void s_syscall_print_before(struct tcb *tcp);
 extern void s_syscall_print_entering(struct tcb *tcp);
 extern void s_syscall_print_exiting(struct tcb *tcp);
+extern void s_syscall_print_after(struct tcb *tcp);
 
 #endif /* #ifndef STRACE_STRUCTURED_H */
