@@ -489,6 +489,7 @@ s_syscall_print_before(struct tcb *tcp)
 
 	//for (; *cur; cur++)
 		(*cur)->print_before(tcp);
+	s_syscall_new(tcp);
 }
 
 void
@@ -515,10 +516,21 @@ s_syscall_print_exiting(struct tcb *tcp)
 void
 s_syscall_print_after(struct tcb *tcp)
 {
+	s_syscall_free(tcp);
 	struct s_printer **cur = s_printers;
 
 	//for (; *cur; cur++)
 		(*cur)->print_after(tcp);
+}
+
+void
+s_syscall_print_unavailable(struct tcb *tcp)
+{
+	struct s_printer **cur = s_printers;
+
+	//for (; *cur; cur++)
+		(*cur)->print_unavailable(tcp);
+	s_syscall_free(tcp);
 }
 
 /* struct representation */
