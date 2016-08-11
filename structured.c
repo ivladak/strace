@@ -89,6 +89,29 @@ s_arg_new(struct tcb *tcp, enum s_type type)
 	return arg;
 }
 
+struct s_arg *
+s_arg_next(struct tcb *tcp, enum s_type type)
+{
+	if (entering(tcp)) {
+		struct s_arg *arg = s_arg_new(current_tcp, type);
+
+		s_arg_insert(current_tcp->s_syscall, arg);
+
+		return arg;
+	} else {
+		struct s_syscall *syscall = tcp->s_syscall;
+		struct s_arg *arg = s_arg_new(tcp, type);
+
+		struct s_arg *chg = syscall->last_changeable;
+		syscall->last_changeable = STAILQ_NEXT(chg, chg_entry);
+
+		struct s_changeable *s_ch = S_ARG_TO_TYPE(chg, changeable);
+		s_ch->exiting = arg;
+
+		return arg;
+	}
+}
+
 void
 s_arg_insert(struct s_syscall *syscall, struct s_arg *arg)
 {
@@ -143,29 +166,6 @@ s_arg_free(struct s_arg *arg)
 	}
 
 	free(s_arg_to_type(arg));
-}
-
-struct s_arg *
-s_arg_next(struct tcb *tcp, enum s_type type)
-{
-	if (entering(tcp)) {
-		struct s_arg *arg = s_arg_new(current_tcp, type);
-
-		s_arg_insert(current_tcp->s_syscall, arg);
-
-		return arg;
-	} else {
-		struct s_syscall *syscall = tcp->s_syscall;
-		struct s_arg *arg = s_arg_new(tcp, type);
-
-		struct s_arg *chg = syscall->last_changeable;
-		syscall->last_changeable = STAILQ_NEXT(chg, chg_entry);
-
-		struct s_changeable *s_ch = S_ARG_TO_TYPE(chg, changeable);
-		s_ch->exiting = arg;
-
-		return arg;
-	}
 }
 
 
