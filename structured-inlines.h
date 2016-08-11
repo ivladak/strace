@@ -1,6 +1,15 @@
 #ifndef STRACE_STRUCTURED_INLINES_H
 #define STRACE_STRUCTURED_INLINES_H
 
+#include <linux/limits.h>
+
+/* internal */
+static inline void
+s_insert_addr_arg(long value, struct s_arg *arg)
+{
+	s_addr_new_and_insert(value, arg);
+}
+
 static inline void
 s_push_value_int(enum s_type type, uint64_t value)
 {
@@ -77,37 +86,60 @@ DEF_PUSH_INT(long long, llx)
 
 #undef DEF_PUSH_INT
 
-static inline void
-s_push_addr_val(long value)
-{
-	s_addr_new_and_insert(value, NULL);
-}
 
 static inline void
-s_push_addr_arg(long value, struct s_arg *arg)
+s_insert_addr(long value)
 {
-	s_addr_new_and_insert(value, arg);
+	s_addr_new_and_insert(value, NULL);
 }
 
 static inline void
 s_push_addr(void)
 {
 	s_syscall_pop_all(current_tcp->s_syscall);
-	s_push_addr_val(current_tcp->u_arg[current_tcp->s_syscall->cur_arg++]);
+	s_insert_addr(current_tcp->u_arg[current_tcp->s_syscall->cur_arg++]);
 }
 
+
+static inline void
+s_insert_string(enum s_type type, long addr, long len, bool has_nul)
+{
+	struct s_str *str = s_str_new(type, addr, len, has_nul);
+
+	s_insert_addr_arg(addr, str ? S_TYPE_TO_ARG(str) : NULL);
+}
+
+/* Equivalent to s_insert_path_addr */
+static inline void
+s_insert_path(long addr)
+{
+	s_insert_string(S_TYPE_path, addr, PATH_MAX, true);
+}
+
+/* Equivalent to s_push_path_addr */
 static inline void
 s_push_path(void)
 {
 	s_syscall_pop_all(current_tcp->s_syscall);
-	s_push_arg(S_TYPE_path, false);
+	s_insert_path(current_tcp->u_arg[current_tcp->s_syscall->cur_arg++]);
 }
 
+/* Equivalent to s_insert_str_addr */
 static inline void
-s_push_path_val(long addr)
+s_insert_str(long addr, long len)
 {
-	s_push_value_int(S_TYPE_path, (uint64_t) addr);
+	s_insert_string(S_TYPE_str, addr, len, len == -1);
 }
+
+/* Equivalent to s_push_str_addr */
+static inline void
+s_push_str(long len)
+{
+	s_syscall_pop_all(current_tcp->s_syscall);
+	s_insert_str(current_tcp->u_arg[current_tcp->s_syscall->cur_arg++],
+		len);
+}
+
 
 static inline void
 s_insert_struct(void)
@@ -119,9 +151,9 @@ s_insert_struct(void)
 static inline void
 s_insert_struct_addr(long addr)
 {
-	struct s_struct *s;
+	struct s_struct *s = s_struct_new();
 
-	s_push_addr_arg(addr, &((s = s_struct_new())->arg));
+	s_insert_addr_arg(addr, &s->arg);
 	s_struct_enter(s);
 }
 
@@ -206,20 +238,6 @@ DEF_XLAT(uint64_t, 64, xlat_ll)
 
 #undef DEF_XLAT
 #undef DEF_XLAT_FUNCS
-
-static inline void
-s_push_str_val(long addr, long len)
-{
-	s_addr_new_and_insert(addr, S_TYPE_TO_ARG(s_str_new(addr, len)));
-}
-
-static inline void
-s_push_str(long len)
-{
-	s_syscall_pop_all(current_tcp->s_syscall);
-	s_push_str_val(current_tcp->u_arg[current_tcp->s_syscall->cur_arg++],
-		len);
-}
 
 static inline void
 s_push_fd(void)

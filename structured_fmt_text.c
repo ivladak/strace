@@ -72,17 +72,14 @@ s_val_print(struct s_arg *arg)
 		}
 		break;
 	}
-	case S_TYPE_str: {
+	case S_TYPE_str:
+	case S_TYPE_path: {
 		struct s_str *s_p = S_ARG_TO_TYPE(arg, str);
-		if (!s_p->str) {
-			if (s_p->addr) {
-				printaddr(s_p->addr);
-			} else {
-				tprints("NULL");
-			}
-		} else {
-			tprints(s_p->str);
-		}
+
+		if (s_p->has_nul && (print_quoted_string(s_p->str,
+		    s_p->len, s_p->has_nul ? QUOTE_0_TERMINATED : 0) > 0))
+			tprints("...");
+
 		break;
 	}
 	case S_TYPE_addr: {
@@ -97,9 +94,6 @@ s_val_print(struct s_arg *arg)
 	case S_TYPE_fd:
 		printfd(arg->syscall->tcp,
 			(int)(((struct s_num *)s_arg_to_type(arg))->val));
-		break;
-	case S_TYPE_path:
-		printpathcur((long)(((struct s_num *)s_arg_to_type(arg))->val));
 		break;
 	case S_TYPE_xlat: {
 		struct s_xlat *f_p = S_ARG_TO_TYPE(arg, xlat);

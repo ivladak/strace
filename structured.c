@@ -26,11 +26,12 @@ static struct s_printer *s_printers[] = {
 	{ \
 		switch (S_TYPE_KIND(S_TYPE_SWITCH)) { \
 		case S_TYPE_KIND_fd: \
-		case S_TYPE_KIND_path: \
 		__ARG_TYPE_CASE(num); \
 		\
-		__ARG_TYPE_CASE(addr); \
+		case S_TYPE_KIND_path: \
 		__ARG_TYPE_CASE(str); \
+		\
+		__ARG_TYPE_CASE(addr); \
 		__ARG_TYPE_CASE(xlat); \
 		__ARG_TYPE_CASE(struct); \
 		\
@@ -178,29 +179,46 @@ s_num_new(enum s_type type, uint64_t value)
 	return res;
 }
 
+/* XXX Accommodates parts of logic from fetchstr and printpathn  */
 struct s_str *
-s_str_new(long addr, long len)
+s_str_new(enum s_type type, long addr, long len, bool has_nul)
 {
-	struct s_str *res = S_ARG_TO_TYPE(s_arg_new(current_tcp, S_TYPE_str),
+	struct s_str *res = S_ARG_TO_TYPE(s_arg_new(current_tcp, type),
 		str);
+	char *buf = NULL;
+	size_t size = max_strlen;
+	int ret;
 
-	res->addr = addr;
-	res->str = NULL;
+	if (len == -1)
+		size = max_strlen;
+	if (len >= 0)
+		size = len;
 
 	if (!addr)
-		return res;
+		goto s_str_new_fail;
 
-	char *outstr;
-	outstr = alloc_outstr();
+	buf = xmalloc(size + 1);
 
-	if (!fetchstr(current_tcp, addr, len, outstr)) {
-		free(outstr);
-		outstr = NULL;
-	} else {
-		res->str = outstr;
-	}
+	if (has_nul)
+		ret = umovestr(current_tcp, addr, size + 1, buf);
+	else
+		ret = umoven(current_tcp, addr, size, buf);
+
+	if (ret < 0)
+		goto s_str_new_fail;
+
+	res->str = buf;
+	res->addr = addr;
+	res->len = size;
+	res->has_nul = has_nul;
 
 	return res;
+
+s_str_new_fail:
+	free(buf);
+	s_arg_free(&res->arg);
+
+	return NULL;
 }
 
 struct s_addr *

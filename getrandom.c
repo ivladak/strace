@@ -11,7 +11,7 @@ SYS_FUNC(getrandom)
 		if (syserror(tcp))
 			s_push_addr();
 		else
-			s_push_str_val(tcp->u_arg[0], tcp->u_rval);
+			s_push_str(tcp->u_rval);
 	}
 	return 0;
 }

@@ -218,6 +218,8 @@ struct s_str {
 	struct s_arg arg;
 
 	char *str;
+	long len;
+	bool has_nul;
 	long addr;
 };
 
@@ -266,7 +268,8 @@ extern struct s_arg *s_arg_next(struct tcb *tcp, enum s_type type);
 extern void s_arg_insert(struct s_syscall *syscall, struct s_arg *arg);
 
 extern struct s_num *s_num_new(enum s_type type, uint64_t value);
-extern struct s_str *s_str_new(long addr, long len);
+extern struct s_str *s_str_new(enum s_type type, long addr, long len,
+	bool has_nul);
 extern struct s_addr *s_addr_new(long addr, struct s_arg *arg);
 extern struct s_xlat *s_xlat_new(const struct xlat *x, uint64_t xlat,
 	const char *dflt, bool flags);
