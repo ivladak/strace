@@ -56,24 +56,25 @@ SYS_FUNC(mount)
 			  | MS_PRIVATE | MS_SLAVE | MS_UNBINDABLE))
 		ignore_type = ignore_data = true;
 
-	s_push_path();
-	s_push_path();
+	s_push_path("source");
+	s_push_path("target");
 
 	if (ignore_type)
-		s_push_addr();
+		s_push_addr("filesystemtype");
 	else
-		s_push_str(-1);
+		s_push_str("filesystemtype", -1);
 
 	if (old_magic)
-		s_insert_xlat_long(NULL, MS_MGC_VAL, "MS_MGC_VAL");
-	s_append_flags_long_val(mount_flags, flags, "MS_???");
+		s_insert_xlat_long("mountflags", NULL, MS_MGC_VAL,
+			"MS_MGC_VAL");
+	s_append_flags_long_val("mountflags", mount_flags, flags, "MS_???");
 
 	s_push_empty(S_TYPE_xlat_l);
 
 	if (ignore_data)
-		s_push_addr();
+		s_push_addr("data");
 	else
-		s_push_str(-1);
+		s_push_str("data", -1);
 
 	return RVAL_DECODED;
 }

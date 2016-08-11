@@ -52,14 +52,14 @@ SYS_FUNC(sendfile64)
 SYS_FUNC(sendfile)
 {
 	if (entering(tcp)) {
-		s_push_fd();
-		s_push_fd();
-		s_push_lu_addr();
+		s_push_fd("out_fd");
+		s_push_fd("in_fd");
+		s_push_lu_addr("offset");
 		s_changeable();
-		s_push_lu();
+		s_push_lu("count");
 	} else {
 		if (!syserror(tcp) && tcp->u_rval)
-			s_insert_lu_addr(tcp->u_arg[2]);
+			s_insert_lu_addr("offset", tcp->u_arg[2]);
 	}
 
 	return 0;

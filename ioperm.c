@@ -2,9 +2,9 @@
 
 SYS_FUNC(ioperm)
 {
-	s_push_lx();
-	s_push_lx();
-	s_push_d();
+	s_push_lx("from");
+	s_push_lx("num");
+	s_push_d("turn_on");
 
 	return RVAL_DECODED;
 }

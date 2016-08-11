@@ -264,30 +264,37 @@ typedef void (*s_fill_arg_fn)(struct s_arg *arg, void *p, size_t len,
 
 extern void *s_arg_to_type(struct s_arg *arg);
 
-extern struct s_arg *s_arg_new(struct tcb *tcp, enum s_type type);
+extern struct s_arg *s_arg_new(struct tcb *tcp, enum s_type type,
+	const char *name);
 extern void s_arg_free(struct s_arg *arg);
-extern struct s_arg *s_arg_next(struct tcb *tcp, enum s_type type);
+extern struct s_arg *s_arg_next(struct tcb *tcp, enum s_type type,
+	const char *name);
 extern void s_arg_insert(struct s_syscall *syscall, struct s_arg *arg);
 
-extern struct s_num *s_num_new(enum s_type type, uint64_t value);
-extern struct s_str *s_str_new(enum s_type type, long addr, long len,
-	bool has_nul);
-extern struct s_addr *s_addr_new(long addr, struct s_arg *arg);
-extern struct s_xlat *s_xlat_new(enum s_type type, const struct xlat *x,
-	uint64_t xlat, const char *dflt, bool flags);
-extern struct s_struct *s_struct_new(void);
-extern struct s_changeable *s_changeable_new(struct s_arg *entering,
-	struct s_arg *exiting);
+extern struct s_num *s_num_new(enum s_type type, const char *name,
+	uint64_t value);
+extern struct s_str *s_str_new(enum s_type type, const char *name,
+	long addr, long len, bool has_nul);
+extern struct s_addr *s_addr_new(const char *name, long addr,
+	struct s_arg *arg);
+extern struct s_xlat *s_xlat_new(enum s_type type, const char *name,
+	const struct xlat *x, uint64_t xlat, const char *dflt, bool flags);
+extern struct s_struct *s_struct_new(const char *name);
+extern struct s_changeable *s_changeable_new(const char *name,
+	struct s_arg *entering, struct s_arg *exiting);
 
-extern struct s_num *s_num_new_and_insert(enum s_type type, uint64_t value);
-extern struct s_addr *s_addr_new_and_insert(long addr, struct s_arg *arg);
+extern struct s_num *s_num_new_and_insert(enum s_type type, const char *name,
+	uint64_t value);
+extern struct s_addr *s_addr_new_and_insert(const char *name, long addr,
+	struct s_arg *arg);
 extern struct s_xlat *s_xlat_new_and_insert(enum s_type type,
-	const struct xlat *x, uint64_t val, const char *dflt, bool flags);
-extern struct s_changeable *s_changeable_new_and_insert(struct s_arg *entering,
-	struct s_arg *exiting);
+	const char *name, const struct xlat *x, uint64_t val, const char *dflt,
+	bool flags);
+extern struct s_changeable *s_changeable_new_and_insert(const char *name,
+	struct s_arg *entering, struct s_arg *exiting);
 
-extern struct s_xlat *s_xlat_append(enum s_type type, const struct xlat *x,
-	uint64_t val, const char *dflt, bool flags);
+extern struct s_xlat *s_xlat_append(enum s_type type, const char *name,
+	const struct xlat *x, uint64_t val, const char *dflt, bool flags);
 
 extern struct args_queue *s_struct_enter(struct s_struct *s);
 extern struct args_queue *s_syscall_insertion_point(struct s_syscall *s);

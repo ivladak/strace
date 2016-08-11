@@ -1457,12 +1457,12 @@ printargs(struct tcb *tcp)
 #if HAVE_STRUCT_TCB_EXT_ARG
 # if SUPPORTED_PERSONALITIES > 1
 			if (current_personality == 1)
-				s_insert_lx(tcp->u_arg[i]);
+				s_insert_lx(NULL, tcp->u_arg[i]);
 			else
 # endif
-			s_insert_llx(tcp->ext_arg[i]);
+			s_insert_llx(NULL, tcp->ext_arg[i]);
 #else
-			s_insert_lx(tcp->u_arg[i]);
+			s_insert_lx(NULL, tcp->u_arg[i]);
 #endif
 		}
 	}
@@ -1475,7 +1475,7 @@ printargs_u(struct tcb *tcp)
 	const int n = tcp->s_ent->nargs;
 	int i;
 	for (i = 0; i < n; ++i)
-		s_insert_u(tcp->u_arg[i]);
+		s_insert_u(NULL, tcp->u_arg[i]);
 	return RVAL_DECODED;
 }
 
@@ -1485,7 +1485,7 @@ printargs_d(struct tcb *tcp)
 	const int n = tcp->s_ent->nargs;
 	int i;
 	for (i = 0; i < n; ++i)
-		s_insert_d(tcp->u_arg[i]);
+		s_insert_d(NULL, tcp->u_arg[i]);
 	return RVAL_DECODED;
 }
 

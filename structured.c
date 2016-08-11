@@ -77,7 +77,7 @@ s_type_to_arg(void *p, enum s_type type)
 
 
 struct s_arg *
-s_arg_new(struct tcb *tcp, enum s_type type)
+s_arg_new(struct tcb *tcp, enum s_type type, const char *name)
 {
 	struct s_syscall *syscall = tcp->s_syscall;
 	void *p = xcalloc(1, s_type_size(type));
@@ -85,22 +85,23 @@ s_arg_new(struct tcb *tcp, enum s_type type)
 
 	arg->syscall = syscall;
 	arg->type = type;
+	arg->name = name;
 
 	return arg;
 }
 
 struct s_arg *
-s_arg_next(struct tcb *tcp, enum s_type type)
+s_arg_next(struct tcb *tcp, enum s_type type, const char *name)
 {
 	if (entering(tcp)) {
-		struct s_arg *arg = s_arg_new(current_tcp, type);
+		struct s_arg *arg = s_arg_new(current_tcp, type, name);
 
 		s_arg_insert(current_tcp->s_syscall, arg);
 
 		return arg;
 	} else {
 		struct s_syscall *syscall = tcp->s_syscall;
-		struct s_arg *arg = s_arg_new(tcp, type);
+		struct s_arg *arg = s_arg_new(tcp, type, name);
 
 		struct s_arg *chg = syscall->last_changeable;
 		syscall->last_changeable = STAILQ_NEXT(chg, chg_entry);
@@ -170,9 +171,10 @@ s_arg_free(struct s_arg *arg)
 
 
 struct s_num *
-s_num_new(enum s_type type, uint64_t value)
+s_num_new(enum s_type type, const char *name, uint64_t value)
 {
-	struct s_num *res = S_ARG_TO_TYPE(s_arg_new(current_tcp, type), num);
+	struct s_num *res = S_ARG_TO_TYPE(s_arg_new(current_tcp, type, name),
+		num);
 
 	res->val = value;
 
@@ -181,9 +183,9 @@ s_num_new(enum s_type type, uint64_t value)
 
 /* XXX Accommodates parts of logic from fetchstr and printpathn  */
 struct s_str *
-s_str_new(enum s_type type, long addr, long len, bool has_nul)
+s_str_new(enum s_type type, const char *name, long addr, long len, bool has_nul)
 {
-	struct s_str *res = S_ARG_TO_TYPE(s_arg_new(current_tcp, type),
+	struct s_str *res = S_ARG_TO_TYPE(s_arg_new(current_tcp, type, name),
 		str);
 	char *buf = NULL;
 	size_t size = max_strlen;
@@ -222,10 +224,10 @@ s_str_new_fail:
 }
 
 struct s_addr *
-s_addr_new(long addr, struct s_arg *arg)
+s_addr_new(const char *name, long addr, struct s_arg *arg)
 {
-	struct s_addr *res = S_ARG_TO_TYPE(s_arg_new(current_tcp, S_TYPE_addr),
-		addr);
+	struct s_addr *res = S_ARG_TO_TYPE(s_arg_new(current_tcp, S_TYPE_addr,
+		name), addr);
 
 	res->addr = addr;
 	res->val = arg;
@@ -234,10 +236,11 @@ s_addr_new(long addr, struct s_arg *arg)
 }
 
 struct s_xlat *
-s_xlat_new(enum s_type type, const struct xlat *x, uint64_t val,
-	const char *dflt, bool flags)
+s_xlat_new(enum s_type type, const char *name, const struct xlat *x,
+	uint64_t val, const char *dflt, bool flags)
 {
-	struct s_xlat *res = S_ARG_TO_TYPE(s_arg_new(current_tcp, type), xlat);
+	struct s_xlat *res = S_ARG_TO_TYPE(s_arg_new(current_tcp, type, name),
+		xlat);
 
 	res->x = x;
 	res->val = val;
@@ -248,10 +251,10 @@ s_xlat_new(enum s_type type, const struct xlat *x, uint64_t val,
 }
 
 struct s_struct *
-s_struct_new(void)
+s_struct_new(const char *name)
 {
 	struct s_struct *res = S_ARG_TO_TYPE(s_arg_new(current_tcp,
-		S_TYPE_struct), struct);
+		S_TYPE_struct, name), struct);
 
 	STAILQ_INIT(&res->args.args);
 
@@ -259,10 +262,11 @@ s_struct_new(void)
 }
 
 struct s_changeable *
-s_changeable_new(struct s_arg *entering, struct s_arg *exiting)
+s_changeable_new(const char *name, struct s_arg *entering,
+	struct s_arg *exiting)
 {
 	struct s_changeable *res = S_ARG_TO_TYPE(s_arg_new(current_tcp,
-		S_TYPE_changeable), changeable);
+		S_TYPE_changeable, name), changeable);
 
 	res->entering = entering;
 	res->exiting = exiting;
@@ -271,53 +275,53 @@ s_changeable_new(struct s_arg *entering, struct s_arg *exiting)
 }
 
 struct s_num *
-s_num_new_and_insert(enum s_type type, uint64_t value)
+s_num_new_and_insert(enum s_type type, const char *name, uint64_t value)
 {
 	struct s_num *res;
 
 	s_arg_insert(current_tcp->s_syscall,
-		&(res = s_num_new(type, value))->arg);
+		&(res = s_num_new(type, name, value))->arg);
 
 	return res;
 }
 
 struct s_addr *
-s_addr_new_and_insert(long addr, struct s_arg *arg)
+s_addr_new_and_insert(const char *name, long addr, struct s_arg *arg)
 {
 	struct s_addr *res;
 
 	s_arg_insert(current_tcp->s_syscall,
-		&(res = s_addr_new(addr, arg))->arg);
+		&(res = s_addr_new(name, addr, arg))->arg);
 
 	return res;
 }
 
 struct s_xlat *
-s_xlat_new_and_insert(enum s_type type, const struct xlat *x, uint64_t val,
-	const char *dflt, bool flags)
+s_xlat_new_and_insert(enum s_type type, const char *name, const struct xlat *x,
+	uint64_t val, const char *dflt, bool flags)
 {
 	struct s_xlat *res;
 
 	s_arg_insert(current_tcp->s_syscall,
-		&(res = s_xlat_new(type, x, val, dflt, flags))->arg);
+		&(res = s_xlat_new(type, name, x, val, dflt, flags))->arg);
 
 	return res;
 }
 
-extern struct s_changeable *s_changeable_new_and_insert(struct s_arg *entering,
-	struct s_arg *exiting)
+extern struct s_changeable *s_changeable_new_and_insert(const char *name,
+	struct s_arg *entering, struct s_arg *exiting)
 {
 	struct s_changeable *res;
 
 	s_arg_insert(current_tcp->s_syscall,
-		&(res = s_changeable_new(entering, exiting))->arg);
+		&(res = s_changeable_new(name, entering, exiting))->arg);
 
 	return res;
 }
 
 struct s_xlat *
-s_xlat_append(enum s_type type, const struct xlat *x, uint64_t val,
-	const char *dflt, bool flags)
+s_xlat_append(enum s_type type, const char *name, const struct xlat *x,
+	uint64_t val, const char *dflt, bool flags)
 {
 	struct s_arg *last_arg = STAILQ_LAST(&current_tcp->s_syscall->args.args,
 		s_arg, entry);
@@ -328,9 +332,10 @@ s_xlat_append(enum s_type type, const struct xlat *x, uint64_t val,
 		last_arg = S_ARG_TO_TYPE(last_arg, addr)->val;
 
 	if (!last_arg || (S_TYPE_KIND(last_arg->type) != S_TYPE_KIND_xlat))
-		return s_xlat_new_and_insert(type, x, val, dflt, flags);
+		return s_xlat_new_and_insert(type, last_arg->name, x, val, dflt,
+			flags);
 
-	res = s_xlat_new(type, x, val, dflt, flags);
+	res = s_xlat_new(type, name, x, val, dflt, flags);
 
 	last_xlat = S_ARG_TO_TYPE(last_arg, xlat);
 
@@ -402,7 +407,7 @@ s_last_is_changeable(struct tcb *tcp)
 	struct s_arg *last_arg = STAILQ_LAST(&syscall->args.args, s_arg, entry);
 	STAILQ_REMOVE(&syscall->args.args, last_arg, s_arg, entry);
 
-	s_changeable_new_and_insert(last_arg, NULL);
+	s_changeable_new_and_insert(last_arg->name, last_arg, NULL);
 }
 
 void
