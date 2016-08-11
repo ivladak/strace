@@ -142,6 +142,7 @@ s_syscall_text_print_after(struct tcb *tcp)
 {
 	long u_error = tcp->u_error;
 	int sys_res = tcp->sys_res;
+
 	tprints(") ");
 	tabto();
 
@@ -234,7 +235,8 @@ s_syscall_text_print_after(struct tcb *tcp)
 					tprintf("= %#lx", tcp->u_rval);
 				break;
 			case RVAL_OCTAL:
-				tprintf("= %#lo", tcp->u_rval);
+				tprints("= ");
+				print_numeric_long_umask(tcp->u_rval);
 				break;
 			case RVAL_UDECIMAL:
 #if SUPPORTED_PERSONALITIES > 1

@@ -1,6 +1,3 @@
-#ifndef STRACE_DEFS_H
-#define STRACE_DEFS_H
-
 /*
  * Copyright (c) 1991, 1992 Paul Kranenburg <pk@cs.few.eur.nl>
  * Copyright (c) 1993 Branko Lankester <branko@hacktic.nl>
