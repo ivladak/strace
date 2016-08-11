@@ -54,19 +54,12 @@ SYS_FUNC(sendfile)
 	if (entering(tcp)) {
 		s_push_fd();
 		s_push_fd();
-		if (!s_push_num_lu()
-			|| !tcp->u_arg[3]) {
-			s_push_lu();
-			s_changeable();
-			return RVAL_DECODED;
-		}
-	} else {
-		if (!syserror(tcp) && tcp->u_rval) {
-			s_push_int_num_lu(tcp->u_arg[2]);
-		} else {
-			s_changeable_void();
-		}
+		s_push_lu_addr();
+		s_changeable();
 		s_push_lu();
+	} else {
+		if (!syserror(tcp) && tcp->u_rval)
+			s_insert_lu_addr(tcp->u_arg[2]);
 	}
 
 	return 0;

@@ -95,7 +95,9 @@ s_val_print(struct s_arg *arg)
 		printfd(arg->syscall->tcp,
 			(int)(((struct s_num *)s_arg_to_type(arg))->val));
 		break;
-	case S_TYPE_xlat: {
+	case S_TYPE_xlat:
+	case S_TYPE_xlat_l:
+	case S_TYPE_xlat_ll: {
 		struct s_xlat *f_p = S_ARG_TO_TYPE(arg, xlat);
 
 		s_process_xlat(f_p, s_print_xlat_text);

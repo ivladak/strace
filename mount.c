@@ -65,8 +65,8 @@ SYS_FUNC(mount)
 		s_push_str(-1);
 
 	if (old_magic)
-		s_push_xlat_val_long(NULL, MS_MGC_VAL, "MS_MGC_VAL");
-	s_append_flags_val_long(mount_flags, flags, "MS_???");
+		s_insert_xlat_long(NULL, MS_MGC_VAL, "MS_MGC_VAL");
+	s_append_flags_long_val(mount_flags, flags, "MS_???");
 
 	s_push_empty(S_TYPE_xlat_l);
 

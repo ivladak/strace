@@ -10,62 +10,92 @@ s_insert_addr_arg(long value, struct s_arg *arg)
 	s_addr_new_and_insert(value, arg);
 }
 
+/* internal */
+/* possible optimization: allocate buf on stack */
+static inline struct s_arg *
+s_insert_addr_type(long value, long len, enum s_type type,
+	s_fill_arg_fn fill_cb, void *fn_data)
+{
+	struct s_addr *addr = s_addr_new_and_insert(value, NULL);
+	void *buf;
+
+	buf = xmalloc(len);
+
+	if (umoven(current_tcp, value, len, buf))
+		goto s_insert_addr_type_cleanup;
+
+	addr->val = s_arg_new(current_tcp, type);
+
+	/* XXX Rewrite */
+	switch (type) {
+	case S_TYPE_struct:
+	case S_TYPE_array:
+		s_struct_enter(S_ARG_TO_TYPE(addr->val, struct));
+		break;
+
+	default:
+		break;
+	}
+
+	fill_cb(addr->val, buf, len, fn_data);
+
+s_insert_addr_type_cleanup:
+	free(buf);
+
+	return addr->val;
+}
+
+
 static inline void
-s_push_value_int(enum s_type type, uint64_t value)
+s_insert_num(enum s_type type, uint64_t value)
 {
 	s_num_new_and_insert(type, value);
 }
 
-static inline bool
-s_push_arg(enum s_type type, bool printnum)
+static inline void
+s_push_num(enum s_type type)
 {
 	struct s_syscall *syscall = current_tcp->s_syscall;
 	unsigned long long val;
 
 	s_syscall_pop_all(syscall);
-
-	if (!printnum) {
-		s_syscall_cur_arg_advance(syscall, type, &val);
-		s_push_value_int(type, val);
-	} else {
-		if (umove_or_printaddr(current_tcp,
-			current_tcp->u_arg[syscall->cur_arg], &val)
-		)
-		syscall->cur_arg++;
-	}
-
-	return !printnum;
+	s_syscall_cur_arg_advance(syscall, type, &val);
+	s_insert_num(type, val);
 }
-
-
 
 #define DEF_PUSH_INT(TYPE, ENUM) \
 	static inline void \
-	s_push_int_ ## ENUM(TYPE value) \
+	s_insert_##ENUM(TYPE value) \
 	{ \
-		s_push_value_int(S_TYPE_ ## ENUM, (uint64_t) value); \
-	} \
-	\
-	static inline bool \
-	s_push_num_ ## ENUM(void) \
-	{ \
-		return s_push_arg(S_TYPE_ ## ENUM, true);\
-	} \
-	static inline bool \
-	s_push_int_num_ ## ENUM(const long addr) \
-	{ \
-		TYPE num; \
-		if (umove_or_printaddr(current_tcp, addr, &num)) \
-			return false; \
-		s_push_int_ ## ENUM(num); \
-		current_tcp->s_syscall->cur_arg++; \
-		return true; \
+		s_insert_num(S_TYPE_##ENUM, (uint64_t) value); \
 	} \
 	\
 	static inline void \
-	s_push_ ## ENUM(void) \
+	s_insert_##ENUM##_addr(long addr) \
 	{ \
-		s_push_arg(S_TYPE_ ## ENUM, false); \
+		TYPE val = 0; \
+		struct s_arg *arg = NULL; \
+		\
+		if (!umove(current_tcp, addr, &val)) \
+			arg = S_TYPE_TO_ARG(s_num_new(S_TYPE_##ENUM, val)); \
+		\
+		s_insert_addr_arg(addr, arg); \
+	} \
+	\
+	static inline void \
+	s_push_##ENUM(void) \
+	{ \
+		s_push_num(S_TYPE_##ENUM); \
+	} \
+	\
+	static inline void \
+	s_push_##ENUM##_addr(void) \
+	{ \
+		struct s_syscall *syscall = current_tcp->s_syscall; \
+		\
+		s_syscall_pop_all(syscall); \
+		s_insert_##ENUM##_addr( \
+			current_tcp->u_arg[syscall->cur_arg++]); \
 	}
 
 DEF_PUSH_INT(int, d)
@@ -83,6 +113,8 @@ DEF_PUSH_INT(long long, llo)
 DEF_PUSH_INT(int, x)
 DEF_PUSH_INT(long, lx)
 DEF_PUSH_INT(long long, llx)
+
+DEF_PUSH_INT(int, fd)
 
 #undef DEF_PUSH_INT
 
@@ -166,11 +198,12 @@ s_push_struct(void)
 		current_tcp->u_arg[current_tcp->s_syscall->cur_arg++]);
 }
 
+
 static inline void
-s_push_xlat_val(const struct xlat *x, uint64_t val, const char *dflt,
-	bool flags)
+s_insert_xlat(enum s_type type, const struct xlat *x, uint64_t val,
+	const char *dflt, bool flags)
 {
-	s_xlat_new_and_insert(x, val, dflt, flags);
+	s_xlat_new_and_insert(type, x, val, dflt, flags);
 }
 
 static inline void
@@ -181,14 +214,14 @@ s_push_xlat(const struct xlat *x, const char *dflt, bool flags,
 
 	s_syscall_pop_all(current_tcp->s_syscall);
 	s_syscall_cur_arg_advance(current_tcp->s_syscall, type, &val);
-	s_push_xlat_val(x, val, dflt, flags);
+	s_insert_xlat(type, x, val, dflt, flags);
 }
 
 static inline void
-s_append_xlat_val(const struct xlat *x, uint64_t val, const char *dflt,
-	bool flags)
+s_append_xlat_val(enum s_type type, const struct xlat *x, uint64_t val,
+	const char *dflt, bool flags)
 {
-	s_xlat_append(x, val, dflt, flags);
+	s_xlat_append(type, x, val, dflt, flags);
 }
 
 static inline void
@@ -198,39 +231,62 @@ s_append_xlat(const struct xlat *x, const char *dflt, bool flags,
 	unsigned long long val;
 
 	s_syscall_cur_arg_advance(current_tcp->s_syscall, type, &val);
-	s_append_xlat_val(x, val, dflt, flags);
+	s_append_xlat_val(type, x, val, dflt, flags);
 }
 
-#define DEF_XLAT_FUNCS(ACT, TYPE, ENUM, FLAGS_TYPE) \
+#define DEF_XLAT_FUNCS(WHAT, TYPE, ENUM, FLAGS_TYPE, FLAGS) \
 	static inline void \
-	s_##ACT##_flags_val_ ## ENUM(const struct xlat *x, TYPE flags, \
-	                      const char *dflt) \
+	s_insert_##WHAT##_##ENUM(const struct xlat *x, TYPE val, \
+		const char *dflt) \
 	{ \
-		s_##ACT##_xlat_val(x, flags, dflt, true); \
+		s_insert_xlat(S_TYPE_##FLAGS_TYPE, x, val, dflt, FLAGS); \
 	} \
 	\
 	static inline void \
-	s_##ACT##_flags_ ## ENUM(const struct xlat *x, const char *dflt) \
+	s_insert_##WHAT##_##ENUM##_addr(const struct xlat *x, long addr, \
+		const char *dflt) \
 	{ \
-		s_##ACT##_xlat(x, dflt, true, S_TYPE_ ## FLAGS_TYPE); \
+		TYPE val = 0; \
+		struct s_arg *arg = NULL; \
+		\
+		if (!umove(current_tcp, addr, &val)) \
+			arg = S_TYPE_TO_ARG(s_xlat_new(S_TYPE_##FLAGS_TYPE, x, \
+				val, dflt, FLAGS)); \
+		\
+		s_insert_addr_arg(addr, arg); \
 	} \
 	\
 	static inline void \
-	s_##ACT##_xlat_val_ ## ENUM(const struct xlat *x, TYPE flags, \
-	                      const char *dflt) \
+	s_push_##WHAT##_##ENUM(const struct xlat *x, const char *dflt) \
 	{ \
-		s_##ACT##_xlat_val(x, flags, dflt, false); \
+		s_push_xlat(x, dflt, FLAGS, S_TYPE_##FLAGS_TYPE); \
 	} \
 	\
 	static inline void \
-	s_##ACT##_xlat_ ## ENUM(const struct xlat *x, const char *dflt) \
+	s_push_##WHAT##_##ENUM##_addr(const struct xlat *x, const char *dflt) \
 	{ \
-		s_##ACT##_xlat(x, dflt, false, S_TYPE_ ## FLAGS_TYPE); \
+		s_syscall_pop_all(current_tcp->s_syscall); \
+		s_insert_##WHAT##_##ENUM##_addr(x, \
+			current_tcp->u_arg[current_tcp->s_syscall->cur_arg++], \
+			dflt); \
+	} \
+	\
+	static inline void \
+	s_append_##WHAT##_##ENUM##_val(const struct xlat *x, TYPE val, \
+		const char *dflt) \
+	{ \
+		s_append_xlat_val(S_TYPE_##FLAGS_TYPE, x, val, dflt, FLAGS); \
+	} \
+	\
+	static inline void \
+	s_append_##WHAT##_##ENUM(const struct xlat *x, const char *dflt) \
+	{ \
+		s_append_xlat(x, dflt, FLAGS, S_TYPE_##FLAGS_TYPE); \
 	}
 
 #define DEF_XLAT(TYPE, ENUM, FLAGS_TYPE) \
-	DEF_XLAT_FUNCS(push, TYPE, ENUM, FLAGS_TYPE) \
-	DEF_XLAT_FUNCS(append, TYPE, ENUM, FLAGS_TYPE)
+	DEF_XLAT_FUNCS(flags, TYPE, ENUM, FLAGS_TYPE, true) \
+	DEF_XLAT_FUNCS(xlat, TYPE, ENUM, FLAGS_TYPE, false)
 
 DEF_XLAT(unsigned, int, xlat)
 DEF_XLAT(unsigned long, long, xlat_l)
@@ -238,12 +294,6 @@ DEF_XLAT(uint64_t, 64, xlat_ll)
 
 #undef DEF_XLAT
 #undef DEF_XLAT_FUNCS
-
-static inline void
-s_push_fd(void)
-{
-	s_push_arg(S_TYPE_fd, false);
-}
 
 static inline void
 s_changeable(void)
