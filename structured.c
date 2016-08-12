@@ -37,6 +37,7 @@ static struct s_printer *s_printers[] = {
 		case S_TYPE_KIND_array: \
 		__ARG_TYPE_CASE(struct); \
 		\
+		__ARG_TYPE_CASE(ellipsis); \
 		__ARG_TYPE_CASE(changeable); \
 		\
 		default: \
@@ -258,6 +259,15 @@ s_struct_new(enum s_type type, const char *name)
 	return res;
 }
 
+struct s_ellipsis *
+s_ellipsis_new(void)
+{
+	struct s_ellipsis *res = S_ARG_TO_TYPE(s_arg_new(current_tcp,
+		S_TYPE_ellipsis, NULL), ellipsis);
+
+	return res;
+}
+
 struct s_changeable *
 s_changeable_new(const char *name, struct s_arg *entering,
 	struct s_arg *exiting)
@@ -345,6 +355,16 @@ s_struct_new_and_insert(enum s_type type, const char *name)
 
 	s_arg_insert(current_tcp->s_syscall,
 		&(res = s_struct_new(type, name))->arg);
+
+	return res;
+}
+
+struct s_ellipsis *
+s_ellipsis_new_and_insert(void)
+{
+	struct s_ellipsis *res;
+
+	s_arg_insert(current_tcp->s_syscall, &(res = s_ellipsis_new())->arg);
 
 	return res;
 }

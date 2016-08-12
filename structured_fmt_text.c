@@ -124,6 +124,9 @@ s_val_print(struct s_arg *arg)
 
 		break;
 	}
+	case S_TYPE_ellipsis:
+		tprints("...");
+		break;
 
 	default:
 		tprints("[!!! unknown value type]");

@@ -92,6 +92,7 @@ enum s_type_kind {
 	S_TYPE_KIND_xlat,
 	S_TYPE_KIND_struct,
 	S_TYPE_KIND_array,
+	S_TYPE_KIND_ellipsis,
 	S_TYPE_KIND_changeable,
 
 	S_TYPE_KIND_COUNT
@@ -142,6 +143,8 @@ enum s_type {
 
 	S_TYPE_struct   = S_TYPE_DEF(i,  unsigned, default, struct),
 	S_TYPE_array    = S_TYPE_DEF(i,  unsigned, default, array),
+
+	S_TYPE_ellipsis = S_TYPE_DEF(i,  unsigned, default, ellipsis),
 
 	S_TYPE_changeable =
 		S_TYPE_DEF(i,  implicit, default, changeable),
@@ -230,6 +233,10 @@ struct s_addr {
 	struct s_arg *val;
 };
 
+struct s_ellipsis {
+	struct s_arg arg;
+};
+
 struct s_changeable {
 	struct s_arg arg;
 
@@ -279,6 +286,7 @@ extern struct s_addr *s_addr_new(const char *name, long addr,
 extern struct s_xlat *s_xlat_new(enum s_type type, const char *name,
 	const struct xlat *x, uint64_t xlat, const char *dflt, bool flags);
 extern struct s_struct *s_struct_new(enum s_type type, const char *name);
+extern struct s_ellipsis *s_ellipsis_new(void);
 extern struct s_changeable *s_changeable_new(const char *name,
 	struct s_arg *entering, struct s_arg *exiting);
 
@@ -294,6 +302,7 @@ extern struct s_xlat *s_xlat_new_and_insert(enum s_type type,
 	bool flags);
 extern struct s_struct *s_struct_new_and_insert(enum s_type type,
 	const char *name);
+extern struct s_ellipsis *s_ellipsis_new_and_insert(void);
 extern struct s_changeable *s_changeable_new_and_insert(const char *name,
 	struct s_arg *entering, struct s_arg *exiting);
 
