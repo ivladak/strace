@@ -316,6 +316,111 @@ s_arg_new_init(struct tcb *tcp, enum s_type type, const char *name)
 	return s_arg_new(tcp, type, name);
 }
 
+bool
+s_arg_equal(struct s_arg *arg1, struct s_arg *arg2)
+{
+	if (!arg1 || !arg2)
+		return false;
+
+	/* This is fine for now */
+	if (S_TYPE_KIND(arg1->type) != S_TYPE_KIND(arg2->type))
+		return false;
+
+	switch (S_TYPE_KIND(arg1->type)) {
+	case S_TYPE_KIND_fd:
+	case S_TYPE_KIND_num: {
+		struct s_num *num1 = S_ARG_TO_TYPE(arg1, num);
+		struct s_num *num2 = S_ARG_TO_TYPE(arg2, num);
+
+		return num1->val == num2->val;
+	}
+	case S_TYPE_KIND_path:
+	case S_TYPE_KIND_str: {
+		struct s_str *str1 = S_ARG_TO_TYPE(arg1, str);
+		struct s_str *str2 = S_ARG_TO_TYPE(arg2, str);
+
+		if (str1->len != str2->len)
+			return false;
+
+		return strncmp(str1->str, str2->str, str1->len);
+	}
+	case S_TYPE_KIND_addr: {
+		struct s_addr *addr1 = S_ARG_TO_TYPE(arg1, addr);
+		struct s_addr *addr2 = S_ARG_TO_TYPE(arg2, addr);
+
+		if (addr1->addr != addr2->addr)
+			return false;
+		if (!addr1->addr && !addr2->addr && !addr1->val && !addr2->val)
+			return true;
+		if (!addr1->val || !addr2->val)
+			return false;
+
+		return s_arg_equal(addr1->val, addr2->val);
+	}
+	case S_TYPE_KIND_xlat: {
+		struct s_xlat *xlat1 = S_ARG_TO_TYPE(arg1, xlat);
+		struct s_xlat *xlat2 = S_ARG_TO_TYPE(arg2, xlat);
+
+		if ((xlat1->x != xlat2->x) || (xlat1->val != xlat2->val))
+			return false;
+		if (xlat1->next && xlat2->next)
+			return s_arg_equal(S_TYPE_TO_ARG(xlat1->next),
+				S_TYPE_TO_ARG(xlat2->next));
+		if (!xlat1->next && !xlat2->next)
+			return true;
+
+		return false;
+	}
+	case S_TYPE_KIND_array:
+	case S_TYPE_KIND_struct: {
+		struct s_struct *struct1 = S_ARG_TO_TYPE(arg1, struct);
+		struct s_struct *struct2 = S_ARG_TO_TYPE(arg2, struct);
+		struct s_arg *field1 = STAILQ_FIRST(&struct1->args.args);
+		struct s_arg *field2 = STAILQ_FIRST(&struct2->args.args);
+
+		while (field1 && field2) {
+			if (!s_arg_equal(field1, field2))
+				return false;
+
+			field1 = STAILQ_NEXT(field1, entry);
+			field2 = STAILQ_NEXT(field2, entry);
+		}
+
+		if (field1 || field2)
+			return false;
+
+		return true;
+	}
+	case S_TYPE_KIND_changeable: {
+		struct s_changeable *chg1 = S_ARG_TO_TYPE(arg1, changeable);
+		struct s_changeable *chg2 = S_ARG_TO_TYPE(arg2, changeable);
+
+		if (chg1->entering && chg2->entering) {
+			if (!s_arg_equal(chg1->entering, chg2->entering))
+				return false;
+		} else {
+			if (chg1->entering || chg2->entering)
+				return false;
+		}
+
+		if (chg1->exiting && chg2->exiting) {
+			if (!s_arg_equal(chg1->exiting, chg2->exiting))
+				return false;
+		} else {
+			if (chg1->exiting || chg2->exiting)
+				return false;
+		}
+
+		return true;
+	}
+
+	default:
+		return false;
+	}
+
+	return false;
+}
+
 struct s_num *
 s_num_new_and_insert(enum s_type type, const char *name, uint64_t value)
 {

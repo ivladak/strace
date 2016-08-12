@@ -292,6 +292,7 @@ extern struct s_changeable *s_changeable_new(const char *name,
 
 extern struct s_arg *s_arg_new_init(struct tcb *tcp, enum s_type type,
 	const char *name);
+extern bool s_arg_equal(struct s_arg *arg1, struct s_arg *arg2);
 
 extern struct s_num *s_num_new_and_insert(enum s_type type, const char *name,
 	uint64_t value);
