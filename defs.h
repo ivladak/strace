@@ -640,8 +640,8 @@ struct strace_stat;
 extern void print_struct_stat(struct tcb *tcp, const struct strace_stat *const st);
 
 struct strace_statfs;
-extern void print_struct_statfs(struct tcb *tcp, long);
-extern void print_struct_statfs64(struct tcb *tcp, long, unsigned long);
+extern int fill_struct_statfs(struct s_arg *arg, long addr, void *fn_data);
+extern int fill_struct_statfs64(struct s_arg *arg, long addr, void *fn_data);
 
 extern void print_ifindex(unsigned int);
 

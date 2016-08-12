@@ -44,7 +44,7 @@ MPERS_PRINTER_DECL(bool, fetch_struct_statfs,
 {
 	struct_statfs b;
 
-	if (umove_or_printaddr(tcp, addr, &b))
+	if (umove(tcp, addr, &b))
 		return false;
 
 	p->f_type = zero_extend_signed_to_ull(b.f_type);
@@ -88,11 +88,10 @@ MPERS_PRINTER_DECL(bool, fetch_struct_statfs64,
 	    && sizeof(b) != COMPAT_STATFS64_PADDED_SIZE
 #endif
 	   ) {
-		printaddr(addr);
 		return false;
 	}
 
-	if (umove_or_printaddr(tcp, addr, &b))
+	if (umove(tcp, addr, &b))
 		return false;
 
 	p->f_type = zero_extend_signed_to_ull(b.f_type);

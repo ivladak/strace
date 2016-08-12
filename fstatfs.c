@@ -3,10 +3,11 @@
 SYS_FUNC(fstatfs)
 {
 	if (entering(tcp)) {
-		printfd(tcp, tcp->u_arg[0]);
-		tprints(", ");
+		s_push_fd("fd");
+		s_changeable_void("buf");
 	} else {
-		print_struct_statfs(tcp, tcp->u_arg[1]);
+		s_insert_addr_type("buf", tcp->u_arg[1], S_TYPE_struct,
+			fill_struct_statfs, NULL);
 	}
 	return 0;
 }

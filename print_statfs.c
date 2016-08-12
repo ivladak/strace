@@ -30,113 +30,89 @@
 #include "xlat/fsmagic.h"
 #include "xlat/statfs_flags.h"
 
-static void
-print_statfs_type(const char *const prefix, const unsigned long long magic)
-{
-	tprints(prefix);
-	const char *s = xlat_search(fsmagic, ARRAY_SIZE(fsmagic), magic);
-	if (s)
-		tprints(s);
-	else
-		tprintf("%#llx", magic);
-}
-
-#if defined HAVE_STRUCT_STATFS_F_FLAGS || defined HAVE_STRUCT_STATFS64_F_FLAGS
-static void
-print_statfs_flags(const char *const prefix, const unsigned long long flags)
-{
-	if (flags & ST_VALID) {
-		tprints(prefix);
-		printflags64(statfs_flags, flags, "ST_???");
-	}
-}
-#endif /* HAVE_STRUCT_STATFS_F_FLAGS || HAVE_STRUCT_STATFS64_F_FLAGS */
-
-static void
-print_statfs_number(const char *const prefix, const unsigned long long number)
-{
-	tprints(prefix);
-	tprintf("%llu",  number);
-}
-
-void
-print_struct_statfs(struct tcb *tcp, const long addr)
+int
+fill_struct_statfs(struct s_arg *arg, long addr, void *fn_data)
 {
 #ifdef HAVE_STRUCT_STATFS
 	struct strace_statfs b;
 
-	if (!fetch_struct_statfs(tcp, addr, &b))
-		return;
+	if (!fetch_struct_statfs(current_tcp, addr, &b))
+		return -1;
 
-	print_statfs_type("{f_type=", b.f_type);
-	print_statfs_number(", f_bsize=", b.f_bsize);
-	print_statfs_number(", f_blocks=", b.f_blocks);
-	print_statfs_number(", f_bfree=", b.f_bfree);
-	print_statfs_number(", f_bavail=", b.f_bavail);
-	print_statfs_number(", f_files=", b.f_files);
-	print_statfs_number(", f_ffree=", b.f_ffree);
+	s_insert_xlat_64("f_type", fsmagic, b.f_type, NULL);
+	s_insert_llu("f_bsize", b.f_bsize);
+	s_insert_llu("f_blocks", b.f_blocks);
+	s_insert_llu("f_bfree", b.f_bfree);
+	s_insert_llu("f_bavail", b.f_bavail);
+	s_insert_llu("f_files", b.f_files);
+	s_insert_llu("f_ffree", b.f_ffree);
 # if defined HAVE_STRUCT_STATFS_F_FSID_VAL \
   || defined HAVE_STRUCT_STATFS_F_FSID___VAL
-	tprints(", f_fsid={");
+	s_insert_struct("f_fsid");
 #  ifdef HAVE_STRUCT_STATFS_F_FSID___VAL
-	tprints("__val=");
+	s_insert_array("__val");
 #  else
-	tprints("val=");
+	s_insert_array("val");
 #  endif
-	print_statfs_number("[", b.f_fsid[0]);
-	print_statfs_number(", ", b.f_fsid[1]);
-	tprints("]}");
+	s_insert_llu(NULL, b.f_fsid[0]);
+	s_insert_llu(NULL, b.f_fsid[1]);
+	s_array_finish();
+	s_struct_finish();
 # endif
-	print_statfs_number(", f_namelen=", b.f_namelen);
+	s_insert_llu("f_namelen", b.f_namelen);
 # ifdef HAVE_STRUCT_STATFS_F_FRSIZE
-	print_statfs_number(", f_frsize=", b.f_frsize);
+	s_insert_llu("f_frsize", b.f_frsize);
 # endif
 # ifdef HAVE_STRUCT_STATFS_F_FLAGS
-	print_statfs_flags(", f_flags=", b.f_flags);
+	s_insert_flags_64("f_flags", statfs_flags, b.f_flags, "ST_???");
 # endif
-	tprints("}");
+
+	return 0;
 #else
-	printaddr(addr);
+	return -2;
 #endif
 }
 
-void
-print_struct_statfs64(struct tcb *tcp, const long addr, const unsigned long size)
+int
+fill_struct_statfs64(struct s_arg *arg, long addr, void *fn_data)
 {
 #ifdef HAVE_STRUCT_STATFS64
 	struct strace_statfs b;
 
-	if (!fetch_struct_statfs64(tcp, addr, size, &b))
-		return;
+	if (!fetch_struct_statfs64(current_tcp, addr,
+	    (unsigned long)fn_data, &b))
+		return -1;
 
-	print_statfs_type("{f_type=", b.f_type);
-	print_statfs_number(", f_bsize=", b.f_bsize);
-	print_statfs_number(", f_blocks=", b.f_blocks);
-	print_statfs_number(", f_bfree=", b.f_bfree);
-	print_statfs_number(", f_bavail=", b.f_bavail);
-	print_statfs_number(", f_files=", b.f_files);
-	print_statfs_number(", f_ffree=", b.f_ffree);
+	s_insert_xlat_64("f_type", fsmagic, b.f_type, NULL);
+	s_insert_llu("f_bsize", b.f_bsize);
+	s_insert_llu("f_blocks", b.f_blocks);
+	s_insert_llu("f_bfree", b.f_bfree);
+	s_insert_llu("f_bavail", b.f_bavail);
+	s_insert_llu("f_files", b.f_files);
+	s_insert_llu("f_ffree", b.f_ffree);
 # if defined HAVE_STRUCT_STATFS64_F_FSID_VAL \
   || defined HAVE_STRUCT_STATFS64_F_FSID___VAL
-	tprints(", f_fsid={");
+	s_insert_struct("f_fsid");
 #  ifdef HAVE_STRUCT_STATFS64_F_FSID___VAL
-	tprints("__val=");
+	s_insert_array("__val");
 #  else
-	tprints("val=");
+	s_insert_array("val");
 #  endif
-	print_statfs_number("[", b.f_fsid[0]);
-	print_statfs_number(", ", b.f_fsid[1]);
-	tprints("]}");
+	s_insert_llu(NULL, b.f_fsid[0]);
+	s_insert_llu(NULL, b.f_fsid[1]);
+	s_array_finish();
+	s_struct_finish();
 # endif
-	print_statfs_number(", f_namelen=", b.f_namelen);
+	s_insert_llu("f_namelen", b.f_namelen);
 # ifdef HAVE_STRUCT_STATFS64_F_FRSIZE
-	print_statfs_number(", f_frsize=", b.f_frsize);
+	s_insert_llu("f_frsize", b.f_frsize);
 # endif
 # ifdef HAVE_STRUCT_STATFS64_F_FLAGS
-	print_statfs_flags(", f_flags=", b.f_flags);
+	s_insert_flags_64("f_flags", statfs_flags, b.f_flags, "ST_???");
 # endif
-	tprints("}");
+
+	return 0;
 #else
-	printaddr(addr);
+	return -2;
 #endif
 }
