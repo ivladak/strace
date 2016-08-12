@@ -19,7 +19,7 @@ s_insert_addr_type(const char *name, long value, enum s_type type,
 	struct s_addr *addr = s_addr_new_and_insert(name, value, NULL);
 	int ret;
 
-	addr->val = s_arg_new(current_tcp, type, name);
+	addr->val = s_arg_new_init(current_tcp, type, name);
 
 	/* XXX Rewrite */
 	switch (type) {

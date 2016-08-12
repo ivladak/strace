@@ -284,6 +284,9 @@ extern struct s_struct *s_struct_new(enum s_type type, const char *name);
 extern struct s_changeable *s_changeable_new(const char *name,
 	struct s_arg *entering, struct s_arg *exiting);
 
+extern struct s_arg *s_arg_new_init(struct tcb *tcp, enum s_type type,
+	const char *name);
+
 extern struct s_num *s_num_new_and_insert(enum s_type type, const char *name,
 	uint64_t value);
 extern struct s_addr *s_addr_new_and_insert(const char *name, long addr,

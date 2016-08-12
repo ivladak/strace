@@ -276,6 +276,39 @@ s_changeable_new(const char *name, struct s_arg *entering,
 	return res;
 }
 
+struct s_arg *
+s_arg_new_init(struct tcb *tcp, enum s_type type, const char *name)
+{
+	switch (S_TYPE_KIND(type)) {
+	case S_TYPE_KIND_fd:
+	case S_TYPE_KIND_num:
+		return &s_num_new(type, name, 0)->arg;
+
+	case S_TYPE_KIND_path:
+	case S_TYPE_KIND_str:
+		/* Since s_str_new fails and returns NULL on empty string */
+		return s_arg_new(tcp, type, name);
+
+	case S_TYPE_KIND_addr:
+		return &s_addr_new(name, 0, NULL)->arg;
+
+	case S_TYPE_KIND_xlat:
+		return &s_xlat_new(type, name, NULL, 0, NULL, false)->arg;
+
+	case S_TYPE_KIND_array:
+	case S_TYPE_KIND_struct:
+		return &s_struct_new(type, name)->arg;
+
+	case S_TYPE_KIND_changeable:
+		return &s_changeable_new(name, NULL, NULL)->arg;
+
+	default:
+		return s_arg_new(tcp, type, name);
+	}
+
+	return s_arg_new(tcp, type, name);
+}
+
 struct s_num *
 s_num_new_and_insert(enum s_type type, const char *name, uint64_t value)
 {
