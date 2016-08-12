@@ -211,7 +211,6 @@ s_str_new(enum s_type type, const char *name, long addr, long len, bool has_nul)
 		goto s_str_new_fail;
 
 	res->str = buf;
-	res->addr = addr;
 	res->len = size;
 	res->has_nul = has_nul;
 

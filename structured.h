@@ -223,7 +223,6 @@ struct s_str {
 	char *str;
 	long len;
 	bool has_nul;
-	long addr;
 };
 
 struct s_addr {
