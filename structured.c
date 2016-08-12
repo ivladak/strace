@@ -88,17 +88,20 @@ s_arg_new(struct tcb *tcp, enum s_type type, const char *name)
 	arg->syscall = syscall;
 	arg->type = type;
 	arg->name = name;
+	arg->arg_num = -1;
 
 	return arg;
 }
 
 void
-s_arg_insert(struct s_syscall *syscall, struct s_arg *arg)
+s_arg_insert(struct s_syscall *syscall, struct s_arg *arg, int force_arg)
 {
 	struct args_queue *ins_point = s_syscall_insertion_point(syscall);
 
 	if (entering(syscall->tcp) || !syscall->last_changeable) {
-		if (ins_point == &syscall->args.args) {
+		if (force_arg >= 0) {
+			arg->arg_num = force_arg;
+		} else if (ins_point == &syscall->args.args) {
 			arg->arg_num = syscall->last_arg;
 			syscall->last_arg = syscall->cur_arg;
 		} else {
@@ -320,7 +323,7 @@ s_num_new_and_insert(enum s_type type, const char *name, uint64_t value)
 	struct s_num *res;
 
 	s_arg_insert(current_tcp->s_syscall,
-		&(res = s_num_new(type, name, value))->arg);
+		&(res = s_num_new(type, name, value))->arg, -1);
 
 	return res;
 }
@@ -331,7 +334,7 @@ s_addr_new_and_insert(const char *name, long addr, struct s_arg *arg)
 	struct s_addr *res;
 
 	s_arg_insert(current_tcp->s_syscall,
-		&(res = s_addr_new(name, addr, arg))->arg);
+		&(res = s_addr_new(name, addr, arg))->arg, -1);
 
 	return res;
 }
@@ -343,7 +346,7 @@ s_xlat_new_and_insert(enum s_type type, const char *name, const struct xlat *x,
 	struct s_xlat *res;
 
 	s_arg_insert(current_tcp->s_syscall,
-		&(res = s_xlat_new(type, name, x, val, dflt, flags))->arg);
+		&(res = s_xlat_new(type, name, x, val, dflt, flags))->arg, -1);
 
 	return res;
 }
@@ -354,7 +357,7 @@ s_struct_new_and_insert(enum s_type type, const char *name)
 	struct s_struct *res;
 
 	s_arg_insert(current_tcp->s_syscall,
-		&(res = s_struct_new(type, name))->arg);
+		&(res = s_struct_new(type, name))->arg, -1);
 
 	return res;
 }
@@ -364,7 +367,8 @@ s_ellipsis_new_and_insert(void)
 {
 	struct s_ellipsis *res;
 
-	s_arg_insert(current_tcp->s_syscall, &(res = s_ellipsis_new())->arg);
+	s_arg_insert(current_tcp->s_syscall, &(res = s_ellipsis_new())->arg,
+		-1);
 
 	return res;
 }
@@ -375,7 +379,8 @@ extern struct s_changeable *s_changeable_new_and_insert(const char *name,
 	struct s_changeable *res;
 
 	s_arg_insert(current_tcp->s_syscall,
-		&(res = s_changeable_new(name, entering, exiting))->arg);
+		&(res = s_changeable_new(name, entering, exiting))->arg,
+		entering ? entering->arg_num : -1);
 
 	return res;
 }
