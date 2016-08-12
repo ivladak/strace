@@ -13,16 +13,11 @@ s_insert_addr_arg(const char *name, long value, struct s_arg *arg)
 /* internal */
 /* possible optimization: allocate buf on stack */
 static inline struct s_arg *
-s_insert_addr_type(const char *name, long value, long len, enum s_type type,
+s_insert_addr_type(const char *name, long value, enum s_type type,
 	s_fill_arg_fn fill_cb, void *fn_data)
 {
 	struct s_addr *addr = s_addr_new_and_insert(name, value, NULL);
-	void *buf;
-
-	buf = xmalloc(len);
-
-	if (umoven(current_tcp, value, len, buf))
-		goto s_insert_addr_type_cleanup;
+	int ret;
 
 	addr->val = s_arg_new(current_tcp, type, name);
 
@@ -36,10 +31,21 @@ s_insert_addr_type(const char *name, long value, long len, enum s_type type,
 		break;
 	}
 
-	fill_cb(addr->val, buf, len, fn_data);
+	ret = fill_cb(addr->val, value, fn_data);
 
-s_insert_addr_type_cleanup:
-	free(buf);
+	switch (type) {
+	case S_TYPE_struct:
+		s_syscall_pop(current_tcp->s_syscall);
+		break;
+
+	default:
+		break;
+	}
+
+	if (ret < 0) {
+		s_arg_free(addr->val);
+		addr->val = NULL;
+	}
 
 	return addr->val;
 }

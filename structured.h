@@ -257,8 +257,7 @@ enum syscall_print_xlat_flags {
 
 typedef void (*s_print_xlat_fn)(uint64_t value, uint64_t mask, const char *str,
 	uint32_t flags);
-typedef void (*s_fill_arg_fn)(struct s_arg *arg, void *p, size_t len,
-	void *fn_data);
+typedef int (*s_fill_arg_fn)(struct s_arg *arg, long addr, void *fn_data);
 
 /* prototypes */
 
