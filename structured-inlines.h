@@ -185,14 +185,14 @@ s_push_str(const char *name, long len)
 static inline void
 s_insert_struct(const char *name)
 {
-	struct s_struct *s = s_struct_new(name);
+	struct s_struct *s = s_struct_new_and_insert(S_TYPE_struct, name);
 	s_struct_enter(s);
 }
 
 static inline void
 s_insert_struct_addr(const char *name, long addr)
 {
-	struct s_struct *s = s_struct_new(name);
+	struct s_struct *s = s_struct_new_and_insert(S_TYPE_struct, name);
 
 	s_insert_addr_arg(name, addr, &s->arg);
 	s_struct_enter(s);

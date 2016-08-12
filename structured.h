@@ -278,7 +278,7 @@ extern struct s_addr *s_addr_new(const char *name, long addr,
 	struct s_arg *arg);
 extern struct s_xlat *s_xlat_new(enum s_type type, const char *name,
 	const struct xlat *x, uint64_t xlat, const char *dflt, bool flags);
-extern struct s_struct *s_struct_new(const char *name);
+extern struct s_struct *s_struct_new(enum s_type type, const char *name);
 extern struct s_changeable *s_changeable_new(const char *name,
 	struct s_arg *entering, struct s_arg *exiting);
 
@@ -289,6 +289,8 @@ extern struct s_addr *s_addr_new_and_insert(const char *name, long addr,
 extern struct s_xlat *s_xlat_new_and_insert(enum s_type type,
 	const char *name, const struct xlat *x, uint64_t val, const char *dflt,
 	bool flags);
+extern struct s_struct *s_struct_new_and_insert(enum s_type type,
+	const char *name);
 extern struct s_changeable *s_changeable_new_and_insert(const char *name,
 	struct s_arg *entering, struct s_arg *exiting);
 

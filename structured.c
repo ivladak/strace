@@ -251,10 +251,10 @@ s_xlat_new(enum s_type type, const char *name, const struct xlat *x,
 }
 
 struct s_struct *
-s_struct_new(const char *name)
+s_struct_new(enum s_type type, const char *name)
 {
-	struct s_struct *res = S_ARG_TO_TYPE(s_arg_new(current_tcp,
-		S_TYPE_struct, name), struct);
+	struct s_struct *res = S_ARG_TO_TYPE(s_arg_new(current_tcp, type, name),
+		struct);
 
 	STAILQ_INIT(&res->args.args);
 
@@ -304,6 +304,17 @@ s_xlat_new_and_insert(enum s_type type, const char *name, const struct xlat *x,
 
 	s_arg_insert(current_tcp->s_syscall,
 		&(res = s_xlat_new(type, name, x, val, dflt, flags))->arg);
+
+	return res;
+}
+
+struct s_struct *
+s_struct_new_and_insert(enum s_type type, const char *name)
+{
+	struct s_struct *res;
+
+	s_arg_insert(current_tcp->s_syscall,
+		&(res = s_struct_new(type, name))->arg);
 
 	return res;
 }
