@@ -70,7 +70,31 @@ s_push_num(enum s_type type, const char *name)
 	s_insert_num(type, name, val);
 }
 
-#define DEF_PUSH_INT(TYPE, ENUM) \
+#define DEF_UMOVE_LONG(NAME, TYPE) \
+	static inline int \
+	s_umove_##NAME(struct tcb *tcp, long addr, TYPE *val) \
+	{ \
+		int ret; \
+		\
+		if (current_wordsize > sizeof(int)) { \
+			unsigned long long tmp; \
+			\
+			if (!(ret = umove(tcp, addr, &tmp))) \
+				*val = tmp; \
+		} else { \
+			unsigned int tmp; \
+			\
+			if (!(ret = umove(tcp, addr, &tmp))) \
+				*val = tmp; \
+		} \
+		\
+		return ret; \
+	}
+
+DEF_UMOVE_LONG(slong, long)
+DEF_UMOVE_LONG(ulong, unsigned long)
+
+#define DEF_PUSH_INT(TYPE, ENUM, UMOVE_FUNC) \
 	static inline void \
 	s_insert_##ENUM(const char *name, TYPE value) \
 	{ \
@@ -83,7 +107,7 @@ s_push_num(enum s_type type, const char *name)
 		TYPE val = 0; \
 		struct s_arg *arg = NULL; \
 		\
-		if (!umove(current_tcp, addr, &val)) \
+		if (!UMOVE_FUNC(current_tcp, addr, &val)) \
 			arg = S_TYPE_TO_ARG(s_num_new(S_TYPE_##ENUM, name, \
 				val)); \
 		\
@@ -107,23 +131,23 @@ s_push_num(enum s_type type, const char *name)
 		s_insert_##ENUM##_addr(name, addr); \
 	}
 
-DEF_PUSH_INT(int, d)
-DEF_PUSH_INT(long, ld)
-DEF_PUSH_INT(long long, lld)
+DEF_PUSH_INT(int, d, umove)
+DEF_PUSH_INT(long, ld, s_umove_slong)
+DEF_PUSH_INT(long long, lld, umove)
 
-DEF_PUSH_INT(unsigned, u)
-DEF_PUSH_INT(unsigned long, lu)
-DEF_PUSH_INT(unsigned long long, llu)
+DEF_PUSH_INT(unsigned, u, umove)
+DEF_PUSH_INT(unsigned long, lu, s_umove_ulong)
+DEF_PUSH_INT(unsigned long long, llu, umove)
 
-DEF_PUSH_INT(int, o)
-DEF_PUSH_INT(long, lo)
-DEF_PUSH_INT(long long, llo)
+DEF_PUSH_INT(unsigned, o, umove)
+DEF_PUSH_INT(unsigned long, lo, s_umove_ulong)
+DEF_PUSH_INT(unsigned long long, llo, umove)
 
-DEF_PUSH_INT(int, x)
-DEF_PUSH_INT(long, lx)
-DEF_PUSH_INT(long long, llx)
+DEF_PUSH_INT(unsigned, x, umove)
+DEF_PUSH_INT(unsigned long, lx, s_umove_ulong)
+DEF_PUSH_INT(unsigned long long, llx, umove)
 
-DEF_PUSH_INT(int, fd)
+DEF_PUSH_INT(int, fd, umove)
 
 #undef DEF_PUSH_INT
 
