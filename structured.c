@@ -469,13 +469,16 @@ int
 s_syscall_cur_arg_advance(struct s_syscall *syscall, enum s_type type,
 	unsigned long long *val)
 {
+	static unsigned long long dummy_val;
+	unsigned long long *local_val = val ? val : &dummy_val;
+
 	syscall->last_arg = syscall->cur_arg;
 
 	if (S_TYPE_SIZE(type) == S_TYPE_SIZE_ll) {
-		syscall->cur_arg = getllval(current_tcp, val,
+		syscall->cur_arg = getllval(current_tcp, local_val,
 			syscall->cur_arg);
 	} else {
-		*val = current_tcp->u_arg[syscall->cur_arg];
+		*local_val = current_tcp->u_arg[syscall->cur_arg];
 		syscall->cur_arg++;
 	}
 
