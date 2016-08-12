@@ -82,10 +82,31 @@ s_val_print(struct s_arg *arg)
 	}
 	case S_TYPE_addr: {
 		struct s_addr *p = S_ARG_TO_TYPE(arg, addr);
-		if (p->val)
+		bool print_brackets = false;
+
+		if (p->val) {
+			switch (S_TYPE_KIND(p->val->type)) {
+			case S_TYPE_KIND_num:
+			case S_TYPE_KIND_addr:
+			case S_TYPE_KIND_fd:
+			case S_TYPE_KIND_xlat:
+			case S_TYPE_KIND_changeable:
+				print_brackets = true;
+				break;
+			default:
+				break;
+			}
+
+			if (print_brackets)
+				tprints("[");
+
 			s_val_print(p->val);
-		else
+
+			if (print_brackets)
+				tprints("]");
+		} else {
 			printaddr(p->addr);
+		}
 
 		break;
 	}
