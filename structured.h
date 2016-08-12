@@ -91,6 +91,7 @@ enum s_type_kind {
 	S_TYPE_KIND_path,
 	S_TYPE_KIND_xlat,
 	S_TYPE_KIND_struct,
+	S_TYPE_KIND_array,
 	S_TYPE_KIND_changeable,
 	S_TYPE_KIND_changeable_void,
 
@@ -141,6 +142,7 @@ enum s_type {
 	S_TYPE_xlat_ll  = S_TYPE_DEF(ll, unsigned, default, xlat),
 
 	S_TYPE_struct   = S_TYPE_DEF(i,  unsigned, default, struct),
+	S_TYPE_array    = S_TYPE_DEF(i,  unsigned, default, array),
 
 	S_TYPE_changeable =
 		S_TYPE_DEF(i,  implicit, default, changeable),

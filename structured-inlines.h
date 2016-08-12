@@ -24,6 +24,7 @@ s_insert_addr_type(const char *name, long value, enum s_type type,
 	/* XXX Rewrite */
 	switch (type) {
 	case S_TYPE_struct:
+	case S_TYPE_array:
 		s_struct_enter(S_ARG_TO_TYPE(addr->val, struct));
 		break;
 
@@ -35,6 +36,7 @@ s_insert_addr_type(const char *name, long value, enum s_type type,
 
 	switch (type) {
 	case S_TYPE_struct:
+	case S_TYPE_array:
 		s_syscall_pop(current_tcp->s_syscall);
 		break;
 
@@ -205,6 +207,43 @@ s_push_struct(const char *name)
 	s_syscall_pop_all(current_tcp->s_syscall);
 	s_insert_struct_addr(name,
 		current_tcp->u_arg[current_tcp->s_syscall->cur_arg++]);
+}
+
+static inline void
+s_insert_array(const char *name)
+{
+	struct s_struct *s = s_struct_new_and_insert(S_TYPE_array, name);
+	s_struct_enter(s);
+}
+
+static inline void
+s_insert_array_addr(const char *name, long addr)
+{
+	struct s_struct *s = s_struct_new_and_insert(S_TYPE_array, name);
+
+	s_insert_addr_arg(name, addr, &s->arg);
+	s_struct_enter(s);
+}
+
+/* Equivalent to s_push_array_addr */
+static inline void
+s_push_array(const char *name)
+{
+	s_syscall_pop_all(current_tcp->s_syscall);
+	s_insert_array_addr(name,
+		current_tcp->u_arg[current_tcp->s_syscall->cur_arg++]);
+}
+
+static inline void
+s_struct_finish(void)
+{
+	s_syscall_pop(current_tcp->s_syscall);
+}
+
+static inline void
+s_array_finish(void)
+{
+	s_syscall_pop(current_tcp->s_syscall);
 }
 
 

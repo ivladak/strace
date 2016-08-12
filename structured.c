@@ -33,6 +33,8 @@ static struct s_printer *s_printers[] = {
 		\
 		__ARG_TYPE_CASE(addr); \
 		__ARG_TYPE_CASE(xlat); \
+		\
+		case S_TYPE_KIND_array: \
 		__ARG_TYPE_CASE(struct); \
 		\
 		case S_TYPE_KIND_changeable_void: \
