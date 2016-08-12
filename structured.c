@@ -492,6 +492,14 @@ s_syscall_cur_arg_advance(struct s_syscall *syscall, enum s_type type,
 	static unsigned long long dummy_val;
 	unsigned long long *local_val = val ? val : &dummy_val;
 
+	if (exiting(syscall->tcp) && syscall->last_changeable) {
+		int chg_arg = syscall->last_changeable->arg_num;
+
+		assert(chg_arg >= 0);
+
+		syscall->cur_arg = chg_arg;
+	}
+
 	syscall->last_arg = syscall->cur_arg;
 
 	if (S_TYPE_SIZE(type) == S_TYPE_SIZE_ll) {
