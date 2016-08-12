@@ -57,19 +57,17 @@ s_val_print(struct s_arg *arg)
 
 #undef PRINT_ALT_INT
 
-	case S_TYPE_changeable_void:
-		tprints("[x]");
-		break;
 	case S_TYPE_changeable: {
 		struct s_changeable *s_ch = S_ARG_TO_TYPE(arg, changeable);
 		if (s_ch->entering)
 			s_val_print(s_ch->entering);
-		else
-			tprints("[x]");
 		if (s_ch->exiting) {
-			tprints(" => ");
+			if (s_ch->entering)
+				tprints(" => ");
 			s_val_print(s_ch->exiting);
 		}
+		if (!s_ch->entering && !s_ch->exiting)
+			tprints("[x]");
 		break;
 	}
 	case S_TYPE_str:

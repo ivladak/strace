@@ -158,6 +158,7 @@ struct s_arg {
 	struct s_syscall *syscall;
 	const char *name; /* if is a field of a struct */
 	enum s_type type;
+	int arg_num;
 
 	STAILQ_ENTRY(s_arg) entry;
 	STAILQ_ENTRY(s_arg) chg_entry;
@@ -175,6 +176,7 @@ SLIST_HEAD(s_args_list, s_args);
 struct s_syscall {
 	struct tcb *tcp;
 	int cur_arg;
+	int last_arg;
 	struct s_arg *last_changeable;
 	struct s_args args;
 	struct args_queue changeable_args;

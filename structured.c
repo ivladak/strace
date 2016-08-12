@@ -91,35 +91,31 @@ s_arg_new(struct tcb *tcp, enum s_type type, const char *name)
 	return arg;
 }
 
-struct s_arg *
-s_arg_next(struct tcb *tcp, enum s_type type, const char *name)
-{
-	if (entering(tcp)) {
-		struct s_arg *arg = s_arg_new(current_tcp, type, name);
-
-		s_arg_insert(current_tcp->s_syscall, arg);
-
-		return arg;
-	} else {
-		struct s_syscall *syscall = tcp->s_syscall;
-		struct s_arg *arg = s_arg_new(tcp, type, name);
-
-		struct s_arg *chg = syscall->last_changeable;
-		syscall->last_changeable = STAILQ_NEXT(chg, chg_entry);
-
-		struct s_changeable *s_ch = S_ARG_TO_TYPE(chg, changeable);
-		s_ch->exiting = arg;
-
-		return arg;
-	}
-}
-
 void
 s_arg_insert(struct s_syscall *syscall, struct s_arg *arg)
 {
-	STAILQ_INSERT_TAIL(s_syscall_insertion_point(syscall), arg, entry);
-	if (arg->type == S_TYPE_changeable) {
-		STAILQ_INSERT_TAIL(&syscall->changeable_args, arg, chg_entry);
+	struct args_queue *ins_point = s_syscall_insertion_point(syscall);
+
+	if (entering(syscall->tcp) || !syscall->last_changeable) {
+		if (ins_point == &syscall->args.args) {
+			arg->arg_num = syscall->last_arg;
+			syscall->last_arg = syscall->cur_arg;
+		} else {
+			arg->arg_num = -1;
+		}
+
+		STAILQ_INSERT_TAIL(ins_point, arg, entry);
+
+		if (arg->type == S_TYPE_changeable)
+			STAILQ_INSERT_TAIL(&syscall->changeable_args, arg,
+				chg_entry);
+	} else {
+		struct s_arg *chg = syscall->last_changeable;
+		struct s_changeable *s_ch = S_ARG_TO_TYPE(chg, changeable);
+
+		syscall->last_changeable = STAILQ_NEXT(chg, chg_entry);
+
+		s_ch->exiting = arg;
 	}
 }
 
@@ -436,7 +432,7 @@ s_syscall_new(struct tcb *tcp)
 	tcp->s_syscall = syscall;
 
 	syscall->tcp = tcp;
-	syscall->cur_arg = 0;
+	syscall->last_arg = syscall->cur_arg = 0;
 
 	STAILQ_INIT(&syscall->args.args);
 	STAILQ_INIT(&syscall->changeable_args);
@@ -473,6 +469,8 @@ int
 s_syscall_cur_arg_advance(struct s_syscall *syscall, enum s_type type,
 	unsigned long long *val)
 {
+	syscall->last_arg = syscall->cur_arg;
+
 	if (S_TYPE_SIZE(type) == S_TYPE_SIZE_ll) {
 		syscall->cur_arg = getllval(current_tcp, val,
 			syscall->cur_arg);
