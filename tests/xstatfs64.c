@@ -40,8 +40,10 @@
 #endif
 #if defined HAVE_STRUCT_STATFS64_F_FSID_VAL
 # define PRINT_F_FSID	f_fsid.val
+# define PRINT_F_FSID_VAL "val"
 #elif defined HAVE_STRUCT_STATFS64_F_FSID___VAL
 # define PRINT_F_FSID	f_fsid.__val
+# define PRINT_F_FSID_VAL "__val"
 #endif
 #define CHECK_ODD_SIZE
 
