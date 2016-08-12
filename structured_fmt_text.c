@@ -76,8 +76,8 @@ s_val_print(struct s_arg *arg)
 	case S_TYPE_path: {
 		struct s_str *s_p = S_ARG_TO_TYPE(arg, str);
 
-		if (s_p->has_nul && (print_quoted_string(s_p->str,
-		    s_p->len, s_p->has_nul ? QUOTE_0_TERMINATED : 0) > 0))
+		if ((print_quoted_string(s_p->str, s_p->len,
+		    s_p->has_nul ? QUOTE_0_TERMINATED : 0) > 0) && s_p->has_nul)
 			tprints("...");
 
 		break;
