@@ -356,11 +356,10 @@ s_changeable(void)
 static inline void
 s_changeable_void(const char *name)
 {
-	s_arg_next(current_tcp, S_TYPE_changeable_void, name);
-	current_tcp->s_syscall->cur_arg++;
-	if (entering(current_tcp)) {
-		s_changeable();
-	}
+	s_syscall_cur_arg_advance(current_tcp->s_syscall, S_TYPE_addr, NULL);
+
+	if (entering(current_tcp))
+		s_changeable_new_and_insert(name, NULL, NULL);
 }
 
 static inline void

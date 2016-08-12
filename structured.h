@@ -93,7 +93,6 @@ enum s_type_kind {
 	S_TYPE_KIND_struct,
 	S_TYPE_KIND_array,
 	S_TYPE_KIND_changeable,
-	S_TYPE_KIND_changeable_void,
 
 	S_TYPE_KIND_COUNT
 };
@@ -146,9 +145,6 @@ enum s_type {
 
 	S_TYPE_changeable =
 		S_TYPE_DEF(i,  implicit, default, changeable),
-	/** the value is write-only */
-	S_TYPE_changeable_void =
-		S_TYPE_DEF(i,  implicit, default, changeable_void),
 };
 
 #define S_ARG_TO_TYPE(_arg, _type) __containerof(_arg, struct s_##_type, arg)

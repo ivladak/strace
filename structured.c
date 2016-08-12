@@ -37,7 +37,6 @@ static struct s_printer *s_printers[] = {
 		case S_TYPE_KIND_array: \
 		__ARG_TYPE_CASE(struct); \
 		\
-		case S_TYPE_KIND_changeable_void: \
 		__ARG_TYPE_CASE(changeable); \
 		\
 		default: \
