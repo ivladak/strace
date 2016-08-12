@@ -384,6 +384,15 @@ DEF_XLAT(uint64_t, 64, xlat_ll)
 #undef DEF_XLAT
 #undef DEF_XLAT_FUNCS
 
+/* Special version for xlat_search replacement */
+static inline void
+s_insert_xlat_64_sorted(const char *name, const struct xlat *x, size_t n_memb,
+	uint64_t val)
+{
+	s_insert_xlat(S_TYPE_xlat_ll, name, NULL, val,
+		xlat_search(x, n_memb, val), false);
+}
+
 static inline void
 s_changeable(void)
 {

@@ -39,7 +39,8 @@ fill_struct_statfs(struct s_arg *arg, long addr, void *fn_data)
 	if (!fetch_struct_statfs(current_tcp, addr, &b))
 		return -1;
 
-	s_insert_xlat_64("f_type", fsmagic, b.f_type, NULL);
+	s_insert_xlat_64_sorted("f_type", fsmagic, ARRAY_SIZE(fsmagic),
+		b.f_type);
 	s_insert_llu("f_bsize", b.f_bsize);
 	s_insert_llu("f_blocks", b.f_blocks);
 	s_insert_llu("f_bfree", b.f_bfree);
@@ -83,7 +84,8 @@ fill_struct_statfs64(struct s_arg *arg, long addr, void *fn_data)
 	    (unsigned long)fn_data, &b))
 		return -1;
 
-	s_insert_xlat_64("f_type", fsmagic, b.f_type, NULL);
+	s_insert_xlat_64_sorted("f_type", fsmagic, ARRAY_SIZE(fsmagic),
+		b.f_type);
 	s_insert_llu("f_bsize", b.f_bsize);
 	s_insert_llu("f_blocks", b.f_blocks);
 	s_insert_llu("f_bfree", b.f_bfree);
