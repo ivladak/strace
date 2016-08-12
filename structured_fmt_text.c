@@ -104,6 +104,29 @@ s_val_print(struct s_arg *arg)
 
 		break;
 	}
+	case S_TYPE_array:
+	case S_TYPE_struct: {
+		struct s_struct *p = S_ARG_TO_TYPE(arg, struct);
+		struct s_arg *field;
+		struct s_arg *tmp;
+
+		tprints(arg->type == S_TYPE_array ? "[" : "{");
+
+		STAILQ_FOREACH_SAFE(field, &p->args.args, entry, tmp) {
+			if ((arg->type == S_TYPE_struct) && field->name)
+				tprintf("%s=", field->name);
+
+			s_val_print(field);
+
+			if (tmp)
+				tprints(", ");
+		}
+
+		tprints(arg->type == S_TYPE_array ? "]" : "}");
+
+		break;
+	}
+
 	default:
 		tprints("[!!! unknown value type]");
 		break;
