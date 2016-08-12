@@ -2,12 +2,13 @@
 
 SYS_FUNC(getcpu)
 {
-	if (exiting(tcp)) {
-		printnum_int(tcp, tcp->u_arg[0], "%u");
-		tprints(", ");
-		printnum_int(tcp, tcp->u_arg[1], "%u");
-		tprints(", ");
-		printaddr(tcp->u_arg[2]);
+	if (entering(tcp)) {
+		s_changeable_void("cpu");
+		s_changeable_void("node");
+		s_push_addr("tcache");
+	} else {
+		s_push_u_addr("cpu");
+		s_push_u_addr("node");
 	}
 	return 0;
 }
