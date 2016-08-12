@@ -787,7 +787,7 @@ trace_syscall_entering(struct tcb *tcp)
 
 	if (res != 1) {
 		printleader(tcp);
-		tprintf("%s(", scno_good == 1 ? tcp->s_ent->sys_name : "????");
+		s_syscall_print_unavailable_entering(tcp, scno_good);
 		/*
 		 * " <unavailable>" will be added later by the code which
 		 * detects ptrace errors.
@@ -906,14 +906,14 @@ trace_syscall_exiting(struct tcb *tcp)
 	if ((followfork < 2 && printing_tcp != tcp) || (tcp->flags & TCB_REPRINT)) {
 		tcp->flags &= ~TCB_REPRINT;
 		printleader(tcp);
-		tprintf("<... %s resumed> ", tcp->s_ent->sys_name);
+		s_syscall_print_resumed(tcp);
 	}
 	printing_tcp = tcp;
 
 	tcp->s_prev_ent = NULL;
 	if (res != 1) {
 		/* There was error in one of prior ptrace ops */
-		s_syscall_print_unavailable(tcp);
+		s_syscall_print_unavailable_exiting(tcp);
 		tcp->flags &= ~TCB_INSYSCALL;
 		tcp->sys_func_rval = 0;
 		free_tcb_priv_data(tcp);
@@ -948,8 +948,7 @@ trace_syscall_exiting(struct tcb *tcp)
 	s_syscall_print_after(tcp);
 	if (Tflag) {
 		tv_sub(&tv, &tv, &tcp->etime);
-		tprintf(" <%ld.%06ld>",
-			(long) tv.tv_sec, (long) tv.tv_usec);
+		s_syscall_print_tv(tcp, &tv);
 	}
 	tprints("\n");
 	dumpio(tcp);

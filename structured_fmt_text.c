@@ -334,7 +334,26 @@ s_syscall_text_print_after(struct tcb *tcp)
 }
 
 void
-s_syscall_text_print_unavailable(struct tcb *tcp)
+s_syscall_text_print_tv(struct tcb *tcp, struct timeval *tv)
+{
+	tprintf(" <%ld.%06ld>",
+		(long) tv->tv_sec, (long) tv->tv_usec);
+}
+
+void
+s_syscall_text_print_resumed(struct tcb *tcp)
+{
+	tprintf("<... %s resumed> ", tcp->s_ent->sys_name);
+}
+
+void
+s_syscall_text_print_unavailable_entering(struct tcb *tcp, int scno_good)
+{
+	tprintf("%s(", scno_good == 1 ? tcp->s_ent->sys_name : "????");
+}
+
+void
+s_syscall_text_print_unavailable_exiting(struct tcb *tcp)
 {
 	tprints(") ");
 	tabto();
@@ -347,5 +366,8 @@ struct s_printer s_printer_text = {
 	.print_entering = s_syscall_text_print_entering,
 	.print_exiting  = s_syscall_text_print_exiting,
 	.print_after = s_syscall_text_print_after,
-	.print_unavailable = s_syscall_text_print_unavailable,
+	.print_resumed = s_syscall_text_print_resumed,
+	.print_tv = s_syscall_text_print_tv,
+	.print_unavailable_entering = s_syscall_text_print_unavailable_entering,
+	.print_unavailable_exiting = s_syscall_text_print_unavailable_exiting,
 };

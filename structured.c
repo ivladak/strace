@@ -740,11 +740,38 @@ s_syscall_print_after(struct tcb *tcp)
 }
 
 void
-s_syscall_print_unavailable(struct tcb *tcp)
+s_syscall_print_resumed(struct tcb *tcp)
 {
 	struct s_printer **cur = s_printers;
 
 	//for (; *cur; cur++)
-		(*cur)->print_unavailable(tcp);
+		(*cur)->print_resumed(tcp);
+}
+
+void
+s_syscall_print_tv(struct tcb *tcp, struct timeval *tv)
+{
+	struct s_printer **cur = s_printers;
+
+	//for (; *cur; cur++)
+		(*cur)->print_tv(tcp, tv);
+}
+
+void
+s_syscall_print_unavailable_entering(struct tcb *tcp, int scno_good)
+{
+	struct s_printer **cur = s_printers;
+
+	//for (; *cur; cur++)
+		(*cur)->print_unavailable_entering(tcp, scno_good);
+}
+
+void
+s_syscall_print_unavailable_exiting(struct tcb *tcp)
+{
+	struct s_printer **cur = s_printers;
+
+	//for (; *cur; cur++)
+		(*cur)->print_unavailable_exiting(tcp);
 	s_syscall_free(tcp);
 }

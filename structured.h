@@ -248,7 +248,10 @@ struct s_printer {
 	void (*print_entering)(struct tcb *tcp);
 	void (*print_exiting)(struct tcb *tcp);
 	void (*print_after)(struct tcb *tcp);
-	void (*print_unavailable)(struct tcb *tcp);
+	void (*print_resumed)(struct tcb *tcp);
+	void (*print_tv)(struct tcb *tcp, struct timeval *tv);
+	void (*print_unavailable_entering)(struct tcb *tcp, int scno_good);
+	void (*print_unavailable_exiting)(struct tcb *tcp);
 };
 
 enum syscall_print_xlat_bits {
@@ -329,6 +332,9 @@ extern void s_syscall_print_entering(struct tcb *tcp);
 extern void s_syscall_init_exiting(struct tcb *tcp);
 extern void s_syscall_print_exiting(struct tcb *tcp);
 extern void s_syscall_print_after(struct tcb *tcp);
-extern void s_syscall_print_unavailable(struct tcb *tcp);
+extern void s_syscall_print_resumed(struct tcb *tcp);
+extern void s_syscall_print_tv(struct tcb *tcp, struct timeval *tv);
+extern void s_syscall_print_unavailable_entering(struct tcb *tcp, int scno_good);
+extern void s_syscall_print_unavailable_exiting(struct tcb *tcp);
 
 #endif /* #ifndef STRACE_STRUCTURED_H */
