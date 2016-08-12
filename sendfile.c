@@ -59,7 +59,7 @@ SYS_FUNC(sendfile)
 		s_push_lu("count");
 	} else {
 		if (!syserror(tcp) && tcp->u_rval)
-			s_insert_lu_addr("offset", tcp->u_arg[2]);
+			s_push_lu_addr("offset");
 	}
 
 	return 0;
