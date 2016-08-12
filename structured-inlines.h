@@ -100,10 +100,11 @@ s_push_num(enum s_type type, const char *name)
 	s_push_##ENUM##_addr(const char *name) \
 	{ \
 		struct s_syscall *syscall = current_tcp->s_syscall; \
+		unsigned long long addr; \
 		\
 		s_syscall_pop_all(syscall); \
-		s_insert_##ENUM##_addr(name, \
-			current_tcp->u_arg[syscall->cur_arg++]); \
+		s_syscall_cur_arg_advance(syscall, S_TYPE_addr, &addr); \
+		s_insert_##ENUM##_addr(name, addr); \
 	}
 
 DEF_PUSH_INT(int, d)
@@ -136,9 +137,11 @@ s_insert_addr(const char *name, long value)
 static inline void
 s_push_addr(const char *name)
 {
+	unsigned long long addr;
+
 	s_syscall_pop_all(current_tcp->s_syscall);
-	s_insert_addr(name,
-		current_tcp->u_arg[current_tcp->s_syscall->cur_arg++]);
+	s_syscall_cur_arg_advance(current_tcp->s_syscall, S_TYPE_addr, &addr);
+	s_insert_addr(name, addr);
 }
 
 
@@ -162,9 +165,11 @@ s_insert_path(const char *name, long addr)
 static inline void
 s_push_path(const char *name)
 {
+	unsigned long long addr;
+
 	s_syscall_pop_all(current_tcp->s_syscall);
-	s_insert_path(name,
-		current_tcp->u_arg[current_tcp->s_syscall->cur_arg++]);
+	s_syscall_cur_arg_advance(current_tcp->s_syscall, S_TYPE_addr, &addr);
+	s_insert_path(name, addr);
 }
 
 /* Equivalent to s_insert_str_addr */
@@ -178,9 +183,11 @@ s_insert_str(const char *name, long addr, long len)
 static inline void
 s_push_str(const char *name, long len)
 {
+	unsigned long long addr;
+
 	s_syscall_pop_all(current_tcp->s_syscall);
-	s_insert_str(name,
-		current_tcp->u_arg[current_tcp->s_syscall->cur_arg++], len);
+	s_syscall_cur_arg_advance(current_tcp->s_syscall, S_TYPE_addr, &addr);
+	s_insert_str(name, addr, len);
 }
 
 
@@ -204,9 +211,11 @@ s_insert_struct_addr(const char *name, long addr)
 static inline void
 s_push_struct(const char *name)
 {
+	unsigned long long addr;
+
 	s_syscall_pop_all(current_tcp->s_syscall);
-	s_insert_struct_addr(name,
-		current_tcp->u_arg[current_tcp->s_syscall->cur_arg++]);
+	s_syscall_cur_arg_advance(current_tcp->s_syscall, S_TYPE_addr, &addr);
+	s_insert_struct_addr(name, addr);
 }
 
 static inline void
@@ -229,9 +238,11 @@ s_insert_array_addr(const char *name, long addr)
 static inline void
 s_push_array(const char *name)
 {
+	unsigned long long addr;
+
 	s_syscall_pop_all(current_tcp->s_syscall);
-	s_insert_array_addr(name,
-		current_tcp->u_arg[current_tcp->s_syscall->cur_arg++]);
+	s_syscall_cur_arg_advance(current_tcp->s_syscall, S_TYPE_addr, &addr);
+	s_insert_array_addr(name, addr);
 }
 
 static inline void
@@ -315,10 +326,12 @@ s_append_xlat(const char *name, const struct xlat *x, const char *dflt,
 	s_push_##WHAT##_##ENUM##_addr(const char *name, const struct xlat *x, \
 		const char *dflt) \
 	{ \
+		unsigned long long addr; \
+		\
 		s_syscall_pop_all(current_tcp->s_syscall); \
-		s_insert_##WHAT##_##ENUM##_addr(name, x, \
-			current_tcp->u_arg[current_tcp->s_syscall->cur_arg++], \
-			dflt); \
+		s_syscall_cur_arg_advance(current_tcp->s_syscall, S_TYPE_addr, \
+			&addr); \
+		s_insert_##WHAT##_##ENUM##_addr(name, x, addr, dflt); \
 	} \
 	\
 	static inline void \
