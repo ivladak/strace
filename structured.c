@@ -572,8 +572,15 @@ s_syscall_print_entering(struct tcb *tcp)
 	tcp->s_syscall->last_changeable =
 		STAILQ_FIRST(&tcp->s_syscall->changeable_args);
 
-	for (; *cur; cur++)
+	//for (; *cur; cur++)
 		(*cur)->print_entering(tcp);
+}
+
+void
+s_syscall_init_exiting(struct tcb *tcp)
+{
+	tcp->s_syscall->last_changeable =
+		STAILQ_FIRST(&tcp->s_syscall->changeable_args);
 }
 
 void

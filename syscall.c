@@ -921,6 +921,8 @@ trace_syscall_exiting(struct tcb *tcp)
 	}
 	tcp->s_prev_ent = tcp->s_ent;
 
+	s_syscall_init_exiting(tcp);
+
 	tcp->sys_res = 0;
 	if (tcp->qual_flg & QUAL_RAW) {
 		/* tcp->sys_res = printargs(tcp); - but it's nop on sysexit */
