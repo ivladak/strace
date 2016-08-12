@@ -113,7 +113,7 @@ s_val_print(struct s_arg *arg)
 void
 s_syscall_text_print_before(struct tcb *tcp)
 {
-	tprintf("%s(", syscall_name(tcp->scno));
+	tprintf("%s(", tcp->s_ent->sys_name);
 }
 
 void
