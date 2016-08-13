@@ -2,8 +2,8 @@
 
 SYS_FUNC(sethostname)
 {
-	printstr(tcp, tcp->u_arg[0], tcp->u_arg[1]);
-	tprintf(", %lu", tcp->u_arg[1]);
+	s_push_str("name", tcp->u_arg[1]);
+	s_push_lu("len");
 
 	return RVAL_DECODED;
 }
@@ -11,12 +11,14 @@ SYS_FUNC(sethostname)
 #if defined(ALPHA)
 SYS_FUNC(gethostname)
 {
-	if (exiting(tcp)) {
+	if (entering(tcp)) {
+		s_changeable_void("name");
+		s_push_lu("len");
+	} else {
 		if (syserror(tcp))
-			printaddr(tcp->u_arg[0]);
+			s_push_addr("name");
 		else
-			printstr(tcp, tcp->u_arg[0], -1);
-		tprintf(", %lu", tcp->u_arg[1]);
+			s_push_str("name", -1);
 	}
 	return 0;
 }
