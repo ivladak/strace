@@ -2,12 +2,14 @@
 
 SYS_FUNC(getcwd)
 {
-	if (exiting(tcp)) {
+	if (entering(tcp)) {
+		s_changeable_void("buf");
+		s_push_lu("size");
+	} else {
 		if (syserror(tcp))
-			printaddr(tcp->u_arg[0]);
+			s_push_addr("buf");
 		else
-			printpathn(tcp, tcp->u_arg[0], tcp->u_rval - 1);
-		tprintf(", %lu", tcp->u_arg[1]);
+			s_push_pathn("buf", tcp->u_rval);
 	}
 	return 0;
 }
