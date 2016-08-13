@@ -8,10 +8,11 @@
 #include "structured.h"
 
 #include "structured_fmt_text.h"
-
+#include "structured_fmt_json.h"
 
 /** List of printers used. */
 static struct s_printer *s_printers[] = {
+	//&s_printer_json,
 	&s_printer_text,
 	NULL
 };

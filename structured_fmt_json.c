@@ -190,10 +190,10 @@ s_syscall_json_print_exiting(struct tcb *tcp)
 	struct s_syscall *syscall = tcp->s_syscall;
 	struct s_arg *arg;
 	struct s_arg *tmp;
-	JsonNode *args_node = json_mkarray();
+	JsonNode *args_node = json_mkobject();
 
 	STAILQ_FOREACH_SAFE(arg, &syscall->args.args, entry, tmp) {
-		json_append_element(args_node, s_val_print(arg));
+		json_append_member(args_node, arg->name, s_val_print(arg));
 	}
 
 	json_append_member(root_node, "args", args_node);
@@ -319,7 +319,7 @@ s_syscall_json_print_after(struct tcb *tcp)
 			json_append_member(root_node, "auxstr", json_mkstring(tcp->auxstr));
 	}
 
-	tprints(json_encode(root_node));
+	tprints(json_stringify(root_node, "\t"));
 	fflush(tcp->outf);
 	json_delete(root_node);
 }
