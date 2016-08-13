@@ -684,6 +684,13 @@ string_quote(const char *instr, char *outstr, const unsigned int size,
 		return 0;
 	}
 
+	if (style & QUOTE_ELLIPSIS) {
+		*s++ = '.';
+		*s++ = '.';
+		*s++ = '.';
+		*s = '\0';
+	}
+
 	return 1;
 
  asciz_ended:
@@ -698,6 +705,40 @@ string_quote(const char *instr, char *outstr, const unsigned int size,
 # define ALLOCA_CUTOFF	4032
 #endif
 #define use_alloca(n) ((n) <= ALLOCA_CUTOFF)
+
+int
+alloc_quoted_string(const char *str, char **outstr, unsigned int size,
+			const unsigned int style)
+{
+	char *buf;
+	unsigned int alloc_size;
+
+	if (size && style & QUOTE_0_TERMINATED)
+		--size;
+
+	alloc_size = 4 * size;
+	if (alloc_size / 4 != size) {
+		error_msg("Out of memory");
+		tprints("???");
+		return -1;
+	}
+	alloc_size += 1 + (style & QUOTE_OMIT_LEADING_TRAILING_QUOTES ? 0 : 2);
+
+	/*if (use_alloca(alloc_size)) {
+		*outstr = alloca(alloc_size);
+		buf = NULL;
+	} else */ {
+		*outstr = buf = malloc(alloc_size);
+		if (!buf) {
+			error_msg("Out of memory");
+			tprints("???");
+			return -1;
+		}
+	}
+
+	return 0;
+
+}
 
 /*
  * Quote string `str' of length `size' and print the result.
@@ -716,38 +757,18 @@ int
 print_quoted_string(const char *str, unsigned int size,
 		    const unsigned int style)
 {
-	char *buf;
 	char *outstr;
-	unsigned int alloc_size;
-	int rc;
+	int rc = alloc_quoted_string(str, &outstr,
+		(style & QUOTE_ELLIPSIS ? size + 3 : size), style);
 
-	if (size && style & QUOTE_0_TERMINATED)
-		--size;
-
-	alloc_size = 4 * size;
-	if (alloc_size / 4 != size) {
-		error_msg("Out of memory");
-		tprints("???");
-		return -1;
-	}
-	alloc_size += 1 + (style & QUOTE_OMIT_LEADING_TRAILING_QUOTES ? 0 : 2);
-
-	if (use_alloca(alloc_size)) {
-		outstr = alloca(alloc_size);
-		buf = NULL;
-	} else {
-		outstr = buf = malloc(alloc_size);
-		if (!buf) {
-			error_msg("Out of memory");
-			tprints("???");
-			return -1;
-		}
+	if (!rc) {
+		if (size && style & QUOTE_0_TERMINATED)
+			--size;
+		rc = string_quote(str, outstr, size, style);
+		tprints(outstr);
+		free(outstr);
 	}
 
-	rc = string_quote(str, outstr, size, style);
-	tprints(outstr);
-
-	free(buf);
 	return rc;
 }
 
