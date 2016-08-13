@@ -1,3 +1,5 @@
+#include <fcntl.h>
+
 #include "defs.h"
 
 #include "structured_fmt_text.h"
@@ -24,6 +26,10 @@ s_print_xlat_text(uint64_t value, uint64_t mask, const char *str,
 			tprintf("%#" PRIx64, value);
 	}
 }
+
+#ifndef AT_FDCWD
+# define AT_FDCWD                -100
+#endif
 
 void
 s_val_print(struct s_arg *arg)
@@ -56,6 +62,26 @@ s_val_print(struct s_arg *arg)
 	PRINT_ALT_INT(long long, llo, "llo");
 
 #undef PRINT_ALT_INT
+
+	case S_TYPE_uid:
+	case S_TYPE_gid: {
+		struct s_num *p = S_ARG_TO_TYPE(arg, num);
+
+		if ((uid_t) -1U == (uid_t)p->val)
+			tprints("-1");
+		else
+			tprintf("%u", (uid_t)p->val);
+
+		break;
+	}
+
+	case S_TYPE_time: {
+		struct s_num *p = S_ARG_TO_TYPE(arg, num);
+
+		tprintf("%s", sprinttime(p->val));
+
+		break;
+	}
 
 	case S_TYPE_changeable: {
 		struct s_changeable *s_ch = S_ARG_TO_TYPE(arg, changeable);
@@ -112,10 +138,17 @@ s_val_print(struct s_arg *arg)
 
 		break;
 	}
-	case S_TYPE_fd:
-		printfd(arg->syscall->tcp,
-			(int)(((struct s_num *)s_arg_to_type(arg))->val));
+	case S_TYPE_dirfd:
+	case S_TYPE_fd: {
+		struct s_num *p = S_ARG_TO_TYPE(arg, num);
+
+		if ((int)p->val == AT_FDCWD)
+			tprints("AT_FDCWD");
+		else
+			printfd(arg->syscall->tcp, (int)p->val);
+
 		break;
+	}
 	case S_TYPE_xlat:
 	case S_TYPE_xlat_l:
 	case S_TYPE_xlat_ll: {

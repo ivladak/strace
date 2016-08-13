@@ -159,7 +159,11 @@ DEF_PUSH_INT(unsigned, x, umove)
 DEF_PUSH_INT(unsigned long, lx, s_umove_ulong)
 DEF_PUSH_INT(unsigned long long, llx, umove)
 
+DEF_PUSH_INT(int, uid, umove)
+DEF_PUSH_INT(int, gid, umove)
+DEF_PUSH_INT(long, time, umove)
 DEF_PUSH_INT(int, fd, umove)
+DEF_PUSH_INT(int, dirfd, umove)
 
 #undef DEF_PUSH_INT
 
@@ -206,6 +210,24 @@ s_push_path(const char *name)
 	s_syscall_pop_all(current_tcp->s_syscall);
 	s_syscall_cur_arg_advance(current_tcp->s_syscall, S_TYPE_addr, &addr);
 	s_insert_path(name, addr);
+}
+
+/* Equivalent to s_insert_path_addr */
+static inline void
+s_insert_pathn(const char *name, long addr, size_t size)
+{
+	s_insert_string(S_TYPE_path, name, addr, size, true);
+}
+
+/* Equivalent to s_push_path_addr */
+static inline void
+s_push_pathn(const char *name, size_t size)
+{
+	unsigned long long addr;
+
+	s_syscall_pop_all(current_tcp->s_syscall);
+	s_syscall_cur_arg_advance(current_tcp->s_syscall, S_TYPE_addr, &addr);
+	s_insert_pathn(name, addr, size);
 }
 
 /* Equivalent to s_insert_str_addr */

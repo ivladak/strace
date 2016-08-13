@@ -69,6 +69,11 @@ enum s_type_fmt {
 	S_TYPE_FMT_octal,
 	S_TYPE_FMT_char,
 
+	S_TYPE_FMT_uid,
+	S_TYPE_FMT_gid,
+	S_TYPE_FMT_time,
+	S_TYPE_FMT_dirfd,
+
 	S_TYPE_FMT_COUNT
 };
 
@@ -132,9 +137,14 @@ enum s_type {
 	S_TYPE_lo       = S_TYPE_DEF(l,  unsigned, octal,   num),
 	S_TYPE_llo      = S_TYPE_DEF(ll, unsigned, octal,   num),
 
+	S_TYPE_uid      = S_TYPE_DEF(i,  unsigned, uid,     num),
+	S_TYPE_gid      = S_TYPE_DEF(i,  unsigned, gid,     num),
+	S_TYPE_time     = S_TYPE_DEF(ll, unsigned, time,    num),
+
 	S_TYPE_str      = S_TYPE_DEF(l,  unsigned, default, str),
 	S_TYPE_addr     = S_TYPE_DEF(l,  unsigned, default, addr),
 	S_TYPE_fd       = S_TYPE_DEF(i,  unsigned, default, fd),
+	S_TYPE_dirfd    = S_TYPE_DEF(i,  unsigned, dirfd,   fd),
 	S_TYPE_path     = S_TYPE_DEF(l,  unsigned, default, path),
 
 	S_TYPE_xlat     = S_TYPE_DEF(i,  unsigned, default, xlat),
