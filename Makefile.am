@@ -223,6 +223,8 @@ strace_SOURCES =	\
 	structured.c	\
 	structured_fmt_text.c	\
 	structured_fmt_text.h	\
+	structured_fmt_json.c	\
+	structured_fmt_json.h	\
 	swapon.c	\
 	syscall.c	\
 	sysctl.c	\
