@@ -140,6 +140,8 @@ strace_SOURCES =	\
 	ipc_sem.c	\
 	ipc_shm.c	\
 	ipc_shmctl.c	\
+	json.c		\
+	json.h		\
 	kcmp.c		\
 	kernel_types.h	\
 	kexec.c		\
