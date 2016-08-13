@@ -279,7 +279,7 @@ enum syscall_print_xlat_flags {
 };
 
 typedef void (*s_print_xlat_fn)(enum s_type type, uint64_t value, uint64_t mask,
-	const char *str, uint32_t flags);
+	const char *str, uint32_t flags, void *fn_data);
 typedef int (*s_fill_arg_fn)(struct s_arg *arg, long addr, void *fn_data);
 
 /* prototypes */
@@ -339,7 +339,7 @@ extern void s_syscall_free(struct tcb *tcp);
 extern int s_syscall_cur_arg_advance(struct s_syscall *syscall,
 	enum s_type type, unsigned long long *val);
 
-extern void s_process_xlat(struct s_xlat *arg, s_print_xlat_fn cb);
+extern void s_process_xlat(struct s_xlat *arg, s_print_xlat_fn cb, void *cb_data);
 
 extern void s_syscall_print_before(struct tcb *tcp);
 extern void s_syscall_print_entering(struct tcb *tcp);

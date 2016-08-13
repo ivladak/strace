@@ -6,7 +6,7 @@
 
 static void
 s_print_xlat_text(enum s_type type, uint64_t value, uint64_t mask,
-	const char *str, uint32_t flags)
+	const char *str, uint32_t flags, void *fn_data)
 {
 	const char *fmt;
 
@@ -184,7 +184,7 @@ s_val_print(struct s_arg *arg)
 	case S_TYPE_xlat_lld: {
 		struct s_xlat *f_p = S_ARG_TO_TYPE(arg, xlat);
 
-		s_process_xlat(f_p, s_print_xlat_text);
+		s_process_xlat(f_p, s_print_xlat_text, NULL);
 
 		break;
 	}
