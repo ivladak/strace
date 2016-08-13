@@ -418,6 +418,61 @@ DEF_XLAT(uint64_t, 64, xlat_ll)
 #undef DEF_XLAT
 #undef DEF_XLAT_FUNCS
 
+static inline void
+s_insert_xlat_flags(enum s_type ftype, enum s_type vtype, const char *name,
+	const struct xlat *fx, const struct xlat *vx, uint64_t val,
+	int64_t mask, const char *flags_dflt, const char *val_dflt)
+{
+	uint64_t flags = val & ~mask;
+	val = val & mask;
+
+	if (!flags) {
+		s_insert_xlat(vtype, name, vx, val, val_dflt, false);
+	} else {
+		s_insert_xlat(ftype, name, fx, flags, flags_dflt,
+			true);
+		s_append_xlat_val(vtype, name, vx, val, val_dflt, false);
+	}
+}
+
+static inline void
+s_push_xlat_flags(enum s_type ftype, enum s_type vtype, const char *name,
+	const struct xlat *fx, const struct xlat *vx,
+	int64_t mask, const char *flags_dflt, const char *val_dflt)
+{
+	unsigned long long val;
+
+	s_syscall_pop_all(current_tcp->s_syscall);
+	s_syscall_cur_arg_advance(current_tcp->s_syscall, ftype, &val);
+	s_insert_xlat_flags(ftype, vtype, name, fx, vx, val, mask, flags_dflt,
+		val_dflt);
+}
+
+#define DEF_XLAT_FLAGS(ENUM, FLAGS_TYPE, VAL_TYPE) \
+	static inline void \
+	s_insert_xlat_flags_##ENUM(const char *name, const struct xlat *fx, \
+		const struct xlat *vx, uint64_t val, int64_t mask, \
+		const char *flags_dflt, const char *val_dflt) \
+	{ \
+		s_insert_xlat_flags(FLAGS_TYPE, VAL_TYPE, name, fx, vx, val, \
+			mask, flags_dflt, val_dflt); \
+	} \
+	\
+	static inline void \
+	s_push_xlat_flags_##ENUM(const char *name, const struct xlat *fx, \
+		const struct xlat *vx, int64_t mask, const char *flags_dflt, \
+		const char *val_dflt) \
+	{ \
+		s_push_xlat_flags(FLAGS_TYPE, VAL_TYPE, name, fx, vx, mask, \
+			flags_dflt, val_dflt); \
+	}
+
+DEF_XLAT_FLAGS(int,  S_TYPE_xlat,    S_TYPE_xlat_d)
+DEF_XLAT_FLAGS(long, S_TYPE_xlat_l,  S_TYPE_xlat_ld)
+DEF_XLAT_FLAGS(64,   S_TYPE_xlat_ll, S_TYPE_xlat_lld)
+
+#undef DEF_XLAT_FLAGS
+
 /* Special version for xlat_search replacement */
 static inline void
 s_insert_xlat_64_sorted(const char *name, const struct xlat *x, size_t n_memb,
