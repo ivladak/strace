@@ -52,6 +52,18 @@ s_insert_addr_type(const char *name, long value, enum s_type type,
 	return addr->val;
 }
 
+static inline struct s_arg *
+s_push_addr_type(const char *name, enum s_type type, s_fill_arg_fn fill_cb,
+	void *fn_data)
+{
+	struct s_syscall *syscall = current_tcp->s_syscall;
+	unsigned long long addr;
+
+	s_syscall_pop_all(syscall);
+	s_syscall_cur_arg_advance(syscall, S_TYPE_addr, &addr);
+
+	return s_insert_addr_type(name, addr, type, fill_cb, fn_data);
+}
 
 static inline void
 s_insert_num(enum s_type type, const char *name, uint64_t value)
