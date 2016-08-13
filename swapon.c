@@ -6,19 +6,9 @@
 
 SYS_FUNC(swapon)
 {
-	unsigned int flags = tcp->u_arg[1];
-	unsigned int prio = flags & SWAP_FLAG_PRIO_MASK;
-	flags &= ~SWAP_FLAG_PRIO_MASK;
-
-	printpath(tcp, tcp->u_arg[0]);
-	tprints(", ");
-	if (flags) {
-		printflags(swap_flags, flags, "SWAP_FLAG_???");
-		if (prio)
-			tprintf("|%u", prio);
-	} else {
-		tprintf("%u", prio);
-	}
+	s_push_path("path");
+	s_push_xlat_flags_int("swapflags", swap_flags, NULL,
+		SWAP_FLAG_PRIO_MASK, "SWAP_FLAG_???", NULL);
 
 	return RVAL_DECODED;
 }
