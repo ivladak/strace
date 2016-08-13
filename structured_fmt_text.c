@@ -4,7 +4,7 @@
 
 #include "structured_fmt_text.h"
 
-void
+static void
 s_print_xlat_text(enum s_type type, uint64_t value, uint64_t mask,
 	const char *str, uint32_t flags)
 {
@@ -58,7 +58,7 @@ s_print_xlat_text(enum s_type type, uint64_t value, uint64_t mask,
 # define AT_FDCWD                -100
 #endif
 
-void
+static void
 s_val_print(struct s_arg *arg)
 {
 	switch (arg->type) {
@@ -220,19 +220,19 @@ s_val_print(struct s_arg *arg)
 	}
 }
 
-void
+static void
 s_syscall_text_print_before(struct tcb *tcp)
 {
 	tprintf("%s(", tcp->s_ent->sys_name);
 }
 
-void
+static void
 s_syscall_text_print_entering(struct tcb *tcp)
 {
 	fflush(tcp->outf);
 }
 
-void
+static void
 s_syscall_text_print_exiting(struct tcb *tcp)
 {
 	struct s_syscall *syscall = tcp->s_syscall;
@@ -247,7 +247,7 @@ s_syscall_text_print_exiting(struct tcb *tcp)
 	}
 }
 
-void
+static void
 s_syscall_text_print_after(struct tcb *tcp)
 {
 	long u_error = tcp->u_error;
@@ -396,26 +396,26 @@ s_syscall_text_print_after(struct tcb *tcp)
 	}
 }
 
-void
+static void
 s_syscall_text_print_tv(struct tcb *tcp, struct timeval *tv)
 {
 	tprintf(" <%ld.%06ld>",
 		(long) tv->tv_sec, (long) tv->tv_usec);
 }
 
-void
+static void
 s_syscall_text_print_resumed(struct tcb *tcp)
 {
 	tprintf("<... %s resumed> ", tcp->s_ent->sys_name);
 }
 
-void
+static void
 s_syscall_text_print_unavailable_entering(struct tcb *tcp, int scno_good)
 {
 	tprintf("%s(", scno_good == 1 ? tcp->s_ent->sys_name : "????");
 }
 
-void
+static void
 s_syscall_text_print_unavailable_exiting(struct tcb *tcp)
 {
 	tprints(") ");
