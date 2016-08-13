@@ -8,10 +8,8 @@
 
 SYS_FUNC(sram_alloc)
 {
-	/* size */
-	tprintf("%lu, ", tcp->u_arg[0]);
-	/* flags */
-	printflags_long(sram_alloc_flags, tcp->u_arg[1], "???_SRAM");
+	s_push_lu("size");
+	s_push_flags_long("flags", sram_alloc_flags, "???_SRAM");
 
 	return RVAL_DECODED | RVAL_HEX;
 }
