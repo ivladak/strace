@@ -5,9 +5,36 @@
 #include "structured_fmt_text.h"
 
 void
-s_print_xlat_text(uint64_t value, uint64_t mask, const char *str,
-	uint32_t flags)
+s_print_xlat_text(enum s_type type, uint64_t value, uint64_t mask,
+	const char *str, uint32_t flags)
 {
+	const char *fmt;
+
+	switch (type) {
+	case S_TYPE_xlat:
+		fmt = "%#" PRIx32;
+		break;
+	case S_TYPE_xlat_l:
+		fmt = (current_wordsize > sizeof(int)) ?
+			"%#" PRIx64 : "%#" PRIx32;
+		break;
+	case S_TYPE_xlat_ll:
+		fmt = "%#" PRIx64;
+		break;
+	case S_TYPE_xlat_d:
+		fmt = "%" PRIu32;
+		break;
+	case S_TYPE_xlat_ld:
+		fmt = (current_wordsize > sizeof(int)) ?
+			"%" PRIu64 : "%" PRIu32;
+		break;
+	case S_TYPE_xlat_lld:
+		fmt = "%" PRIu64;
+		break;
+	default:
+		fmt = "%#" PRIx64;
+	}
+
 	/* Corner case */
 	if (!(flags & SPXF_FIRST) && (flags & SPXF_DEFAULT) && !value)
 		return;
@@ -16,14 +43,14 @@ s_print_xlat_text(uint64_t value, uint64_t mask, const char *str,
 		tprints("|");
 
 	if (flags & SPXF_DEFAULT) {
-		tprintf("%#" PRIx64, value);
+		tprintf(fmt, value);
 		if (str && value)
 			tprintf(" /* %s */", str);
 	} else {
 		if (str)
 			tprintf("%s", str);
 		else
-			tprintf("%#" PRIx64, value);
+			tprintf(fmt, value);
 	}
 }
 
@@ -151,7 +178,10 @@ s_val_print(struct s_arg *arg)
 	}
 	case S_TYPE_xlat:
 	case S_TYPE_xlat_l:
-	case S_TYPE_xlat_ll: {
+	case S_TYPE_xlat_ll:
+	case S_TYPE_xlat_d:
+	case S_TYPE_xlat_ld:
+	case S_TYPE_xlat_lld: {
 		struct s_xlat *f_p = S_ARG_TO_TYPE(arg, xlat);
 
 		s_process_xlat(f_p, s_print_xlat_text);

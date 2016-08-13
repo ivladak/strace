@@ -147,9 +147,13 @@ enum s_type {
 	S_TYPE_dirfd    = S_TYPE_DEF(i,  unsigned, dirfd,   fd),
 	S_TYPE_path     = S_TYPE_DEF(l,  unsigned, default, path),
 
-	S_TYPE_xlat     = S_TYPE_DEF(i,  unsigned, default, xlat),
-	S_TYPE_xlat_l   = S_TYPE_DEF(l,  unsigned, default, xlat),
-	S_TYPE_xlat_ll  = S_TYPE_DEF(ll, unsigned, default, xlat),
+	S_TYPE_xlat     = S_TYPE_DEF(i,  unsigned, hex,     xlat),
+	S_TYPE_xlat_l   = S_TYPE_DEF(l,  unsigned, hex,     xlat),
+	S_TYPE_xlat_ll  = S_TYPE_DEF(ll, unsigned, hex,     xlat),
+
+	S_TYPE_xlat_d   = S_TYPE_DEF(i,  unsigned, default, xlat),
+	S_TYPE_xlat_ld  = S_TYPE_DEF(l,  unsigned, default, xlat),
+	S_TYPE_xlat_lld = S_TYPE_DEF(ll, unsigned, default, xlat),
 
 	S_TYPE_struct   = S_TYPE_DEF(i,  unsigned, default, struct),
 	S_TYPE_array    = S_TYPE_DEF(i,  unsigned, default, array),
@@ -274,8 +278,8 @@ enum syscall_print_xlat_flags {
 	SPXF_DEFAULT  = POW2(SPXF_DEFAULT_BIT),
 };
 
-typedef void (*s_print_xlat_fn)(uint64_t value, uint64_t mask, const char *str,
-	uint32_t flags);
+typedef void (*s_print_xlat_fn)(enum s_type type, uint64_t value, uint64_t mask,
+	const char *str, uint32_t flags);
 typedef int (*s_fill_arg_fn)(struct s_arg *arg, long addr, void *fn_data);
 
 /* prototypes */
