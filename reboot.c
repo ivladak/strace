@@ -6,18 +6,14 @@
 
 SYS_FUNC(reboot)
 {
-	const unsigned int magic1 = tcp->u_arg[0];
-	const unsigned int magic2 = tcp->u_arg[1];
 	const unsigned int cmd = tcp->u_arg[2];
 
-	printflags(bootflags1, magic1, "LINUX_REBOOT_MAGIC_???");
-	tprints(", ");
-	printflags(bootflags2, magic2, "LINUX_REBOOT_MAGIC_???");
-	tprints(", ");
-	printflags(bootflags3, cmd, "LINUX_REBOOT_CMD_???");
-	if (cmd == LINUX_REBOOT_CMD_RESTART2) {
-		tprints(", ");
-		printstr(tcp, tcp->u_arg[3], -1);
-	}
+	s_push_flags_int("magic", bootflags1, "LINUX_REBOOT_MAGIC_???");
+	s_push_flags_int("magic2", bootflags2, "LINUX_REBOOT_MAGIC_???");
+	s_push_flags_int("cmd", bootflags3, "LINUX_REBOOT_CMD_???");
+
+	if (cmd == LINUX_REBOOT_CMD_RESTART2)
+		s_push_str("arg", -1);
+
 	return RVAL_DECODED;
 }
