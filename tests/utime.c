@@ -37,7 +37,7 @@
 static void
 print_tm(const struct tm * const p)
 {
-	printf("%02d/%02d/%02d-%02d:%02d:%02d",
+	printf("%04d-%02d-%02dT%02d:%02d:%02dZ",
 	       p->tm_year + 1900, p->tm_mon + 1, p->tm_mday,
 	       p->tm_hour, p->tm_min, p->tm_sec);
 }

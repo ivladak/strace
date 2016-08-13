@@ -473,7 +473,7 @@ sprinttime(time_t t)
 	}
 	tmp = localtime(&t);
 	if (tmp)
-		snprintf(buf, sizeof buf, "%02d/%02d/%02d-%02d:%02d:%02d",
+		snprintf(buf, sizeof buf, "%04d-%02d-%02dT%02d:%02d:%02dZ",
 			tmp->tm_year + 1900, tmp->tm_mon + 1, tmp->tm_mday,
 			tmp->tm_hour, tmp->tm_min, tmp->tm_sec);
 	else
