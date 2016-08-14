@@ -10,24 +10,24 @@ SYS_FUNC(truncate)
 
 SYS_FUNC(truncate64)
 {
-	printpath(tcp, tcp->u_arg[0]);
-	printllval(tcp, ", %llu", 1);
+	s_push_path("path");
+	s_push_llu("length");
 
 	return RVAL_DECODED;
 }
 
 SYS_FUNC(ftruncate)
 {
-	printfd(tcp, tcp->u_arg[0]);
-	tprintf(", %lu", tcp->u_arg[1]);
+	s_push_fd("fd");
+	s_push_lu("length");
 
 	return RVAL_DECODED;
 }
 
 SYS_FUNC(ftruncate64)
 {
-	printfd(tcp, tcp->u_arg[0]);
-	printllval(tcp, ", %llu", 1);
+	s_push_fd("fd");
+	s_push_llu("length");
 
 	return RVAL_DECODED;
 }
