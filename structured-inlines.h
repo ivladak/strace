@@ -432,6 +432,7 @@ s_append_xlat(const char *name, const struct xlat *x, const char *dflt,
 	DEF_XLAT_FUNCS(xlat, TYPE, ENUM, FLAGS_TYPE, false, UMOVE_FUNC)
 
 DEF_XLAT(unsigned, int, xlat, umove)
+DEF_XLAT(int, signed, xlat_d, umove)
 DEF_XLAT(unsigned long, long, xlat_l, s_umove_ulong)
 DEF_XLAT(uint64_t, 64, xlat_ll, umove)
 
