@@ -37,21 +37,30 @@
 typedef struct tms tms_t;
 #include MPERS_DEFS
 
-SYS_FUNC(times)
+MPERS_PRINTER_DECL(int, fill_tms_t, struct s_arg *arg, long addr, void *fn_data)
 {
 	tms_t tbuf;
 
-	if (entering(tcp))
-		return 0;
-
-	if (!umove_or_printaddr(tcp, tcp->u_arg[0], &tbuf)) {
-		tprintf("{tms_utime=%llu, tms_stime=%llu, ",
-			zero_extend_signed_to_ull(tbuf.tms_utime),
-			zero_extend_signed_to_ull(tbuf.tms_stime));
-		tprintf("tms_cutime=%llu, tms_cstime=%llu}",
-			zero_extend_signed_to_ull(tbuf.tms_cutime),
-			zero_extend_signed_to_ull(tbuf.tms_cstime));
+	if (umove(current_tcp, addr, &tbuf)) {
+		return -1;
 	}
+	s_insert_llu("tms_utime", zero_extend_signed_to_ull(tbuf.tms_utime));
+	s_insert_llu("tms_stime", zero_extend_signed_to_ull(tbuf.tms_stime));
+	s_insert_llu("tms_cutime", zero_extend_signed_to_ull(tbuf.tms_cutime));
+	s_insert_llu("tms_cstime", zero_extend_signed_to_ull(tbuf.tms_cstime));
+
+	return 0;
+}
+
+SYS_FUNC(times)
+{
+
+	if (entering(tcp)) {
+		s_changeable_void("buf");
+		return 0;
+	}
+
+	s_push_addr_type("buf", S_TYPE_struct, MPERS_FUNC_NAME(fill_tms_t), NULL);
 
 	return syserror(tcp) ? RVAL_DECIMAL :
 #if defined(RVAL_LUDECIMAL) && !defined(IN_MPERS)
