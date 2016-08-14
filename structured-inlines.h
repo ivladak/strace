@@ -528,7 +528,7 @@ s_push_empty(enum s_type type)
 }
 
 static inline void
-s_insert_elipsis(void)
+s_insert_ellipsis(void)
 {
 	s_ellipsis_new_and_insert();
 }
