@@ -92,6 +92,9 @@
 # endif
 #endif
 
+#include "print_time.h"
+#include "printsiginfo.h"
+
 /* Note on the size of sigset_t:
  *
  * In glibc, sigset_t is an array with space for 1024 bits (!),
@@ -262,6 +265,21 @@ void
 print_sigset_addr_len(struct tcb *tcp, long addr, long len)
 {
 	print_sigset_addr_len_limit(tcp, addr, len, current_wordsize);
+}
+
+void
+s_insert_sigset_addr_len(const char *name, unsigned long addr,
+	unsigned long len)
+{
+	/* XXX */
+	s_insert_addr(name, addr);
+}
+
+void
+s_push_sigset_addr_len(const char *name, unsigned long len)
+{
+	/* XXX */
+	s_push_addr(name);
 }
 
 SYS_FUNC(sigsetmask)
@@ -607,25 +625,25 @@ SYS_FUNC(rt_sigsuspend)
 }
 
 static void
-print_sigqueueinfo(struct tcb *tcp, int sig, unsigned long uinfo)
+s_push_sigqueueinfo(void)
 {
-	printsignal(sig);
-	tprints(", ");
-	printsiginfo_at(tcp, uinfo);
+	s_push_signo("sig");
+	s_push_siginfo("uinfo");
 }
 
 SYS_FUNC(rt_sigqueueinfo)
 {
-	tprintf("%d, ", (int) tcp->u_arg[0]);
-	print_sigqueueinfo(tcp, tcp->u_arg[1], tcp->u_arg[2]);
+	s_push_d("tgid");
+	s_push_sigqueueinfo();
 
 	return RVAL_DECODED;
 }
 
 SYS_FUNC(rt_tgsigqueueinfo)
 {
-	tprintf("%d, %d, ", (int) tcp->u_arg[0], (int) tcp->u_arg[1]);
-	print_sigqueueinfo(tcp, tcp->u_arg[2], tcp->u_arg[3]);
+	s_push_d("tgid");
+	s_push_d("tid");
+	s_push_sigqueueinfo();
 
 	return RVAL_DECODED;
 }
@@ -634,29 +652,14 @@ SYS_FUNC(rt_sigtimedwait)
 {
 	/* NB: kernel requires arg[3] == NSIG / 8 */
 	if (entering(tcp)) {
-		print_sigset_addr_len(tcp, tcp->u_arg[0], tcp->u_arg[3]);
-		tprints(", ");
-		if (!(tcp->u_arg[1] && verbose(tcp))) {
-			/*
-			 * This is the only "return" parameter,
-			 * if we are not going to fetch it on exit,
-			 * decode all parameters on entry.
-			 */
-			printaddr(tcp->u_arg[1]);
-			tprints(", ");
-			print_timespec(tcp, tcp->u_arg[2]);
-			tprintf(", %lu", tcp->u_arg[3]);
-		} else {
-			char *sts = xstrdup(sprint_timespec(tcp, tcp->u_arg[2]));
-			set_tcb_priv_data(tcp, sts, free);
-		}
+		s_push_sigset_addr_len("uthese", tcp->u_arg[3]);
+		s_push_addr("uinfo");
+		s_changeable();
+		s_push_timespec("uts");
+		s_push_lu("sigsetsize");
 	} else {
-		if (tcp->u_arg[1] && verbose(tcp)) {
-			printsiginfo_at(tcp, tcp->u_arg[1]);
-			tprints(", ");
-			tprints(get_tcb_priv_data(tcp));
-			tprintf(", %lu", tcp->u_arg[3]);
-		}
+		if (tcp->u_arg[1] && verbose(tcp))
+			s_push_siginfo("uinfo");
 
 		if (!syserror(tcp) && tcp->u_rval) {
 			tcp->auxstr = signame(tcp->u_rval);

@@ -27,6 +27,8 @@
 
 #include "defs.h"
 
+#include <assert.h>
+
 #ifdef HAVE_LINUX_SECCOMP_H
 # include <linux/seccomp.h>
 #endif
@@ -57,170 +59,305 @@ struct bpf_filter {
 	uint32_t k;
 };
 
+static const size_t BPF_STR_BUF_SIZE = 4096;
+
+#define _SNAPPEND(_str, _pos, _size, _func, ...) \
+	do { \
+		size_t __size = (_size); \
+		size_t __pos = (_pos); \
+		\
+		if (__pos < __size) { \
+			int __new_pos; \
+			\
+			__new_pos = _func(_str + __pos, __size - __pos, __VA_ARGS__); \
+			\
+			if (__new_pos >= 0) \
+				_pos += __new_pos; \
+		} \
+	} while (0)
+
+static int
+sprintxval(char *buf, size_t size, const struct xlat *x, const unsigned int val,
+	const char *dflt)
+{
+	const char *str = xlookup(x, val);
+
+	if (str)
+		return snprintf(buf, size, "%s", str);
+	if (dflt)
+		return snprintf(buf, size, "%#x /* %s */", val, dflt);
+
+	return snprintf(buf, size, "%#x", val);
+}
+
 #ifdef HAVE_LINUX_FILTER_H
 
-static void
-decode_bpf_code(uint16_t code)
+static size_t
+decode_bpf_code(char *buf, size_t len, uint16_t code)
 {
 	uint16_t i = code & ~BPF_CLASS(code);
+	size_t pos = 0;
 
-	printxval(bpf_class, BPF_CLASS(code), "BPF_???");
+	_SNAPPEND(buf, pos, len, sprintxval, bpf_class, BPF_CLASS(code), "BPF_???");
 	switch (BPF_CLASS(code)) {
 		case BPF_LD:
 		case BPF_LDX:
-			tprints("|");
-			printxval(bpf_size, BPF_SIZE(code), "BPF_???");
-			tprints("|");
-			printxval(bpf_mode, BPF_MODE(code), "BPF_???");
+			_SNAPPEND(buf, pos, len, snprintf, "|");
+			_SNAPPEND(buf, pos, len, sprintxval, bpf_size, BPF_SIZE(code),
+				"BPF_???");
+			_SNAPPEND(buf, pos, len, snprintf, "|");
+			_SNAPPEND(buf, pos, len, sprintxval, bpf_mode, BPF_MODE(code),
+				"BPF_???");
 			break;
 		case BPF_ST:
 		case BPF_STX:
 			if (i)
-				tprintf("|%#x /* %s */", i, "BPF_???");
+				_SNAPPEND(buf, pos, len, snprintf, "|%#x /* %s */", i,
+					"BPF_???");
 			break;
 		case BPF_ALU:
-			tprints("|");
-			printxval(bpf_src, BPF_SRC(code), "BPF_???");
-			tprints("|");
-			printxval(bpf_op_alu, BPF_OP(code), "BPF_???");
+			_SNAPPEND(buf, pos, len, snprintf, "|");
+			_SNAPPEND(buf, pos, len, sprintxval, bpf_src, BPF_SRC(code),
+				"BPF_???");
+			_SNAPPEND(buf, pos, len, snprintf, "|");
+			_SNAPPEND(buf, pos, len, sprintxval, bpf_op_alu, BPF_OP(code),
+				"BPF_???");
 			break;
 		case BPF_JMP:
-			tprints("|");
-			printxval(bpf_src, BPF_SRC(code), "BPF_???");
-			tprints("|");
-			printxval(bpf_op_jmp, BPF_OP(code), "BPF_???");
+			_SNAPPEND(buf, pos, len, snprintf, "|");
+			_SNAPPEND(buf, pos, len, sprintxval, bpf_src, BPF_SRC(code),
+				"BPF_???");
+			_SNAPPEND(buf, pos, len, snprintf, "|");
+			_SNAPPEND(buf, pos, len, sprintxval, bpf_op_jmp, BPF_OP(code),
+				"BPF_???");
 			break;
 		case BPF_RET:
-			tprints("|");
-			printxval(bpf_rval, BPF_RVAL(code), "BPF_???");
+			_SNAPPEND(buf, pos, len, snprintf, "|");
+			_SNAPPEND(buf, pos, len, sprintxval, bpf_rval, BPF_RVAL(code),
+				"BPF_???");
 			i &= ~BPF_RVAL(code);
 			if (i)
-				tprintf("|%#x /* %s */", i, "BPF_???");
+				_SNAPPEND(buf, pos, len, snprintf, "|%#x /* %s */", i,
+					"BPF_???");
 			break;
 		case BPF_MISC:
-			tprints("|");
-			printxval(bpf_miscop, BPF_MISCOP(code), "BPF_???");
+			_SNAPPEND(buf, pos, len, snprintf, "|");
+			_SNAPPEND(buf, pos, len, sprintxval, bpf_miscop, BPF_MISCOP(code),
+				"BPF_???");
 			i &= ~BPF_MISCOP(code);
 			if (i)
-				tprintf("|%#x /* %s */", i, "BPF_???");
+				_SNAPPEND(buf, pos, len, snprintf, "|%#x /* %s */", i,
+					"BPF_???");
 			break;
 	}
 
+	return pos;
 }
 
 #endif /* HAVE_LINUX_FILTER_H */
 
-static void
+static char *
 decode_bpf_stmt(const struct bpf_filter *filter)
 {
+	const size_t len = BPF_STR_BUF_SIZE;
+	char *buf = malloc(len);
+	size_t pos = 0;
+
+	if (!buf)
+		return NULL;
+
 #ifdef HAVE_LINUX_FILTER_H
-	tprints("BPF_STMT(");
-	decode_bpf_code(filter->code);
-	tprints(", ");
+	_SNAPPEND(buf, pos, len, snprintf, "BPF_STMT(");
+	_SNAPPEND(buf, pos, len, decode_bpf_code, filter->code);
+	_SNAPPEND(buf, pos, len, snprintf, ", ");
 	if (BPF_CLASS(filter->code) == BPF_RET) {
 		unsigned int action = SECCOMP_RET_ACTION & filter->k;
 		unsigned int data = filter->k & ~action;
 
-		printxval(seccomp_ret_action, action, "SECCOMP_RET_???");
+		_SNAPPEND(buf, pos, len, sprintxval, seccomp_ret_action, action,
+			"SECCOMP_RET_???");
 		if (data)
-			tprintf("|%#x)", data);
+			_SNAPPEND(buf, pos, len, snprintf, "|%#x)", data);
 		else
-			tprints(")");
+			_SNAPPEND(buf, pos, len, snprintf, ")");
 	} else {
-		tprintf("%#x)", filter->k);
+		_SNAPPEND(buf, pos, len, snprintf, "%#x)", filter->k);
 	}
 #else
-	tprintf("BPF_STMT(%#x, %#x)", filter->code, filter->k);
+	_SNAPPEND(buf, pos, len, snprintf, "BPF_STMT(%#x, %#x)", filter->code,
+		filter->k);
 #endif /* HAVE_LINUX_FILTER_H */
+
+	if (pos > len) {
+		free(buf);
+		buf = NULL;
+	}
+
+	return buf;
 }
 
-static void
+static char *
 decode_bpf_jump(const struct bpf_filter *filter)
 {
+	const size_t len = BPF_STR_BUF_SIZE;
+	char *buf = malloc(len);
+	size_t pos = 0;
+
+	if (!buf)
+		return NULL;
+
 #ifdef HAVE_LINUX_FILTER_H
-	tprints("BPF_JUMP(");
-	decode_bpf_code(filter->code);
-	tprintf(", %#x, %#x, %#x)",
+	_SNAPPEND(buf, pos, len, snprintf, "BPF_JUMP(");
+	_SNAPPEND(buf, pos, len, decode_bpf_code, filter->code);
+	_SNAPPEND(buf, pos, len, snprintf, ", %#x, %#x, %#x)",
 		filter->k, filter->jt, filter->jf);
 #else
-	tprintf("BPF_JUMP(%#x, %#x, %#x, %#x)",
+	_SNAPPEND(buf, pos, len, snprintf, "BPF_JUMP(%#x, %#x, %#x, %#x)",
 		filter->code, filter->k, filter->jt, filter->jf);
 #endif /* HAVE_LINUX_FILTER_H */
+
+	if (pos > len) {
+		free(buf);
+		buf = NULL;
+	}
+
+	return buf;
 }
 
 #ifndef BPF_MAXINSNS
 # define BPF_MAXINSNS 4096
 #endif
 
-static bool
-print_bpf_filter(struct tcb *tcp, void *elem_buf, size_t elem_size, void *data)
+static void
+s_insert_bpf_code(const char *name, uint16_t code)
 {
-	const struct bpf_filter *filter = elem_buf;
-	unsigned int *pn = data;
+	static const struct xlat empty_xlat[] = { XLAT_END };
+	uint16_t i = code & ~BPF_CLASS(code);
 
-	if ((*pn)++ >= BPF_MAXINSNS) {
-		tprints("...");
-		return false;
+	s_insert_xlat_int(name, bpf_class, BPF_CLASS(code), "BPF_???");
+	switch (BPF_CLASS(code)) {
+		case BPF_LD:
+		case BPF_LDX:
+			s_append_xlat_int_val(NULL, bpf_size, BPF_SIZE(code), "BPF_???");
+			s_append_xlat_int_val(NULL, bpf_mode, BPF_MODE(code), "BPF_???");
+			break;
+		case BPF_ST:
+		case BPF_STX:
+			if (i)
+				s_append_xlat_int_val(NULL, empty_xlat, i, "BPF_???");
+			break;
+		case BPF_ALU:
+			s_append_xlat_int_val(NULL, bpf_src, BPF_SRC(code), "BPF_???");
+			s_append_xlat_int_val(NULL, bpf_op_alu, BPF_OP(code), "BPF_???");
+			break;
+		case BPF_JMP:
+			s_append_xlat_int_val(NULL, bpf_src, BPF_SRC(code), "BPF_???");
+			s_append_xlat_int_val(NULL, bpf_op_jmp, BPF_OP(code), "BPF_???");
+			break;
+		case BPF_RET:
+			s_append_xlat_int_val(NULL, bpf_rval, BPF_RVAL(code), "BPF_???");
+			i &= ~BPF_RVAL(code);
+			if (i)
+				s_append_xlat_int_val(NULL, empty_xlat, i, "BPF_???");
+			break;
+		case BPF_MISC:
+			s_append_xlat_int_val(NULL, bpf_miscop, BPF_MISCOP(code),
+				"BPF_???");
+			i &= ~BPF_MISCOP(code);
+			if (i)
+				s_append_xlat_int_val(NULL, empty_xlat, i, "BPF_???");
+			break;
+		default:
+			s_append_xlat_int_val(NULL, empty_xlat, code, "BPF_???");
 	}
+}
+
+static int
+fill_bpf_filter(struct s_arg *arg, void *buf, size_t len, void *data)
+{
+	const struct bpf_filter *filter = buf;
+	unsigned int *pn = data;
+	struct s_struct *struct_arg = S_ARG_TO_TYPE(arg, struct);
+
+	assert(arg->type == S_TYPE_struct);
+
+	s_insert_bpf_code("code", filter->code);
+	s_insert_x("jt", filter->jt);
+	s_insert_x("jf", filter->jf);
+	s_insert_x("k", filter->k);
 
 	if (filter->jt || filter->jf)
-		decode_bpf_jump(filter);
+		struct_arg->aux_str = decode_bpf_jump(filter);
 	else
-		decode_bpf_stmt(filter);
+		struct_arg->aux_str = decode_bpf_stmt(filter);
 
-	return true;
+	if ((*pn)++ >= BPF_MAXINSNS)
+		return -1;
+
+	return 0;
 }
 
 void
-print_seccomp_fprog(struct tcb *tcp, unsigned long addr, unsigned short len)
+s_insert_seccomp_fprog(const char *name, unsigned long addr, unsigned short len)
 {
-	if (abbrev(tcp)) {
-		printaddr(addr);
+	if (abbrev(current_tcp)) {
+		s_insert_addr(name, addr);
 	} else {
 		unsigned int insns = 0;
-		struct bpf_filter filter;
 
-		print_array(tcp, addr, len, &filter, sizeof(filter),
-			    umoven_or_printaddr, print_bpf_filter, &insns);
+		s_insert_array_type(name, addr, len, sizeof(struct bpf_filter),
+			S_TYPE_struct, fill_bpf_filter, &insns);
+	}
+}
+
+void
+s_push_seccomp_fprog(const char *name, unsigned short len)
+{
+	if (abbrev(current_tcp)) {
+		s_push_addr(name);
+	} else {
+		unsigned int insns = 0;
+
+		s_push_array_type(name, len, sizeof(struct bpf_filter),
+			S_TYPE_struct, fill_bpf_filter, &insns);
 	}
 }
 
 #include "seccomp_fprog.h"
 
-void
-print_seccomp_filter(struct tcb *tcp, unsigned long addr)
+static ssize_t
+fetch_fill_seccomp_filter(struct s_arg *arg, unsigned long addr, void *fn_data)
 {
 	struct seccomp_fprog fprog;
+	ssize_t ret;
 
-	if (fetch_seccomp_fprog(tcp, addr, &fprog)) {
-		tprintf("{len=%hu, filter=", fprog.len);
-		print_seccomp_fprog(tcp, fprog.filter, fprog.len);
-		tprints("}");
+	if ((ret = fetch_seccomp_fprog(current_tcp, addr, &fprog)) > 0) {
+		s_insert_u("len", fprog.len);
+		s_insert_seccomp_fprog("filter", fprog.filter, fprog.len);
 	}
+
+	return ret;
 }
 
-static void
-decode_seccomp_set_mode_strict(unsigned int flags, unsigned long addr)
+void
+s_push_seccomp_filter(const char *name)
 {
-	tprintf("%u, ", flags);
-	printaddr(addr);
+	s_push_addr_type(name, S_TYPE_struct, fetch_fill_seccomp_filter, NULL);
 }
 
 SYS_FUNC(seccomp)
 {
 	unsigned int op = tcp->u_arg[0];
 
-	printxval(seccomp_ops, op, "SECCOMP_SET_MODE_???");
-	tprints(", ");
+	s_push_xlat_int("operation", seccomp_ops, "SECCOMP_SET_MODE_???");
 
 	if (op == SECCOMP_SET_MODE_FILTER) {
-		printflags(seccomp_filter_flags, tcp->u_arg[1],
+		s_push_flags_int("flags", seccomp_filter_flags,
 			   "SECCOMP_FILTER_FLAG_???");
-		tprints(", ");
-		print_seccomp_filter(tcp, tcp->u_arg[2]);
+		s_push_seccomp_filter("args");
 	} else {
-		decode_seccomp_set_mode_strict(tcp->u_arg[1],
-					       tcp->u_arg[2]);
+		s_push_u("flags");
+		s_push_addr("args");
 	}
 
 	return RVAL_DECODED;

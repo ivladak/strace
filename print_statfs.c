@@ -30,13 +30,14 @@
 #include "xlat/fsmagic.h"
 #include "xlat/statfs_flags.h"
 
-int
-fill_struct_statfs(struct s_arg *arg, long addr, void *fn_data)
+ssize_t
+fill_struct_statfs(struct s_arg *arg, unsigned long addr, void *fn_data)
 {
 #ifdef HAVE_STRUCT_STATFS
 	struct strace_statfs b;
+	ssize_t ret;
 
-	if (!fetch_struct_statfs(current_tcp, addr, &b))
+	if ((ret = fetch_struct_statfs(current_tcp, addr, &b)) < 1)
 		return -1;
 
 	s_insert_xlat_64_sorted("f_type", fsmagic, ARRAY_SIZE(fsmagic),
@@ -68,20 +69,21 @@ fill_struct_statfs(struct s_arg *arg, long addr, void *fn_data)
 	s_insert_flags_64("f_flags", statfs_flags, b.f_flags, "ST_???");
 # endif
 
-	return 0;
+	return ret;
 #else
 	return -2;
 #endif
 }
 
-int
-fill_struct_statfs64(struct s_arg *arg, long addr, void *fn_data)
+ssize_t
+fill_struct_statfs64(struct s_arg *arg, unsigned long addr, void *fn_data)
 {
 #ifdef HAVE_STRUCT_STATFS64
 	struct strace_statfs b;
+	ssize_t ret;
 
-	if (!fetch_struct_statfs64(current_tcp, addr,
-	    (unsigned long)fn_data, &b))
+	if ((ret = fetch_struct_statfs64(current_tcp, addr,
+	    (unsigned long)fn_data, &b) < 0))
 		return -1;
 
 	s_insert_xlat_64_sorted("f_type", fsmagic, ARRAY_SIZE(fsmagic),
@@ -113,7 +115,7 @@ fill_struct_statfs64(struct s_arg *arg, long addr, void *fn_data)
 	s_insert_flags_64("f_flags", statfs_flags, b.f_flags, "ST_???");
 # endif
 
-	return 0;
+	return ret;
 #else
 	return -2;
 #endif

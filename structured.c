@@ -3,8 +3,11 @@
  */
 
 #include <assert.h>
+#include <signal.h>
 
 #include "defs.h"
+#include "printsiginfo.h"
+
 #include "structured.h"
 
 #include "structured_fmt_text.h"
@@ -151,6 +154,8 @@ s_arg_free(struct s_arg *arg)
 
 		STAILQ_FOREACH_SAFE(arg, &p->args.args, entry, tmp)
 			s_arg_free(arg);
+
+		free(p->aux_str);
 
 		break;
 	}
@@ -555,13 +560,14 @@ s_syscall_pop_all(struct s_syscall *s)
 
 
 struct s_syscall *
-s_syscall_new(struct tcb *tcp)
+s_syscall_new(struct tcb *tcp, enum s_syscall_type sc_type)
 {
 	struct s_syscall *syscall = xmalloc(sizeof(*syscall));
 
 	tcp->s_syscall = syscall;
 
 	syscall->tcp = tcp;
+	syscall->type = sc_type;
 	syscall->last_arg = syscall->cur_arg = 0;
 
 	STAILQ_INIT(&syscall->args.args);
@@ -703,7 +709,7 @@ s_syscall_print_before(struct tcb *tcp)
 
 	//for (; *cur; cur++)
 		(*cur)->print_before(tcp);
-	s_syscall_new(tcp);
+	s_syscall_new(tcp, S_SCT_SYSCALL);
 }
 
 void
@@ -779,4 +785,28 @@ s_syscall_print_unavailable_exiting(struct tcb *tcp)
 	//for (; *cur; cur++)
 		(*cur)->print_unavailable_exiting(tcp);
 	s_syscall_free(tcp);
+}
+
+void
+s_syscall_print_signal(struct tcb *tcp, const void *si_void, unsigned sig)
+{
+	const siginfo_t *si = si_void;
+	struct s_printer **cur = s_printers;
+	struct s_syscall *saved_syscall = tcp->s_syscall;
+
+	s_syscall_new(tcp, S_SCT_SIGNAL);
+
+	s_insert_signo("signal", sig);
+	if (si) {
+		s_insert_struct("siginfo");
+		printsiginfo(si);
+		s_struct_finish();
+	}
+
+	//for (; *cur; cur++)
+		(*cur)->print_signal(tcp);
+
+	s_syscall_free(tcp);
+
+	tcp->s_syscall = saved_syscall;
 }

@@ -37,41 +37,69 @@ typedef struct rusage rusage_t;
 
 #include MPERS_DEFS
 
-MPERS_PRINTER_DECL(void, printrusage, struct tcb *tcp, long addr)
+MPERS_PRINTER_DECL(ssize_t, fetch_fill_rusage, struct s_arg *arg,
+	unsigned long addr, void *fn_data)
 {
 	rusage_t ru;
 
-	if (umove_or_printaddr(tcp, addr, &ru))
-		return;
+	if (s_umove_verbose(current_tcp, addr, &ru))
+		return -1;
 
-	tprintf("{ru_utime={%llu, %llu}, ru_stime={%llu, %llu}, ",
-		zero_extend_signed_to_ull(ru.ru_utime.tv_sec),
-		zero_extend_signed_to_ull(ru.ru_utime.tv_usec),
-		zero_extend_signed_to_ull(ru.ru_stime.tv_sec),
-		zero_extend_signed_to_ull(ru.ru_stime.tv_usec));
-	if (abbrev(tcp))
-		tprints("...}");
-	else {
-		tprintf("ru_maxrss=%llu, ", zero_extend_signed_to_ull(ru.ru_maxrss));
-		tprintf("ru_ixrss=%llu, ", zero_extend_signed_to_ull(ru.ru_ixrss));
-		tprintf("ru_idrss=%llu, ", zero_extend_signed_to_ull(ru.ru_idrss));
-		tprintf("ru_isrss=%llu, ", zero_extend_signed_to_ull(ru.ru_isrss));
-		tprintf("ru_minflt=%llu, ", zero_extend_signed_to_ull(ru.ru_minflt));
-		tprintf("ru_majflt=%llu, ", zero_extend_signed_to_ull(ru.ru_majflt));
-		tprintf("ru_nswap=%llu, ", zero_extend_signed_to_ull(ru.ru_nswap));
-		tprintf("ru_inblock=%llu, ", zero_extend_signed_to_ull(ru.ru_inblock));
-		tprintf("ru_oublock=%llu, ", zero_extend_signed_to_ull(ru.ru_oublock));
-		tprintf("ru_msgsnd=%llu, ", zero_extend_signed_to_ull(ru.ru_msgsnd));
-		tprintf("ru_msgrcv=%llu, ", zero_extend_signed_to_ull(ru.ru_msgrcv));
-		tprintf("ru_nsignals=%llu, ", zero_extend_signed_to_ull(ru.ru_nsignals));
-		tprintf("ru_nvcsw=%llu, ", zero_extend_signed_to_ull(ru.ru_nvcsw));
-		tprintf("ru_nivcsw=%llu}", zero_extend_signed_to_ull(ru.ru_nivcsw));
+	s_insert_struct("ru_utime");
+	s_insert_llu("tv_sec",  zero_extend_signed_to_ull(ru.ru_utime.tv_sec));
+	s_insert_llu("tv_usec", zero_extend_signed_to_ull(ru.ru_utime.tv_usec));
+	s_struct_finish();
+
+	s_insert_struct("ru_stime");
+	s_insert_llu("tv_sec",  zero_extend_signed_to_ull(ru.ru_stime.tv_sec));
+	s_insert_llu("tv_usec", zero_extend_signed_to_ull(ru.ru_stime.tv_usec));
+	s_struct_finish();
+
+	if (abbrev(current_tcp)) {
+		s_insert_ellipsis();
+	} else {
+		s_insert_llu("ru_maxrss",   zero_extend_signed_to_ull(ru.ru_maxrss));
+		s_insert_llu("ru_ixrss",    zero_extend_signed_to_ull(ru.ru_ixrss));
+		s_insert_llu("ru_idrss",    zero_extend_signed_to_ull(ru.ru_idrss));
+		s_insert_llu("ru_isrss",    zero_extend_signed_to_ull(ru.ru_isrss));
+		s_insert_llu("ru_minflt",   zero_extend_signed_to_ull(ru.ru_minflt));
+		s_insert_llu("ru_majflt",   zero_extend_signed_to_ull(ru.ru_majflt));
+		s_insert_llu("ru_nswap",    zero_extend_signed_to_ull(ru.ru_nswap));
+		s_insert_llu("ru_inblock",  zero_extend_signed_to_ull(ru.ru_inblock));
+		s_insert_llu("ru_oublock",  zero_extend_signed_to_ull(ru.ru_oublock));
+		s_insert_llu("ru_msgsnd",   zero_extend_signed_to_ull(ru.ru_msgsnd));
+		s_insert_llu("ru_msgrcv",   zero_extend_signed_to_ull(ru.ru_msgrcv));
+		s_insert_llu("ru_nsignals", zero_extend_signed_to_ull(ru.ru_nsignals));
+		s_insert_llu("ru_nvcsw",    zero_extend_signed_to_ull(ru.ru_nvcsw));
+		s_insert_llu("ru_nivcsw",   zero_extend_signed_to_ull(ru.ru_nivcsw));
 	}
+
+	return sizeof(ru);
+}
+
+#ifdef IN_MPERS
+static inline
+#endif
+void
+s_insert_rusage(const char *name, unsigned long addr)
+{
+	s_insert_addr_type(name, addr, S_TYPE_struct,
+		MPERS_FUNC_NAME(fetch_fill_rusage), NULL);
+}
+
+#ifdef IN_MPERS
+static inline
+#endif
+void
+s_push_rusage(const char *name)
+{
+	s_push_addr_type(name, S_TYPE_struct,
+		MPERS_FUNC_NAME(fetch_fill_rusage), NULL);
 }
 
 #ifdef ALPHA
-void
-printrusage32(struct tcb *tcp, long addr)
+ssize_t
+fetch_fill_rusage32(struct s_arg *arg, long addr, void *fn_data)
 {
 	struct timeval32 {
 		unsigned tv_sec;
@@ -96,29 +124,49 @@ printrusage32(struct tcb *tcp, long addr)
 		long	ru_nivcsw;		/* involuntary " */
 	} ru;
 
-	if (umove_or_printaddr(tcp, addr, &ru))
-		return;
+	if (s_umove_verbose(current_tcp, addr, &ru))
+		return -1;
 
-	tprintf("{ru_utime={%lu, %lu}, ru_stime={%lu, %lu}, ",
-		(long) ru.ru_utime.tv_sec, (long) ru.ru_utime.tv_usec,
-		(long) ru.ru_stime.tv_sec, (long) ru.ru_stime.tv_usec);
-	if (abbrev(tcp))
-		tprints("...}");
-	else {
-		tprintf("ru_maxrss=%lu, ", ru.ru_maxrss);
-		tprintf("ru_ixrss=%lu, ", ru.ru_ixrss);
-		tprintf("ru_idrss=%lu, ", ru.ru_idrss);
-		tprintf("ru_isrss=%lu, ", ru.ru_isrss);
-		tprintf("ru_minflt=%lu, ", ru.ru_minflt);
-		tprintf("ru_majflt=%lu, ", ru.ru_majflt);
-		tprintf("ru_nswap=%lu, ", ru.ru_nswap);
-		tprintf("ru_inblock=%lu, ", ru.ru_inblock);
-		tprintf("ru_oublock=%lu, ", ru.ru_oublock);
-		tprintf("ru_msgsnd=%lu, ", ru.ru_msgsnd);
-		tprintf("ru_msgrcv=%lu, ", ru.ru_msgrcv);
-		tprintf("ru_nsignals=%lu, ", ru.ru_nsignals);
-		tprintf("ru_nvcsw=%lu, ", ru.ru_nvcsw);
-		tprintf("ru_nivcsw=%lu}", ru.ru_nivcsw);
+	s_insert_struct("ru_utime");
+	s_insert_llu("tv_sec",  (long)ru.ru_utime.tv_sec);
+	s_insert_llu("tv_usec", (long)ru.ru_utime.tv_usec);
+	s_struct_finish();
+
+	s_insert_struct("ru_stime");
+	s_insert_llu("tv_sec",  (long)ru.ru_stime.tv_sec);
+	s_insert_llu("tv_usec", (long)ru.ru_stime.tv_usec);
+	s_struct_finish();
+
+	if (abbrev(current_tcp)) {
+		s_insert_ellipsis();
+	} else {
+		s_insert_lu("ru_maxrss",   ru.ru_maxrss);
+		s_insert_lu("ru_ixrss",    ru.ru_ixrss);
+		s_insert_lu("ru_idrss",    ru.ru_idrss);
+		s_insert_lu("ru_isrss",    ru.ru_isrss);
+		s_insert_lu("ru_minflt",   ru.ru_minflt);
+		s_insert_lu("ru_majflt",   ru.ru_majflt);
+		s_insert_lu("ru_nswap",    ru.ru_nswap);
+		s_insert_lu("ru_inblock",  ru.ru_inblock);
+		s_insert_lu("ru_oublock",  ru.ru_oublock);
+		s_insert_lu("ru_msgsnd",   ru.ru_msgsnd);
+		s_insert_lu("ru_msgrcv",   ru.ru_msgrcv);
+		s_insert_lu("ru_nsignals", ru.ru_nsignals);
+		s_insert_lu("ru_nvcsw",    ru.ru_nvcsw);
+		s_insert_lu("ru_nivcsw",   ru.ru_nivcsw);
 	}
 }
+
+void
+s_insert_rusage32(const char *name, unsigned long addr)
+{
+	s_insert_addr_type(name, addr, S_TYPE_struct, fetch_fill_rusage32, NULL);
+}
+
+void
+s_push_rusage32(const char *name)
+{
+	s_push_addr_type(name, S_TYPE_struct, fetch_fill_rusage32, NULL);
+}
+
 #endif

@@ -39,13 +39,13 @@ typedef struct statfs64 struct_statfs64;
 
 #include "statfs.h"
 
-MPERS_PRINTER_DECL(bool, fetch_struct_statfs,
+MPERS_PRINTER_DECL(ssize_t, fetch_struct_statfs,
 		   struct tcb *tcp, const long addr, struct strace_statfs *p)
 {
 	struct_statfs b;
 
-	if (umove(tcp, addr, &b))
-		return false;
+	if (s_umove_verbose(tcp, addr, &b))
+		return -1;
 
 	p->f_type = zero_extend_signed_to_ull(b.f_type);
 	p->f_bsize = zero_extend_signed_to_ull(b.f_bsize);
@@ -69,7 +69,7 @@ MPERS_PRINTER_DECL(bool, fetch_struct_statfs,
 	p->f_flags = zero_extend_signed_to_ull(b.f_flags);
 #endif
 
-	return true;
+	return sizeof(b);
 }
 
 #if defined ARM || (defined AARCH64 && defined IN_MPERS)
@@ -77,9 +77,9 @@ MPERS_PRINTER_DECL(bool, fetch_struct_statfs,
 # define COMPAT_STATFS64_PADDED_SIZE (sizeof(struct_statfs64) + 4)
 #endif
 
-MPERS_PRINTER_DECL(bool, fetch_struct_statfs64,
-		   struct tcb *tcp, const long addr, const unsigned long size,
-		   struct strace_statfs *p)
+MPERS_PRINTER_DECL(ssize_t, fetch_struct_statfs64,
+	struct tcb *tcp, const long unsigned addr, const unsigned long size,
+	struct strace_statfs *p)
 {
 	struct_statfs64 b;
 
@@ -88,10 +88,10 @@ MPERS_PRINTER_DECL(bool, fetch_struct_statfs64,
 	    && sizeof(b) != COMPAT_STATFS64_PADDED_SIZE
 #endif
 	   ) {
-		return false;
+		return -1;
 	}
 
-	if (umove(tcp, addr, &b))
+	if (s_umove_verbose(tcp, addr, &b))
 		return false;
 
 	p->f_type = zero_extend_signed_to_ull(b.f_type);
@@ -116,5 +116,5 @@ MPERS_PRINTER_DECL(bool, fetch_struct_statfs64,
 	p->f_flags = zero_extend_signed_to_ull(b.f_flags);
 #endif
 
-	return true;
+	return sizeof(b);
 }

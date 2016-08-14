@@ -29,6 +29,7 @@
  */
 
 #include "defs.h"
+#include "seccomp_structured.h"
 
 #include <sys/prctl.h>
 
@@ -65,19 +66,20 @@ enum {
 static void
 print_prctl_args(struct tcb *tcp, const unsigned int first)
 {
+	static const char *arg_names[] =
+		{ "option", "arg2", "arg3", "arg4", "arg5" };
 	unsigned int i;
 
-	for (i = first; i < tcp->s_ent->nargs; ++i)
-		tprintf(", %#lx", tcp->u_arg[i]);
+	for (i = first; i < MIN(tcp->s_ent->nargs, ARRAY_SIZE(arg_names)); ++i)
+		s_push_lx(arg_names[i]);
 }
 
 SYS_FUNC(prctl)
 {
 	const unsigned int option = tcp->u_arg[0];
-	unsigned int i;
 
 	if (entering(tcp))
-		printxval(prctl_options, option, "PR_???");
+		s_push_xlat_int("option", prctl_options, "PR_???");
 
 	switch (option) {
 	case PR_GET_DUMPABLE:
@@ -92,30 +94,27 @@ SYS_FUNC(prctl)
 	case PR_GET_FPEMU:
 	case PR_GET_FPEXC:
 		if (entering(tcp))
-			tprints(", ");
+			s_changeable_void("arg2");
 		else
-			printnum_int(tcp, tcp->u_arg[1], "%u");
+			s_push_u_addr("arg2");
 		break;
 
 	case PR_GET_NAME:
-		if (entering(tcp))
-			tprints(", ");
-		else {
+		if (entering(tcp)) {
+			s_changeable_void("arg2");
+		} else {
 			if (syserror(tcp))
-				printaddr(tcp->u_arg[1]);
+				s_push_addr("arg2");
 			else
-				printstr(tcp, tcp->u_arg[1], -1);
+				s_push_str("arg2", -1);
 		}
 		break;
 
 	case PR_GET_PDEATHSIG:
 		if (entering(tcp))
-			tprints(", ");
-		else if (!umove_or_printaddr(tcp, tcp->u_arg[1], &i)) {
-			tprints("[");
-			tprints(signame(i));
-			tprints("]");
-		}
+			s_changeable_void("arg2");
+		else
+			s_push_signo_addr("addr2");
 		break;
 
 	case PR_GET_SECUREBITS:
@@ -129,29 +128,23 @@ SYS_FUNC(prctl)
 
 	case PR_GET_TID_ADDRESS:
 		if (entering(tcp))
-			tprints(", ");
+			s_changeable_void("arg2");
 		else
-			printnum_ptr(tcp, tcp->u_arg[1]);
+			s_push_lu_addr("arg2");
 		break;
 
 	case PR_GET_TSC:
 		if (entering(tcp))
-			tprints(", ");
-		else if (!umove_or_printaddr(tcp, tcp->u_arg[1], &i)) {
-			tprints("[");
-			printxval(pr_tsc, i, "PR_TSC_???");
-			tprints("]");
-		}
+			s_changeable_void("arg2");
+		else
+			s_push_xlat_int_addr("arg2", pr_tsc, "PR_TSC_???");
 		break;
 
 	case PR_GET_UNALIGN:
 		if (entering(tcp))
-			tprints(", ");
-		else if (!umove_or_printaddr(tcp, tcp->u_arg[1], &i)) {
-			tprints("[");
-			printflags(pr_unalign_flags, i, "PR_UNALIGN_???");
-			tprints("]");
-		}
+			s_changeable_void("arg2");
+		else
+			s_push_xlat_int_addr("arg2", pr_unalign_flags, "PR_UNALIGN_???");
 		break;
 
 	/* PR_TASK_PERF_EVENTS_* take no arguments. */
@@ -166,25 +159,21 @@ SYS_FUNC(prctl)
 	case PR_SET_FPEXC:
 	case PR_SET_KEEPCAPS:
 	case PR_SET_TIMING:
-		tprintf(", %lu", tcp->u_arg[1]);
+		s_push_lu("arg2");
 		return RVAL_DECODED;
 
 	case PR_CAPBSET_DROP:
 	case PR_CAPBSET_READ:
-		tprints(", ");
-		printxval_long(cap, tcp->u_arg[1], "CAP_???");
+		s_push_xlat_long("arg2", cap, "CAP_???");
 		return RVAL_DECODED;
 
 	case PR_CAP_AMBIENT:
-		tprints(", ");
-		printxval_long(pr_cap_ambient, tcp->u_arg[1],
-			       "PR_CAP_AMBIENT_???");
+		s_push_xlat_long("arg2", pr_cap_ambient, "PR_CAP_AMBIENT_???");
 		switch (tcp->u_arg[1]) {
 		case PR_CAP_AMBIENT_RAISE:
 		case PR_CAP_AMBIENT_LOWER:
 		case PR_CAP_AMBIENT_IS_SET:
-			tprints(", ");
-			printxval_long(cap, tcp->u_arg[2], "CAP_???");
+			s_push_xlat_long("arg3", cap, "CAP_???");
 			print_prctl_args(tcp, 3);
 			break;
 		default:
@@ -194,20 +183,16 @@ SYS_FUNC(prctl)
 		return RVAL_DECODED;
 
 	case PR_MCE_KILL:
-		tprints(", ");
-		printxval_long(pr_mce_kill, tcp->u_arg[1], "PR_MCE_KILL_???");
-		tprints(", ");
+		s_push_xlat_long("arg2", pr_mce_kill, "PR_MCE_KILL_???");
 		if (PR_MCE_KILL_SET == tcp->u_arg[1])
-			printxval_long(pr_mce_kill_policy, tcp->u_arg[2],
-				   "PR_MCE_KILL_???");
+			s_push_xlat_long("arg3", pr_mce_kill_policy, "PR_MCE_KILL_???");
 		else
-			tprintf("%#lx", tcp->u_arg[2]);
+			s_push_lx("arg3");
 		print_prctl_args(tcp, 3);
 		return RVAL_DECODED;
 
 	case PR_SET_NAME:
-		tprints(", ");
-		printstr(tcp, tcp->u_arg[1], TASK_COMM_LEN);
+		s_push_str("arg2", TASK_COMM_LEN);
 		return RVAL_DECODED;
 
 #ifdef __ANDROID__
@@ -216,9 +201,10 @@ SYS_FUNC(prctl)
 # endif
 	case PR_SET_VMA:
 		if (tcp->u_arg[1] == PR_SET_VMA_ANON_NAME) {
-			tprintf(", PR_SET_VMA_ANON_NAME, %#lx", tcp->u_arg[2]);
-			tprintf(", %lu, ", tcp->u_arg[3]);
-			printstr(tcp, tcp->u_arg[4], -1);
+			s_push_xlat_long("arg2", NULL, "PR_SET_VMA_ANON_NAME");
+			s_push_lx("arg3");
+			s_push_lu("arg4");
+			s_push_str("arg5", -1);
 		} else {
 			/* There are no other sub-options now, but there
 			 * might be in future... */
@@ -228,63 +214,54 @@ SYS_FUNC(prctl)
 #endif
 
 	case PR_SET_MM:
-		tprints(", ");
-		printxval(pr_set_mm, tcp->u_arg[1], "PR_SET_MM_???");
+		s_push_xlat_long("arg2", pr_set_mm, "PR_SET_MM_???");
 		print_prctl_args(tcp, 2);
 		return RVAL_DECODED;
 
 	case PR_SET_PDEATHSIG:
-		tprints(", ");
 		if ((unsigned long) tcp->u_arg[1] > 128)
-			tprintf("%lu", tcp->u_arg[1]);
+			s_push_lu("arg2");
 		else
-			tprints(signame(tcp->u_arg[1]));
+			s_push_signo("arg2");
 		return RVAL_DECODED;
 
 	case PR_SET_PTRACER:
-		tprints(", ");
 		if (tcp->u_arg[1] == -1)
-			tprints("PR_SET_PTRACER_ANY");
+			s_push_xlat_long("arg2", NULL, "PR_SET_PTRACER_ANY");
 		else
-			tprintf("%lu", tcp->u_arg[1]);
+			s_push_lu("arg2");
 		return RVAL_DECODED;
 
 	case PR_SET_SECCOMP:
-		tprints(", ");
-		printxval_long(seccomp_mode, tcp->u_arg[1],
-			  "SECCOMP_MODE_???");
+		s_push_xlat_long("arg2", seccomp_mode, "SECCOMP_MODE_???");
 		if (SECCOMP_MODE_STRICT == tcp->u_arg[1])
 			return RVAL_DECODED;
 		if (SECCOMP_MODE_FILTER == tcp->u_arg[1]) {
-			tprints(", ");
-			print_seccomp_filter(tcp, tcp->u_arg[2]);
+			s_push_seccomp_filter("arg3");
 			return RVAL_DECODED;
 		}
 		print_prctl_args(tcp, 2);
 		return RVAL_DECODED;
 
 	case PR_SET_SECUREBITS:
-		tprints(", ");
-		printflags_long(secbits, tcp->u_arg[1], "SECBIT_???");
+		s_push_flags_long("arg2", secbits, "SECBIT_???");
 		return RVAL_DECODED;
 
 	case PR_SET_TIMERSLACK:
-		tprintf(", %ld", tcp->u_arg[1]);
+		s_push_ld("arg2");
 		return RVAL_DECODED;
 
 	case PR_SET_TSC:
-		tprints(", ");
-		printxval(pr_tsc, tcp->u_arg[1], "PR_TSC_???");
+		s_push_xlat_int("arg2", pr_tsc, "PR_TSC_???");
 		return RVAL_DECODED;
 
 	case PR_SET_UNALIGN:
-		tprints(", ");
-		printflags(pr_unalign_flags, tcp->u_arg[1], "PR_UNALIGN_???");
+		s_push_flags_int("arg2", pr_unalign_flags, "PR_UNALIGN_???");
 		return RVAL_DECODED;
 
 	case PR_SET_NO_NEW_PRIVS:
 	case PR_SET_THP_DISABLE:
-		tprintf(", %lu", tcp->u_arg[1]);
+		s_push_lu("arg2");
 		print_prctl_args(tcp, 2);
 		return RVAL_DECODED;
 
@@ -319,19 +296,19 @@ SYS_FUNC(arch_prctl)
 	const unsigned int option = tcp->u_arg[0];
 
 	if (entering(tcp))
-		printxval(archvals, option, "ARCH_???");
+		s_push_xlat_int("option", archvals, "ARCH_???");
 
 	switch (option) {
 	case ARCH_GET_GS:
 	case ARCH_GET_FS:
 		if (entering(tcp))
-			tprints(", ");
+			s_changeable_void("arg2");
 		else
-			printnum_ptr(tcp, tcp->u_arg[1]);
+			s_push_lx_addr("arg2");
 		return 0;
 	}
 
-	tprintf(", %#lx", tcp->u_arg[1]);
+	s_push_lx("arg2");
 	return RVAL_DECODED;
 }
 #endif /* X86_64 || X32 */

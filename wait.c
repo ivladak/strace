@@ -33,6 +33,7 @@
  */
 
 #include "defs.h"
+#include "printrusage.h"
 
 #include <sys/wait.h>
 
@@ -57,10 +58,13 @@
 # define W_CONTINUED 0xffff
 #endif
 
+#include <signal.h>
+
+#include "printsiginfo.h"
 #include "ptrace.h"
 #include "xlat/ptrace_events.h"
 
-static int
+int
 printstatus(int status)
 {
 	int exited = 0;
@@ -72,31 +76,31 @@ printstatus(int status)
 	 */
 	if (WIFSTOPPED(status)) {
 		int sig = WSTOPSIG(status);
-		tprintf("[{WIFSTOPPED(s) && WSTOPSIG(s) == %s%s}",
+		tprintf("{WIFSTOPPED(s) && WSTOPSIG(s) == %s%s}",
 			signame(sig & 0x7f),
 			sig & 0x80 ? " | 0x80" : "");
 		status &= ~W_STOPCODE(sig);
 	}
 	else if (WIFSIGNALED(status)) {
-		tprintf("[{WIFSIGNALED(s) && WTERMSIG(s) == %s%s}",
+		tprintf("{WIFSIGNALED(s) && WTERMSIG(s) == %s%s}",
 			signame(WTERMSIG(status)),
 			WCOREDUMP(status) ? " && WCOREDUMP(s)" : "");
 		status &= ~(W_EXITCODE(0, WTERMSIG(status)) | WCOREFLAG);
 	}
 	else if (WIFEXITED(status)) {
-		tprintf("[{WIFEXITED(s) && WEXITSTATUS(s) == %d}",
+		tprintf("{WIFEXITED(s) && WEXITSTATUS(s) == %d}",
 			WEXITSTATUS(status));
 		exited = 1;
 		status &= ~W_EXITCODE(WEXITSTATUS(status), 0);
 	}
 #ifdef WIFCONTINUED
 	else if (WIFCONTINUED(status)) {
-		tprints("[{WIFCONTINUED(s)}");
+		tprints("{WIFCONTINUED(s)}");
 		status &= ~W_CONTINUED;
 	}
 #endif
 	else {
-		tprintf("[%#x]", status);
+		tprintf("%#x", status);
 		return 0;
 	}
 
@@ -111,13 +115,12 @@ printstatus(int status)
 		if (status)
 			tprintf(" | %#x", status);
 	}
-	tprints("]");
 
 	return exited;
 }
 
 static int
-printwaitn(struct tcb *tcp, void (*const print_rusage)(struct tcb *, long))
+printwaitn(struct tcb *tcp, s_fetch_fill_arg_fn rusage_fn)
 {
 	if (entering(tcp)) {
 		/* On Linux, kernel-side pid_t is typedef'ed to int
@@ -126,26 +129,24 @@ printwaitn(struct tcb *tcp, void (*const print_rusage)(struct tcb *, long))
 		 * for example, wait4(4294967295, ...) instead of -1
 		 * in strace. We have to use int here, not long.
 		 */
-		int pid = tcp->u_arg[0];
-		tprintf("%d, ", pid);
+		s_push_d("pid");
+		s_changeable_void("wstatus");
+		s_push_flags_signed("options", wait4_options, "W???");
+		if (rusage_fn)
+			s_changeable_void("rusage");
 	} else {
-		int status;
-
 		/* status */
 		if (tcp->u_rval == 0)
-			printaddr(tcp->u_arg[1]);
-		else if (!umove_or_printaddr(tcp, tcp->u_arg[1], &status))
-			printstatus(status);
-		/* options */
-		tprints(", ");
-		printflags(wait4_options, tcp->u_arg[2], "W???");
-		if (print_rusage) {
+			s_push_addr("wstatus");
+		else
+			s_push_wstatus_addr("wstatus");
+
+		if (rusage_fn) {
 			/* usage */
-			tprints(", ");
 			if (tcp->u_rval > 0)
-				print_rusage(tcp, tcp->u_arg[3]);
+				s_push_addr_type("ru", S_TYPE_struct, rusage_fn, NULL);
 			else
-				printaddr(tcp->u_arg[3]);
+				s_push_addr("ru");
 		}
 	}
 	return 0;
@@ -158,13 +159,13 @@ SYS_FUNC(waitpid)
 
 SYS_FUNC(wait4)
 {
-	return printwaitn(tcp, printrusage);
+	return printwaitn(tcp, fetch_fill_rusage);
 }
 
 #ifdef ALPHA
 SYS_FUNC(osf_wait4)
 {
-	return printwaitn(tcp, printrusage32);
+	return printwaitn(tcp, fetch_fill_rusage32);
 }
 #endif
 
@@ -173,18 +174,14 @@ SYS_FUNC(osf_wait4)
 SYS_FUNC(waitid)
 {
 	if (entering(tcp)) {
-		printxval(waitid_types, tcp->u_arg[0], "P_???");
-		int pid = tcp->u_arg[1];
-		tprintf(", %d, ", pid);
+		s_push_xlat_signed("which", waitid_types, "P_???");
+		s_push_d("pid");
+		s_changeable_void("infop");
+		s_push_flags_signed("options", wait4_options, "W???");
+		s_changeable_void("ru");
 	} else {
-		/* siginfo */
-		printsiginfo_at(tcp, tcp->u_arg[2]);
-		/* options */
-		tprints(", ");
-		printflags(wait4_options, tcp->u_arg[3], "W???");
-		/* usage */
-		tprints(", ");
-		printrusage(tcp, tcp->u_arg[4]);
+		s_push_siginfo("infop");
+		s_push_rusage("ru");
 	}
 	return 0;
 }

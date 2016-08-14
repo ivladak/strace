@@ -8,17 +8,18 @@ typedef struct utimbuf utimbuf_t;
 
 #include MPERS_DEFS
 
-static int fill_utimbuf(struct s_arg *arg, long addr, void *fn_data)
+static ssize_t
+fill_utimbuf(struct s_arg *arg, unsigned long addr, void *fn_data)
 {
 	utimbuf_t u;
 
-	if (umove((struct tcb *)fn_data, addr, &u))
+	if (s_umove_verbose((struct tcb *)fn_data, addr, &u))
 		return -1;
 
 	s_insert_time("actime", u.actime);
 	s_insert_time("modtime", u.modtime);
 
-	return 0;
+	return sizeof(u);
 }
 
 SYS_FUNC(utime)

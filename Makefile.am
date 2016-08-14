@@ -183,6 +183,7 @@ strace_SOURCES =	\
 	print_statfs.c	\
 	print_struct_stat.c \
 	print_time.c	\
+	print_time_structured.c \
 	print_timex.c	\
 	printmode.c	\
 	printrusage.c	\

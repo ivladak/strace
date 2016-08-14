@@ -103,6 +103,20 @@ MPERS_PRINTER_DECL(const char *, sprint_timespec,
 	return buf;
 }
 
+MPERS_PRINTER_DECL(ssize_t, s_fetch_fill_timespec,
+	struct s_arg *arg, unsigned long addr, void *fn_data)
+{
+	timespec_t t;
+
+	if (s_umove_verbose(current_tcp, addr, &t))
+		return -1;
+
+	s_insert_lx("tv_sec", t.tv_sec);
+	s_insert_lx("tv_nsec", t.tv_nsec);
+
+	return sizeof(t);
+}
+
 MPERS_PRINTER_DECL(void, print_timespec_utime_pair,
 		   struct tcb *tcp, const long addr)
 {

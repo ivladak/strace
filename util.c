@@ -701,11 +701,6 @@ string_quote(const char *instr, char *outstr, const unsigned int size,
 	return 0;
 }
 
-#ifndef ALLOCA_CUTOFF
-# define ALLOCA_CUTOFF	4032
-#endif
-#define use_alloca(n) ((n) <= ALLOCA_CUTOFF)
-
 int
 alloc_quoted_string(const char *str, char **outstr, unsigned int size,
 			const unsigned int style)

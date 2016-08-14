@@ -68,77 +68,72 @@
 static void
 printsigsource(const siginfo_t *sip)
 {
-	tprintf(", si_pid=%u, si_uid=%u",
-		(unsigned int) sip->si_pid,
-		(unsigned int) sip->si_uid);
+	s_insert_u("si_pid", sip->si_pid);
+	s_insert_u("si_uid", sip->si_uid);
 }
 
 static void
 printsigval(const siginfo_t *sip)
 {
-	tprintf(", si_value={int=%d, ptr=", sip->si_int);
-	printaddr((unsigned long) sip->si_ptr);
-	tprints("}");
+	s_insert_d("si_value", sip->si_int);
+	s_insert_addr("ptr", (unsigned long)sip->si_ptr);
 }
 
 static void
 print_si_code(int si_signo, unsigned int si_code)
 {
-	const char *code = xlookup(siginfo_codes, si_code);
+	const struct xlat *xlat_to_use = siginfo_codes;
 
-	if (!code) {
+	if (!si_code) {
 		switch (si_signo) {
 		case SIGTRAP:
-			code = xlookup(sigtrap_codes, si_code);
+			xlat_to_use = sigtrap_codes;
 			break;
 		case SIGCHLD:
-			code = xlookup(sigchld_codes, si_code);
+			xlat_to_use = sigchld_codes;
 			break;
 		case SIGPOLL:
-			code = xlookup(sigpoll_codes, si_code);
+			xlat_to_use = sigpoll_codes;
 			break;
 		case SIGPROF:
-			code = xlookup(sigprof_codes, si_code);
+			xlat_to_use = sigprof_codes;
 			break;
 		case SIGILL:
-			code = xlookup(sigill_codes, si_code);
+			xlat_to_use = sigill_codes;
 			break;
 #ifdef SIGEMT
 		case SIGEMT:
-			code = xlookup(sigemt_codes, si_code);
+			xlat_to_use = sigemt_codes;
 			break;
 #endif
 		case SIGFPE:
-			code = xlookup(sigfpe_codes, si_code);
+			xlat_to_use = sigfpe_codes;
 			break;
 		case SIGSEGV:
-			code = xlookup(sigsegv_codes, si_code);
+			xlat_to_use = sigsegv_codes;
 			break;
 		case SIGBUS:
-			code = xlookup(sigbus_codes, si_code);
+			xlat_to_use = sigbus_codes;
 			break;
 		case SIGSYS:
-			code = xlookup(sigsys_codes, si_code);
+			xlat_to_use = sigsys_codes;
 			break;
 		}
 	}
 
-	if (code)
-		tprints(code);
-	else
-		tprintf("%#x", si_code);
+	s_insert_xlat_int("si_code", xlat_to_use, si_code, NULL);
 }
 
 static void
 print_si_info(const siginfo_t *sip)
 {
 	if (sip->si_errno) {
-		tprints(", si_errno=");
-		if ((unsigned) sip->si_errno < nerrnos
-		    && errnoent[sip->si_errno])
-			tprints(errnoent[sip->si_errno]);
-		else
-			tprintf("%d", sip->si_errno);
+		const char *errno_str = NULL;
+
+		if ((unsigned) sip->si_errno < nerrnos && errnoent[sip->si_errno])
+			errno_str = errnoent[sip->si_errno];
+
+		s_insert_xlat_signed("si_errno", NULL, sip->si_errno, errno_str);
 	}
 
 	if (SI_FROMUSER(sip)) {
@@ -151,8 +146,8 @@ print_si_info(const siginfo_t *sip)
 			break;
 #if defined HAVE_SIGINFO_T_SI_TIMERID && defined HAVE_SIGINFO_T_SI_OVERRUN
 		case SI_TIMER:
-			tprintf(", si_timerid=%#x, si_overrun=%d",
-				sip->si_timerid, sip->si_overrun);
+			s_insert_x("si_timerid", sip->si_timerid);
+			s_insert_d("si_overrun", sip->si_overrun);
 			printsigval(sip);
 			break;
 #endif
@@ -166,36 +161,32 @@ print_si_info(const siginfo_t *sip)
 		switch (sip->si_signo) {
 		case SIGCHLD:
 			printsigsource(sip);
-			tprints(", si_status=");
 			if (sip->si_code == CLD_EXITED)
-				tprintf("%d", sip->si_status);
+				s_insert_d("si_status", sip->si_status);
 			else
-				printsignal(sip->si_status);
-			tprintf(", si_utime=%llu, si_stime=%llu",
-				zero_extend_signed_to_ull(sip->si_utime),
-				zero_extend_signed_to_ull(sip->si_stime));
+				s_insert_signo("si_status", sip->si_status);
+			s_insert_llu("si_utime", zero_extend_signed_to_ull(sip->si_utime));
+			s_insert_llu("si_stime", zero_extend_signed_to_ull(sip->si_stime));
 			break;
 		case SIGILL: case SIGFPE:
 		case SIGSEGV: case SIGBUS:
-			tprints(", si_addr=");
-			printaddr((unsigned long) sip->si_addr);
+			s_insert_addr("si_addr", (unsigned long)sip->si_addr);
 			break;
 		case SIGPOLL:
 			switch (sip->si_code) {
 			case POLL_IN: case POLL_OUT: case POLL_MSG:
-				tprintf(", si_band=%ld",
-					(long) sip->si_band);
+				s_insert_ld("si_band", (long)sip->si_band);
+				/* XXX mpers? si_fd? */
 				break;
 			}
 			break;
 #ifdef HAVE_SIGINFO_T_SI_SYSCALL
-		case SIGSYS:
-			tprints(", si_call_addr=");
-			printaddr((unsigned long) sip->si_call_addr);
-			tprintf(", si_syscall=__NR_%s, si_arch=",
-				syscall_name((unsigned) sip->si_syscall));
-			printxval(audit_arch, sip->si_arch, "AUDIT_ARCH_???");
+		case SIGSYS: {
+			s_insert_addr("si_call_addr", (unsigned long) sip->si_call_addr);
+			s_insert_scno("si_syscall", (unsigned) sip->si_syscall);
+			s_insert_xlat_int("si_arch", audit_arch, sip->si_arch, "AUDIT_ARCH_???");
 			break;
+		}
 #endif
 		default:
 			if (sip->si_pid || sip->si_uid)
@@ -212,45 +203,71 @@ static
 void
 printsiginfo(const siginfo_t *sip)
 {
-	if (sip->si_signo == 0) {
-		tprints("{}");
+	if (sip->si_signo == 0)
 		return;
-	}
-	tprints("{si_signo=");
-	printsignal(sip->si_signo);
 
-	tprints(", si_code=");
+	s_insert_signo("si_signo", sip->si_signo);
 	print_si_code(sip->si_signo, sip->si_code);
 
 #ifdef SI_NOINFO
 	if (sip->si_code != SI_NOINFO)
 #endif
 		print_si_info(sip);
-
-	tprints("}");
 }
 
-MPERS_PRINTER_DECL(void, printsiginfo_at,
-		   struct tcb *tcp, long addr)
+MPERS_PRINTER_DECL(bool, fetch_siginfo,
+		   struct tcb *tcp, long addr, void *d)
+{
+	return !s_umoven_verbose(tcp, addr, sizeof(siginfo_t), d);
+}
+
+static int
+fill_siginfo_t(struct s_arg *arg, void *buf, size_t len, void *fn_data)
+{
+	printsiginfo((const siginfo_t *)buf);
+	return 0;
+}
+
+#ifdef IN_MPERS
+static inline
+#endif
+ssize_t
+fetch_fill_siginfo_t(struct s_arg *arg, unsigned long addr, void *fn_data)
 {
 	siginfo_t si;
 
-	if (!umove_or_printaddr(tcp, addr, &si))
-		printsiginfo(&si);
+	if (!MPERS_FUNC_NAME(fetch_siginfo)(current_tcp, addr, &si))
+		return -1;
+
+	fill_siginfo_t(arg, &si, sizeof(si), fn_data);
+
+	return sizeof(si);
 }
 
-static bool
-print_siginfo_t(struct tcb *tcp, void *elem_buf, size_t elem_size, void *data)
+#ifdef IN_MPERS
+static inline
+#endif
+void
+s_insert_siginfo(const char *name, unsigned long addr)
 {
-	printsiginfo((const siginfo_t *) elem_buf);
-	return true;
+	s_insert_addr_type(name, addr, S_TYPE_struct, fetch_fill_siginfo_t, NULL);
 }
 
-MPERS_PRINTER_DECL(void, print_siginfo_array,
-		   struct tcb *tcp, unsigned long addr, unsigned long len)
+#ifdef IN_MPERS
+static inline
+#endif
+void
+s_push_siginfo(const char *name)
 {
-	siginfo_t si;
+	s_push_addr_type(name, S_TYPE_struct, fetch_fill_siginfo_t, NULL);
+}
 
-	print_array(tcp, addr, len, &si, sizeof(si),
-		    umoven_or_printaddr, print_siginfo_t, 0);
+#ifdef IN_MPERS
+static inline
+#endif
+void
+s_push_siginfo_array(const char *name, unsigned long nmemb)
+{
+	s_push_array_type("data", nmemb, sizeof(siginfo_t), S_TYPE_struct,
+		fill_siginfo_t, NULL);
 }

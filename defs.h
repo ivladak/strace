@@ -618,7 +618,6 @@ extern bool print_sockaddr_by_inode_cached(const unsigned long);
 extern void print_dirfd(struct tcb *, int);
 extern int decode_sockaddr(struct tcb *, long, int);
 #ifdef ALPHA
-extern void printrusage32(struct tcb *, long);
 extern const char *sprint_timeval32(struct tcb *tcp, long);
 extern void print_timeval32(struct tcb *tcp, long);
 extern void print_timeval32_pair(struct tcb *tcp, long);
@@ -636,15 +635,16 @@ extern void tprint_iov_upto(struct tcb *, unsigned long, unsigned long,
 extern void decode_netlink(struct tcb *, unsigned long, unsigned long);
 extern void tprint_open_modes(unsigned int);
 extern const char *sprint_open_modes(unsigned int);
-extern void print_seccomp_filter(struct tcb *, unsigned long);
-extern void print_seccomp_fprog(struct tcb *, unsigned long, unsigned short);
 
 struct strace_stat;
 extern void print_struct_stat(struct tcb *tcp, const struct strace_stat *const st);
 
+struct strace_rusage;
 struct strace_statfs;
-extern int fill_struct_statfs(struct s_arg *arg, long addr, void *fn_data);
-extern int fill_struct_statfs64(struct s_arg *arg, long addr, void *fn_data);
+extern ssize_t fill_struct_statfs(struct s_arg *arg, unsigned long addr,
+	void *fn_data);
+extern ssize_t fill_struct_statfs64(struct s_arg *arg, unsigned long addr,
+	void *fn_data);
 
 extern void print_ifindex(unsigned int);
 
@@ -853,6 +853,11 @@ extern unsigned num_quals;
 #define PRI__d64 PRI__64"d"
 #define PRI__u64 PRI__64"u"
 #define PRI__x64 PRI__64"x"
+
+#ifndef ALLOCA_CUTOFF
+# define ALLOCA_CUTOFF	4032
+#endif
+#define use_alloca(n) ((n) <= ALLOCA_CUTOFF)
 
 #include "structured-inlines.h"
 #endif /* !STRACE_DEFS_H */

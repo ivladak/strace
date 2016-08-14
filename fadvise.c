@@ -52,7 +52,7 @@ SYS_FUNC(fadvise64_64)
 	s_push_fd("fd");
 #if defined __ARM_EABI__ || defined AARCH64 || defined POWERPC || defined XTENSA
 	s_push_empty(S_TYPE_d);
-#else
+#endif
 	s_push_lld("offset");
 	s_push_lld("len");
 

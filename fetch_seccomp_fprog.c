@@ -34,19 +34,20 @@ typedef struct seccomp_fprog seccomp_fprog_t;
 
 #include MPERS_DEFS
 
-MPERS_PRINTER_DECL(bool, fetch_seccomp_fprog,
+MPERS_PRINTER_DECL(ssize_t, fetch_seccomp_fprog,
 		   struct tcb *tcp, const long addr, void *p)
 {
 	struct seccomp_fprog *pfp = p;
 	seccomp_fprog_t mfp;
 
 	if (sizeof(*pfp) == sizeof(mfp))
-		return !umove_or_printaddr(tcp, addr, pfp);
+		return s_umove_verbose(tcp, addr, pfp) ? -1 : (ssize_t)sizeof(*pfp);
 
-	if (umove_or_printaddr(tcp, addr, &mfp))
-		return false;
+	if (s_umove_verbose(tcp, addr, &mfp))
+		return -1;
 
 	pfp->len = mfp.len;
 	pfp->filter = mfp.filter;
-	return true;
+
+	return sizeof(*pfp);
 }

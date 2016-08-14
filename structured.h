@@ -24,6 +24,11 @@
 	 (x <= POW2(8)) ? 8 : ~0)
 
 
+enum s_syscall_type {
+	S_SCT_SYSCALL,
+	S_SCT_SIGNAL,
+};
+
 enum s_type_size {
 	S_TYPE_SIZE_c,
 	S_TYPE_SIZE_h,
@@ -73,6 +78,12 @@ enum s_type_fmt {
 	S_TYPE_FMT_gid,
 	S_TYPE_FMT_time,
 	S_TYPE_FMT_dirfd,
+	S_TYPE_FMT_signo,
+	S_TYPE_FMT_scno,
+	S_TYPE_FMT_wstatus,
+	S_TYPE_FMT_rlim32,
+	S_TYPE_FMT_rlim64,
+	S_TYPE_FMT_ptrace_uaddr,
 
 	S_TYPE_FMT_umask,
 	S_TYPE_FMT_umode_t,
@@ -143,7 +154,13 @@ enum s_type {
 
 	S_TYPE_uid      = S_TYPE_DEF(i,  unsigned, uid,     num),
 	S_TYPE_gid      = S_TYPE_DEF(i,  unsigned, gid,     num),
-	S_TYPE_time     = S_TYPE_DEF(ll, unsigned, time,    num),
+	S_TYPE_time     = S_TYPE_DEF(i,  unsigned, time,    num),
+
+	S_TYPE_signo    = S_TYPE_DEF(i,  unsigned, signo,   num),
+	S_TYPE_scno     = S_TYPE_DEF(i,  unsigned, scno,    num),
+	S_TYPE_wstatus  = S_TYPE_DEF(i,  unsigned, wstatus, num),
+	S_TYPE_rlim32   = S_TYPE_DEF(i,  unsigned, rlim32,  num),
+	S_TYPE_rlim64   = S_TYPE_DEF(ll, unsigned, rlim64,  num),
 
 	S_TYPE_umask    = S_TYPE_DEF(l,  unsigned, umask,   num),
 	S_TYPE_umode_t  = S_TYPE_DEF(h,  unsigned, umode_t, num),
@@ -155,6 +172,8 @@ enum s_type {
 	S_TYPE_dirfd    = S_TYPE_DEF(i,  unsigned, dirfd,   fd),
 
 	S_TYPE_path     = S_TYPE_DEF(l,  unsigned, default, path),
+
+	S_TYPE_ptrace_uaddr = S_TYPE_DEF(l,  unsigned, ptrace_uaddr, addr),
 
 	S_TYPE_xlat     = S_TYPE_DEF(i,  unsigned, hex,     xlat),
 	S_TYPE_xlat_l   = S_TYPE_DEF(l,  unsigned, hex,     xlat),
@@ -182,7 +201,7 @@ struct s_syscall;
 
 struct s_arg {
 	struct s_syscall *syscall;
-	const char *name; /* if is a field of a struct */
+	const char *name;
 	enum s_type type;
 	int arg_num;
 
@@ -207,6 +226,7 @@ struct s_syscall {
 	struct s_args args;
 	struct args_queue changeable_args;
 	enum s_type ret_type;
+	enum s_syscall_type type;
 
 	struct s_args_list insertion_stack;
 };
@@ -217,6 +237,8 @@ struct s_struct {
 	struct s_arg arg;
 
 	struct s_args args;
+	/** Auxiliary non-standard string representation */
+	char *aux_str;
 };
 
 /* complex arguments */
@@ -275,6 +297,7 @@ struct s_printer {
 	void (*print_tv)(struct tcb *tcp, struct timeval *tv);
 	void (*print_unavailable_entering)(struct tcb *tcp, int scno_good);
 	void (*print_unavailable_exiting)(struct tcb *tcp);
+	void (*print_signal)(struct tcb *tcp);
 };
 
 enum syscall_print_xlat_bits {
@@ -289,7 +312,11 @@ enum syscall_print_xlat_flags {
 
 typedef void (*s_print_xlat_fn)(enum s_type type, uint64_t value, uint64_t mask,
 	const char *str, uint32_t flags, void *fn_data);
-typedef int (*s_fill_arg_fn)(struct s_arg *arg, long addr, void *fn_data);
+/** Returns amount of bytes read. */
+typedef ssize_t (*s_fetch_fill_arg_fn)(struct s_arg *arg, unsigned long addr,
+	void *fn_data);
+typedef int (*s_fill_arg_fn)(struct s_arg *arg, void *buf, size_t len,
+	void *fn_data);
 
 /* prototypes */
 
@@ -341,7 +368,8 @@ extern struct args_queue *s_syscall_insertion_point(struct s_syscall *s);
 extern struct args_queue *s_syscall_pop(struct s_syscall *s);
 extern struct args_queue *s_syscall_pop_all(struct s_syscall *s);
 
-extern struct s_syscall *s_syscall_new(struct tcb *tcp);
+extern struct s_syscall *s_syscall_new(struct tcb *tcp,
+	enum s_syscall_type sc_type);
 extern void s_last_is_changeable(struct tcb *tcp);
 extern void s_syscall_free(struct tcb *tcp);
 
@@ -359,5 +387,6 @@ extern void s_syscall_print_resumed(struct tcb *tcp);
 extern void s_syscall_print_tv(struct tcb *tcp, struct timeval *tv);
 extern void s_syscall_print_unavailable_entering(struct tcb *tcp, int scno_good);
 extern void s_syscall_print_unavailable_exiting(struct tcb *tcp);
+extern void s_syscall_print_signal(struct tcb *tcp, const void *si, unsigned sig);
 
 #endif /* #ifndef STRACE_STRUCTURED_H */

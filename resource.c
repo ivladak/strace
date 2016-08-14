@@ -28,12 +28,15 @@
  * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include "defs.h"
 #include <sys/resource.h>
+
+#include "defs.h"
+#include "printrusage.h"
+
 
 #include "xlat/resources.h"
 
-static const char *
+const char *
 sprint_rlim64(uint64_t lim)
 {
 	static char buf[sizeof(uint64_t)*3 + sizeof("*1024")];
@@ -48,23 +51,26 @@ sprint_rlim64(uint64_t lim)
 	return buf;
 }
 
-static void
-print_rlimit64(struct tcb *tcp, unsigned long addr)
+static ssize_t
+print_rlimit64(struct s_arg *arg, unsigned long addr, void *fn_data)
 {
 	struct rlimit_64 {
 		uint64_t rlim_cur;
 		uint64_t rlim_max;
 	} rlim;
 
-	if (!umove_or_printaddr(tcp, addr, &rlim)) {
-		tprintf("{rlim_cur=%s,", sprint_rlim64(rlim.rlim_cur));
-		tprintf(" rlim_max=%s}", sprint_rlim64(rlim.rlim_max));
-	}
+	if (s_umove_verbose(current_tcp, addr, &rlim))
+		return -1;
+
+	s_insert_rlim64("rlim_cur", rlim.rlim_cur);
+	s_insert_rlim64("rlim_max", rlim.rlim_max);
+
+	return sizeof(rlim);
 }
 
 #if !defined(current_wordsize) || current_wordsize == 4
 
-static const char *
+const char *
 sprint_rlim32(uint32_t lim)
 {
 	static char buf[sizeof(uint32_t)*3 + sizeof("*1024")];
@@ -79,22 +85,25 @@ sprint_rlim32(uint32_t lim)
 	return buf;
 }
 
-static void
-print_rlimit32(struct tcb *tcp, unsigned long addr)
+static ssize_t
+print_rlimit32(struct s_arg *arg, unsigned long addr, void *fn_data)
 {
 	struct rlimit_32 {
 		uint32_t rlim_cur;
 		uint32_t rlim_max;
 	} rlim;
 
-	if (!umove_or_printaddr(tcp, addr, &rlim)) {
-		tprintf("{rlim_cur=%s,", sprint_rlim32(rlim.rlim_cur));
-		tprintf(" rlim_max=%s}", sprint_rlim32(rlim.rlim_max));
-	}
+	if (s_umove_verbose(current_tcp, addr, &rlim))
+		return -1;
+
+	s_insert_rlim32("rlim_cur", rlim.rlim_cur);
+	s_insert_rlim32("rlim_max", rlim.rlim_max);
+
+	return sizeof(rlim);
 }
 
-static void
-decode_rlimit(struct tcb *tcp, unsigned long addr)
+static ssize_t
+fetch_fill_rlimit(struct s_arg *arg, unsigned long addr, void *fn_data)
 {
 # if defined(X86_64) || defined(X32)
 	/*
@@ -107,34 +116,38 @@ decode_rlimit(struct tcb *tcp, unsigned long addr)
 # else
 	if (current_wordsize == 4)
 # endif
-		print_rlimit32(tcp, addr);
+		return print_rlimit32(arg, addr, fn_data);
 	else
-		print_rlimit64(tcp, addr);
+		return print_rlimit64(arg, addr, fn_data);
 }
 
 #else /* defined(current_wordsize) && current_wordsize != 4 */
 
-# define decode_rlimit print_rlimit64
+#define fetch_fill_rlimit print_rlimit64
 
 #endif
+
+static void
+s_push_rlimit_addr(const char *name)
+{
+	s_push_addr_type(name, S_TYPE_struct, fetch_fill_rlimit, NULL);
+}
 
 SYS_FUNC(getrlimit)
 {
 	if (entering(tcp)) {
-		printxval(resources, tcp->u_arg[0], "RLIMIT_???");
-		tprints(", ");
-	}
-	else {
-		decode_rlimit(tcp, tcp->u_arg[1]);
+		s_push_xlat_signed("resource", resources, "RLIMIT_???");
+		s_changeable_void("rlim");
+	} else {
+		s_push_rlimit_addr("rlim");
 	}
 	return 0;
 }
 
 SYS_FUNC(setrlimit)
 {
-	printxval(resources, tcp->u_arg[0], "RLIMIT_???");
-	tprints(", ");
-	decode_rlimit(tcp, tcp->u_arg[1]);
+	s_push_xlat_signed("resource", resources, "RLIMIT_???");
+	s_push_rlimit_addr("rlim");
 
 	return RVAL_DECODED;
 }
@@ -142,13 +155,12 @@ SYS_FUNC(setrlimit)
 SYS_FUNC(prlimit64)
 {
 	if (entering(tcp)) {
-		tprintf("%d, ", (int) tcp->u_arg[0]);
-		printxval(resources, tcp->u_arg[1], "RLIMIT_???");
-		tprints(", ");
-		print_rlimit64(tcp, tcp->u_arg[2]);
-		tprints(", ");
+		s_push_d("pid");
+		s_push_xlat_signed("resource", resources, "RLIMIT_???");
+		s_push_rlimit_addr("new_limit");
+		s_changeable_void("old_limit");
 	} else {
-		print_rlimit64(tcp, tcp->u_arg[3]);
+		s_push_rlimit_addr("old_limit");
 	}
 	return 0;
 }
@@ -158,11 +170,12 @@ SYS_FUNC(prlimit64)
 SYS_FUNC(getrusage)
 {
 	if (entering(tcp)) {
-		printxval(usagewho, tcp->u_arg[0], "RUSAGE_???");
-		tprints(", ");
+		s_push_xlat_signed("who", usagewho, "RUSAGE_???");
+		s_changeable_void("usage");
+	} else {
+		s_push_rusage("usage");
 	}
-	else
-		printrusage(tcp, tcp->u_arg[1]);
+
 	return 0;
 }
 
@@ -170,11 +183,12 @@ SYS_FUNC(getrusage)
 SYS_FUNC(osf_getrusage)
 {
 	if (entering(tcp)) {
-		printxval(usagewho, tcp->u_arg[0], "RUSAGE_???");
-		tprints(", ");
+		s_push_xlat_signed("who", usagewho, "RUSAGE_???");
+		s_changeable_void("usage");
+	} else {
+		s_push_rusage32("usage");
 	}
-	else
-		printrusage32(tcp, tcp->u_arg[1]);
+
 	return 0;
 }
 #endif /* ALPHA */
@@ -183,16 +197,17 @@ SYS_FUNC(osf_getrusage)
 
 SYS_FUNC(getpriority)
 {
-	printxval(priorities, tcp->u_arg[0], "PRIO_???");
-	tprintf(", %d", (int) tcp->u_arg[1]);
+	s_push_xlat_signed("which", priorities, "PRIO_???");
+	s_push_d("who");
 
 	return RVAL_DECODED;
 }
 
 SYS_FUNC(setpriority)
 {
-	printxval(priorities, tcp->u_arg[0], "PRIO_???");
-	tprintf(", %d, %d", (int) tcp->u_arg[1], (int) tcp->u_arg[2]);
+	s_push_xlat_signed("which", priorities, "PRIO_???");
+	s_push_d("who");
+	s_push_d("prio");
 
 	return RVAL_DECODED;
 }

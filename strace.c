@@ -2130,13 +2130,7 @@ print_stopped(struct tcb *tcp, const siginfo_t *si, const unsigned int sig)
 	    && (qual_flags[sig] & QUAL_SIGNAL)
 	   ) {
 		printleader(tcp);
-		if (si) {
-			tprintf("--- %s ", signame(sig));
-			printsiginfo(si);
-			tprints(" ---\n");
-		} else
-			tprintf("--- stopped by %s ---\n", signame(sig));
-		line_ended();
+		s_syscall_print_signal(tcp, si, sig);
 	}
 }
 

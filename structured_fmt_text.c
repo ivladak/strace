@@ -1,6 +1,9 @@
 #include <fcntl.h>
 
 #include "defs.h"
+#include "printresource.h"
+#include "process.h"
+#include "printwait.h"
 
 #include "structured_fmt_text.h"
 
@@ -134,6 +137,54 @@ s_val_print(struct s_arg *arg)
 		break;
 	}
 
+	case S_TYPE_signo: {
+		struct s_num *p = S_ARG_TO_TYPE(arg, num);
+
+		tprintf("%s", signame(p->val));
+
+		break;
+	}
+
+	case S_TYPE_scno: {
+		struct s_num *p = S_ARG_TO_TYPE(arg, num);
+		const char *str = SCNO_IS_VALID(p->val) ? syscall_name(p->val) : NULL;
+
+		if (str)
+			tprintf("__NR_%s", str);
+		else
+			tprintf("%lu", (long)p->val);
+
+		break;
+	}
+
+	case S_TYPE_wstatus: {
+		struct s_num *p = S_ARG_TO_TYPE(arg, num);
+
+		printstatus(p->val);
+
+		break;
+	}
+
+	case S_TYPE_rlim64: {
+		struct s_num *p = S_ARG_TO_TYPE(arg, num);
+
+		tprintf("%s", sprint_rlim64(p->val));
+
+		break;
+	}
+
+	case S_TYPE_rlim32: {
+		struct s_num *p = S_ARG_TO_TYPE(arg, num);
+
+#if !defined(current_wordsize) || current_wordsize == 4
+		tprintf("%s", sprint_rlim64(p->val));
+#else /* !defined(current_wordsize) || current_wordsize == 4 */
+		tprintf("%u", (unsigned)p->val);
+#endif /* !defined(current_wordsize) || current_wordsize == 4 */
+
+		break;
+	}
+
 	case S_TYPE_changeable: {
 		struct s_changeable *s_ch = S_ARG_TO_TYPE(arg, changeable);
 		if (s_ch->entering)
@@ -189,6 +240,13 @@ s_val_print(struct s_arg *arg)
 
 		break;
 	}
+	case S_TYPE_ptrace_uaddr: {
+		struct s_addr *p = S_ARG_TO_TYPE(arg, addr);
+
+		print_user_offset_addr(p->addr);
+
+		break;
+	}
 	case S_TYPE_dirfd:
 	case S_TYPE_fd: {
 		struct s_num *p = S_ARG_TO_TYPE(arg, num);
@@ -217,6 +275,11 @@ s_val_print(struct s_arg *arg)
 		struct s_struct *p = S_ARG_TO_TYPE(arg, struct);
 		struct s_arg *field;
 		struct s_arg *tmp;
+
+		if (p->aux_str) {
+			tprints(p->aux_str);
+			break;
+		}
 
 		tprints(arg->type == S_TYPE_array ? "[" : "{");
 
@@ -448,6 +511,27 @@ s_syscall_text_print_unavailable_exiting(struct tcb *tcp)
 	line_ended();
 }
 
+static void
+s_syscall_text_print_signal(struct tcb *tcp)
+{
+	struct s_syscall *syscall = tcp->s_syscall;
+	struct s_arg *arg;
+	struct s_arg *tmp;
+
+	tprints("--- stopped by ");
+
+	STAILQ_FOREACH_SAFE(arg, &syscall->args.args, entry, tmp) {
+		s_val_print(arg);
+
+		if (tmp)
+			tprints(" ");
+	}
+
+	tprints(" ---\n");
+
+	line_ended();
+}
+
 struct s_printer s_printer_text = {
 	.print_before = s_syscall_text_print_before,
 	.print_entering = s_syscall_text_print_entering,
@@ -457,4 +541,5 @@ struct s_printer s_printer_text = {
 	.print_tv = s_syscall_text_print_tv,
 	.print_unavailable_entering = s_syscall_text_print_unavailable_entering,
 	.print_unavailable_exiting = s_syscall_text_print_unavailable_exiting,
+	.print_signal = s_syscall_text_print_signal,
 };

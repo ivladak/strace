@@ -4,6 +4,11 @@
 
 #include "structured_fmt_json.h"
 
+static const char *s_syscall_type_names[] = {
+	[S_SCT_SYSCALL] = "syscall",
+	[S_SCT_SIGNAL]  = "signal",
+};
+
 JsonNode *root_node;
 
 static void
@@ -56,6 +61,11 @@ s_val_print(struct s_arg *arg)
 	PRINT_INT(long, lo);
 	PRINT_INT(long long, llo);
 
+	PRINT_INT(int, wstatus);
+
+	PRINT_INT(unsigned, rlim32);
+	PRINT_INT(unsigned long long, rlim64);
+
 #undef PRINT_INT
 
 	case S_TYPE_uid:
@@ -72,6 +82,17 @@ s_val_print(struct s_arg *arg)
 		struct s_num *p = S_ARG_TO_TYPE(arg, num);
 
 		return json_mkstring(sprinttime(p->val));
+	}
+
+	case S_TYPE_signo: {
+		struct s_num *p = S_ARG_TO_TYPE(arg, num);
+		JsonNode *res = json_mkobject();
+
+		json_append_member(res, "type", json_mkstring("signo"));
+		json_append_member(res, "val", json_mknumber(p->val));
+		json_append_member(res, "name", json_mkstring(signame(p->val)));
+
+		return res;
 	}
 
 	case S_TYPE_changeable: {
@@ -100,6 +121,7 @@ s_val_print(struct s_arg *arg)
 
 		return json_mkstring(outstr);
 	}
+	case S_TYPE_ptrace_uaddr:
 	case S_TYPE_addr: {
 		struct s_addr *p = S_ARG_TO_TYPE(arg, addr);
 
@@ -175,13 +197,14 @@ static void
 s_syscall_json_print_before(struct tcb *tcp)
 {
 	root_node = json_mkobject();
-	json_append_member(root_node, "type", json_mkstring("syscall"));
 	json_append_member(root_node, "name", json_mkstring(tcp->s_ent->sys_name));
 }
 
 static void
 s_syscall_json_print_entering(struct tcb *tcp)
 {
+	json_append_member(root_node, "type",
+		json_mkstring(s_syscall_type_names[tcp->s_syscall->type]));
 }
 
 static void
@@ -190,10 +213,10 @@ s_syscall_json_print_exiting(struct tcb *tcp)
 	struct s_syscall *syscall = tcp->s_syscall;
 	struct s_arg *arg;
 	struct s_arg *tmp;
-	JsonNode *args_node = json_mkobject();
+	JsonNode *args_node = json_mkarray();
 
 	STAILQ_FOREACH_SAFE(arg, &syscall->args.args, entry, tmp) {
-		json_append_member(args_node, arg->name, s_val_print(arg));
+		json_append_element(args_node, s_val_print(arg));
 	}
 
 	json_append_member(root_node, "args", args_node);
@@ -342,7 +365,8 @@ static void
 s_syscall_json_print_unavailable_entering(struct tcb *tcp, int scno_good)
 {
 	root_node = json_mkobject();
-	json_append_member(root_node, "type", json_mkstring("syscall"));
+	json_append_member(root_node, "type",
+		json_mkstring(s_syscall_type_names[tcp->s_syscall->type]));
 	json_append_member(root_node, "name",
 		json_mkstring(scno_good == 1 ? tcp->s_ent->sys_name : "????"));
 }
@@ -354,6 +378,24 @@ s_syscall_json_print_unavailable_exiting(struct tcb *tcp)
 	json_append_member(root_node, "retstring", json_mkstring("<unavailable>"));
 }
 
+static void
+s_syscall_json_print_signal(struct tcb *tcp)
+{
+	struct s_syscall *syscall = tcp->s_syscall;
+	struct s_arg *arg;
+	struct s_arg *tmp;
+
+	root_node = json_mkobject();
+	json_append_member(root_node, "type",
+		json_mkstring(s_syscall_type_names[tcp->s_syscall->type]));
+
+	STAILQ_FOREACH_SAFE(arg, &syscall->args.args, entry, tmp) {
+		json_append_member(root_node, arg->name, s_val_print(arg));
+	}
+
+	tprints(json_stringify(root_node, "\t"));
+}
+
 struct s_printer s_printer_json = {
 	.print_before = s_syscall_json_print_before,
 	.print_entering = s_syscall_json_print_entering,
@@ -363,4 +405,5 @@ struct s_printer s_printer_json = {
 	.print_tv = s_syscall_json_print_tv,
 	.print_unavailable_entering = s_syscall_json_print_unavailable_entering,
 	.print_unavailable_exiting = s_syscall_json_print_unavailable_exiting,
+	.print_signal = s_syscall_json_print_signal,
 };

@@ -37,7 +37,8 @@
 typedef struct tms tms_t;
 #include MPERS_DEFS
 
-MPERS_PRINTER_DECL(int, fill_tms_t, struct s_arg *arg, long addr, void *fn_data)
+MPERS_PRINTER_DECL(ssize_t, fill_tms_t, struct s_arg *arg, unsigned long addr,
+	void *fn_data)
 {
 	tms_t tbuf;
 
@@ -49,7 +50,7 @@ MPERS_PRINTER_DECL(int, fill_tms_t, struct s_arg *arg, long addr, void *fn_data)
 	s_insert_llu("tms_cutime", zero_extend_signed_to_ull(tbuf.tms_cutime));
 	s_insert_llu("tms_cstime", zero_extend_signed_to_ull(tbuf.tms_cstime));
 
-	return 0;
+	return sizeof(tbuf);
 }
 
 SYS_FUNC(times)
