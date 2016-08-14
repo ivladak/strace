@@ -38,27 +38,28 @@
 
 SYS_FUNC(fadvise64)
 {
-	int argn;
-
-	printfd(tcp, tcp->u_arg[0]);
-	argn = printllval(tcp, ", %lld", 1);
-	tprintf(", %ld, ", tcp->u_arg[argn++]);
-	printxval(advise, tcp->u_arg[argn], "POSIX_FADV_???");
+	s_push_fd("fd");
+	s_push_lld("offset");
+	s_push_ld("len");
+	s_push_xlat_signed("advice", advise, "POSIX_FADV_???");
 
 	return RVAL_DECODED;
 }
 
 SYS_FUNC(fadvise64_64)
 {
-	int argn;
 
-	printfd(tcp, tcp->u_arg[0]);
-	argn = printllval(tcp, ", %lld, ", 1);
-	argn = printllval(tcp, "%lld, ", argn);
+	s_push_fd("fd");
 #if defined __ARM_EABI__ || defined AARCH64 || defined POWERPC || defined XTENSA
-	printxval(advise, tcp->u_arg[1], "POSIX_FADV_???");
+	s_push_empty(S_TYPE_d);
 #else
-	printxval(advise, tcp->u_arg[argn], "POSIX_FADV_???");
+	s_push_lld("offset");
+	s_push_lld("len");
+
+#if defined __ARM_EABI__ || defined AARCH64 || defined POWERPC || defined XTENSA
+	s_insert_xlat_signed("advice", advise, tcp->u_arg[1], "POSIX_FADV_???");
+#else
+	s_push_xlat_signed("advice", advise, "POSIX_FADV_???");
 #endif
 
 	return RVAL_DECODED;
