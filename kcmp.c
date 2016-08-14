@@ -30,18 +30,16 @@
 
 SYS_FUNC(kcmp)
 {
-	pid_t pid1 = tcp->u_arg[0];
-	pid_t pid2 = tcp->u_arg[1];
 	int type = tcp->u_arg[2];
-	unsigned long idx1 = tcp->u_arg[3];
-	unsigned long idx2 = tcp->u_arg[4];
 
-	tprintf("%d, %d, ", pid1, pid2);
-	printxval(kcmp_types, type, "KCMP_???");
+	s_push_d("pid1");
+	s_push_d("pid2");
+	s_push_xlat_signed("type", kcmp_types, "KCMP_???");
 
 	switch(type) {
 		case KCMP_FILE:
-			tprintf(", %u, %u", (unsigned) idx1, (unsigned) idx2);
+			s_push_d("idx1");
+			s_push_d("idx2");
 			break;
 		case KCMP_FILES:
 		case KCMP_FS:
@@ -51,7 +49,8 @@ SYS_FUNC(kcmp)
 		case KCMP_VM:
 			break;
 		default:
-			tprintf(", %#lx, %#lx", idx1, idx2);
+			s_push_lx("idx1");
+			s_push_lx("idx2");
 	}
 
 	return RVAL_DECODED;
