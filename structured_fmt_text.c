@@ -110,6 +110,30 @@ s_val_print(struct s_arg *arg)
 		break;
 	}
 
+	case S_TYPE_umask: {
+		struct s_num *p = S_ARG_TO_TYPE(arg, num);
+
+		print_numeric_long_umask(p->val);
+
+		break;
+	}
+
+	case S_TYPE_umode_t: {
+		struct s_num *p = S_ARG_TO_TYPE(arg, num);
+
+		print_numeric_umode_t(p->val);
+
+		break;
+	}
+
+	case S_TYPE_mode_t: {
+		struct s_num *p = S_ARG_TO_TYPE(arg, num);
+
+		print_symbolic_mode_t(p->val);
+
+		break;
+	}
+
 	case S_TYPE_changeable: {
 		struct s_changeable *s_ch = S_ARG_TO_TYPE(arg, changeable);
 		if (s_ch->entering)

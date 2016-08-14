@@ -165,6 +165,10 @@ DEF_PUSH_INT(long, time, umove)
 DEF_PUSH_INT(int, fd, umove)
 DEF_PUSH_INT(int, dirfd, umove)
 
+DEF_PUSH_INT(unsigned long,  umask,   s_umove_ulong)
+DEF_PUSH_INT(unsigned short, umode_t, umove)
+DEF_PUSH_INT(unsigned int,   mode_t,  umove)
+
 #undef DEF_PUSH_INT
 
 
