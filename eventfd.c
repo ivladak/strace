@@ -37,10 +37,9 @@
 static int
 do_eventfd(struct tcb *tcp, int flags_arg)
 {
-	tprintf("%u", (unsigned int) tcp->u_arg[0]);
+	s_push_u("initval");
 	if (flags_arg >= 0) {
-		tprints(", ");
-		printflags(efd_flags, tcp->u_arg[flags_arg], "EFD_???");
+		s_push_flags_int("flags", efd_flags, "EFD_???");
 	}
 
 	return RVAL_DECODED | RVAL_FD;
