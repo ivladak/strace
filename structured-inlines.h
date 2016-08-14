@@ -188,6 +188,22 @@ s_push_addr(const char *name)
 	s_insert_addr(name, addr);
 }
 
+static inline void
+s_push_addr_addr(const char *name)
+{
+	unsigned long long addr;
+	unsigned long addr_addr = 0;
+	struct s_arg *arg = NULL;
+
+	s_syscall_pop_all(current_tcp->s_syscall);
+	s_syscall_cur_arg_advance(current_tcp->s_syscall, S_TYPE_addr, &addr);
+
+	if (!s_umove_ulong(current_tcp, addr, &addr_addr))
+		arg = S_TYPE_TO_ARG(s_addr_new(name, addr_addr, NULL));
+
+	s_insert_addr_arg(name, addr, arg);
+}
+
 
 static inline void
 s_insert_string(enum s_type type, const char *name, long addr, long len,
