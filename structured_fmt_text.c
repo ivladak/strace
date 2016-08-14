@@ -22,14 +22,14 @@ s_print_xlat_text(enum s_type type, uint64_t value, uint64_t mask,
 		fmt = "%#" PRIx64;
 		break;
 	case S_TYPE_xlat_d:
-		fmt = "%" PRIu32;
+		fmt = "%" PRId32;
 		break;
 	case S_TYPE_xlat_ld:
 		fmt = (current_wordsize > sizeof(int)) ?
-			"%" PRIu64 : "%" PRIu32;
+			"%" PRId64 : "%" PRId32;
 		break;
 	case S_TYPE_xlat_lld:
-		fmt = "%" PRIu64;
+		fmt = "%" PRId64;
 		break;
 	default:
 		fmt = "%#" PRIx64;
