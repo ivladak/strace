@@ -30,16 +30,8 @@
 
 SYS_FUNC(socketcall)
 {
-	const unsigned int call = tcp->u_arg[0];
-	const char *str = xlookup(socketcalls, call);
-
-	if (str)
-		tprints(str);
-	else
-		tprintf("%d", call);
-
-	tprints(", ");
-	printaddr(tcp->u_arg[1]);
+	s_push_xlat_signed("call", socketcalls, NULL);
+	s_push_addr("args");
 
 	return RVAL_DECODED;
 }

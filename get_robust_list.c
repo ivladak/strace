@@ -30,11 +30,12 @@
 SYS_FUNC(get_robust_list)
 {
 	if (entering(tcp)) {
-		tprintf("%d, ", (int) tcp->u_arg[0]);
+		s_push_d("pid");
+		s_changeable_void("head_ptr");
+		s_changeable_void("len_ptr");
 	} else {
-		printnum_ptr(tcp, tcp->u_arg[1]);
-		tprints(", ");
-		printnum_ulong(tcp, tcp->u_arg[2]);
+		s_push_addr_addr("head_ptr");
+		s_push_lu_addr("len_ptr");
 	}
 	return 0;
 }

@@ -1,18 +1,17 @@
 #include "defs.h"
 
 static void
-decode_renameat(struct tcb *tcp)
+decode_renameat(void)
 {
-	print_dirfd(tcp, tcp->u_arg[0]);
-	printpath(tcp, tcp->u_arg[1]);
-	tprints(", ");
-	print_dirfd(tcp, tcp->u_arg[2]);
-	printpath(tcp, tcp->u_arg[3]);
+	s_push_dirfd("oldfd");
+	s_push_path("oldname");
+	s_push_dirfd("newfd");
+	s_push_path("newname");
 }
 
 SYS_FUNC(renameat)
 {
-	decode_renameat(tcp);
+	decode_renameat();
 
 	return RVAL_DECODED;
 }
@@ -22,9 +21,8 @@ SYS_FUNC(renameat)
 
 SYS_FUNC(renameat2)
 {
-	decode_renameat(tcp);
-	tprints(", ");
-	printflags(rename_flags, tcp->u_arg[4], "RENAME_??");
+	decode_renameat();
+	s_push_flags_int("flags", rename_flags, "RENAME_??");
 
 	return RVAL_DECODED;
 }

@@ -1,33 +1,31 @@
 #include "defs.h"
 
 static void
-decode_chmod(struct tcb *tcp, const int offset)
+decode_chmod(void)
 {
-	printpath(tcp, tcp->u_arg[offset]);
-	tprints(", ");
-	print_numeric_umode_t(tcp->u_arg[offset + 1]);
+	s_push_path("path");
+	s_push_umode_t("mode");
 }
 
 SYS_FUNC(chmod)
 {
-	decode_chmod(tcp, 0);
+	decode_chmod();
 
 	return RVAL_DECODED;
 }
 
 SYS_FUNC(fchmodat)
 {
-	print_dirfd(tcp, tcp->u_arg[0]);
-	decode_chmod(tcp, 1);
+	s_push_dirfd("dirfd");
+	decode_chmod();
 
 	return RVAL_DECODED;
 }
 
 SYS_FUNC(fchmod)
 {
-	printfd(tcp, tcp->u_arg[0]);
-	tprints(", ");
-	print_numeric_umode_t(tcp->u_arg[1]);
+	s_push_fd("fd");
+	s_push_umode_t("mode");
 
 	return RVAL_DECODED;
 }

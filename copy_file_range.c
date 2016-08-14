@@ -29,22 +29,12 @@
 
 SYS_FUNC(copy_file_range)
 {
-	/* int fd_in */
-	printfd(tcp, tcp->u_arg[0]);
-	tprints(", ");
-	/* loff_t *off_in */
-	printnum_int64(tcp, tcp->u_arg[1], "%" PRId64);
-	tprints(", ");
-	/* int fd_out */
-	printfd(tcp, tcp->u_arg[2]);
-	tprints(", ");
-	/* loff_t *off_out */
-	printnum_int64(tcp, tcp->u_arg[3], "%" PRId64);
-	tprints(", ");
-	/* size_t len */
-	tprintf("%lu, ", tcp->u_arg[4]);
-	/* unsigned int flags */
-	tprintf("%u", (unsigned int) tcp->u_arg[5]);
+	s_push_fd("fd_in");
+	s_push_lld_addr("off_in");
+	s_push_fd("fd_out");
+	s_push_lld_addr("off_out");
+	s_push_lu("len");
+	s_push_u("flags");
 
 	return RVAL_DECODED;
 }

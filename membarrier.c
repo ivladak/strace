@@ -32,10 +32,11 @@
 SYS_FUNC(membarrier)
 {
 	if (entering(tcp)) {
-		int cmd = tcp->u_arg[0], flags = tcp->u_arg[1];
+		int cmd = tcp->u_arg[0];
 
-		printxval(membarrier_cmds, cmd, "MEMBARRIER_CMD_???");
-		tprintf(", %d", flags);
+		s_push_xlat_signed("cmd", membarrier_cmds,
+			"MEMBARRIER_CMD_???");
+		s_push_d("flags");
 
 		return cmd ? RVAL_DECODED : 0;
 	}

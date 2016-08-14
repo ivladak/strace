@@ -2,8 +2,8 @@
 
 SYS_FUNC(truncate)
 {
-	printpath(tcp, tcp->u_arg[0]);
-	tprintf(", %lu", tcp->u_arg[1]);
+	s_push_path("path");
+	s_push_lu("length");
 
 	return RVAL_DECODED;
 }

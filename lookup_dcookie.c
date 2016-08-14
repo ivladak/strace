@@ -29,21 +29,16 @@
 
 SYS_FUNC(lookup_dcookie)
 {
-	if (entering(tcp))
-		return 0;
-
-	/* cookie */
-	int argn = printllval(tcp, "%llu", 0);
-	tprints(", ");
-
-	/* buffer */
-	if (syserror(tcp))
-		printaddr(tcp->u_arg[argn]);
-	else
-		printstr(tcp, tcp->u_arg[argn], tcp->u_rval);
-
-	/* len */
-	tprintf(", %lu", tcp->u_arg[argn + 1]);
+	if (entering(tcp)) {
+		s_push_llu("cookie");
+		s_changeable_void("buffer");
+		s_push_lu("len");
+	} else {
+		if (syserror(tcp))
+			s_push_addr("buffer");
+		else
+			s_push_str("buffer", tcp->u_rval);
+	}
 
 	return 0;
 }

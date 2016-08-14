@@ -36,12 +36,11 @@
 
 SYS_FUNC(perf_event_open)
 {
-	printaddr(tcp->u_arg[0]);
-	tprintf(", %d, %d, %d, ",
-		(int) tcp->u_arg[1],
-		(int) tcp->u_arg[2],
-		(int) tcp->u_arg[3]);
-	printflags_long(perf_event_open_flags, tcp->u_arg[4], "PERF_FLAG_???");
+	s_push_addr("attr");
+	s_push_d("pid");
+	s_push_d("cpu");
+	s_push_d("group_fd");
+	s_push_flags_long("flags", perf_event_open_flags, "PERF_FLAG_???");
 
 	return RVAL_DECODED | RVAL_FD;
 }
