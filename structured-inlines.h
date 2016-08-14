@@ -371,7 +371,7 @@ s_append_xlat(const char *name, const struct xlat *x, const char *dflt,
 	s_append_xlat_val(type, name, x, val, dflt, flags);
 }
 
-#define DEF_XLAT_FUNCS(WHAT, TYPE, ENUM, FLAGS_TYPE, FLAGS) \
+#define DEF_XLAT_FUNCS(WHAT, TYPE, ENUM, FLAGS_TYPE, FLAGS, UMOVE_FUNC) \
 	static inline void \
 	s_insert_##WHAT##_##ENUM(const char *name, const struct xlat *x, \
 		TYPE val, const char *dflt) \
@@ -386,7 +386,7 @@ s_append_xlat(const char *name, const struct xlat *x, const char *dflt,
 		TYPE val = 0; \
 		struct s_arg *arg = NULL; \
 		\
-		if (!umove(current_tcp, addr, &val)) \
+		if (!UMOVE_FUNC(current_tcp, addr, &val)) \
 			arg = S_TYPE_TO_ARG(s_xlat_new(S_TYPE_##FLAGS_TYPE, \
 				name, x, val, dflt, FLAGS)); \
 		\
@@ -427,13 +427,13 @@ s_append_xlat(const char *name, const struct xlat *x, const char *dflt,
 		s_append_xlat(name, x, dflt, FLAGS, S_TYPE_##FLAGS_TYPE); \
 	}
 
-#define DEF_XLAT(TYPE, ENUM, FLAGS_TYPE) \
-	DEF_XLAT_FUNCS(flags, TYPE, ENUM, FLAGS_TYPE, true) \
-	DEF_XLAT_FUNCS(xlat, TYPE, ENUM, FLAGS_TYPE, false)
+#define DEF_XLAT(TYPE, ENUM, FLAGS_TYPE, UMOVE_FUNC) \
+	DEF_XLAT_FUNCS(flags, TYPE, ENUM, FLAGS_TYPE, true, UMOVE_FUNC) \
+	DEF_XLAT_FUNCS(xlat, TYPE, ENUM, FLAGS_TYPE, false, UMOVE_FUNC)
 
-DEF_XLAT(unsigned, int, xlat)
-DEF_XLAT(unsigned long, long, xlat_l)
-DEF_XLAT(uint64_t, 64, xlat_ll)
+DEF_XLAT(unsigned, int, xlat, umove)
+DEF_XLAT(unsigned long, long, xlat_l, s_umove_ulong)
+DEF_XLAT(uint64_t, 64, xlat_ll, umove)
 
 #undef DEF_XLAT
 #undef DEF_XLAT_FUNCS
