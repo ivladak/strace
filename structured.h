@@ -76,8 +76,8 @@ enum s_type_fmt {
 
 	S_TYPE_FMT_uid,
 	S_TYPE_FMT_gid,
-	S_TYPE_FMT_uid16,
-	S_TYPE_FMT_gid16,
+	S_TYPE_FMT_uid_1,
+	S_TYPE_FMT_gid_1,
 	S_TYPE_FMT_time,
 	S_TYPE_FMT_dirfd,
 	S_TYPE_FMT_signo,
@@ -156,8 +156,12 @@ enum s_type {
 
 	S_TYPE_uid      = S_TYPE_DEF(i,  unsigned, uid,     num),
 	S_TYPE_gid      = S_TYPE_DEF(i,  unsigned, gid,     num),
-	S_TYPE_uid16    = S_TYPE_DEF(h,  unsigned, uid16,   num),
-	S_TYPE_gid16    = S_TYPE_DEF(h,  unsigned, gid16,   num),
+	S_TYPE_uid16    = S_TYPE_DEF(h,  unsigned, uid,     num),
+	S_TYPE_gid16    = S_TYPE_DEF(h,  unsigned, gid,     num),
+	S_TYPE_uid_1    = S_TYPE_DEF(i,  unsigned, uid_1,   num),
+	S_TYPE_gid_1    = S_TYPE_DEF(i,  unsigned, gid_1,   num),
+	S_TYPE_uid16_1  = S_TYPE_DEF(h,  unsigned, uid_1,   num),
+	S_TYPE_gid16_1  = S_TYPE_DEF(h,  unsigned, gid_1,   num),
 	S_TYPE_time     = S_TYPE_DEF(i,  unsigned, time,    num),
 
 	S_TYPE_signo    = S_TYPE_DEF(i,  unsigned, signo,   num),

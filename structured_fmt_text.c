@@ -77,6 +77,11 @@ s_val_print(struct s_arg *arg)
 	PRINT_INT(unsigned long, lu, "lu");
 	PRINT_INT(unsigned long long, llu, "llu");
 
+	PRINT_INT(uid_t, uid, "u");
+	PRINT_INT(gid_t, gid, "u");
+	PRINT_INT(uint16_t, uid16, "hu");
+	PRINT_INT(uint16_t, gid16, "hu");
+
 #undef PRINT_INT
 
 #define PRINT_ALT_INT(TYPE, ENUM, PR) \
@@ -93,11 +98,11 @@ s_val_print(struct s_arg *arg)
 
 #undef PRINT_ALT_INT
 
-	case S_TYPE_uid:
-	case S_TYPE_gid: {
+	case S_TYPE_uid_1:
+	case S_TYPE_gid_1: {
 		struct s_num *p = S_ARG_TO_TYPE(arg, num);
 
-		if ((uid_t) -1U == (uid_t)p->val)
+		if ((uid_t)-1U == (uid_t)p->val)
 			tprints("-1");
 		else
 			tprintf("%u", (uid_t)p->val);
@@ -105,12 +110,11 @@ s_val_print(struct s_arg *arg)
 		break;
 	}
 
-	case S_TYPE_uid16:
-	case S_TYPE_gid16: {
+	case S_TYPE_uid16_1:
+	case S_TYPE_gid16_1: {
 		struct s_num *p = S_ARG_TO_TYPE(arg, num);
 
-		if ((arg->type == S_TYPE_uid16) &&
-		    ((int16_t)-1U == (int16_t)p->val))
+		if ((uint16_t)-1U == (uint16_t)p->val)
 			tprints("-1");
 		else
 			tprintf("%hu", (uint16_t)p->val);
