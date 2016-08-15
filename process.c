@@ -139,7 +139,7 @@ SYS_FUNC(ptrace)
 		case PTRACE_GETSIGMASK:
 		case PTRACE_SETSIGMASK:
 		case PTRACE_SECCOMP_GET_FILTER:
-			s_push_addr("addr");
+			s_push_lu("addr");
 			break;
 		case PTRACE_PEEKSIGINFO: {
 			s_push_addr_type("addr", S_TYPE_struct, fetch_fill_peeksiginfo, NULL);
