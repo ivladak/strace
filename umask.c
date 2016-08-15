@@ -2,7 +2,7 @@
 
 SYS_FUNC(umask)
 {
-	print_numeric_umode_t(tcp->u_arg[0]);
+	s_push_umode_t("mask");
 
 	return RVAL_DECODED | RVAL_OCTAL;
 }
