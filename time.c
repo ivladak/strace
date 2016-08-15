@@ -31,25 +31,36 @@
 #include <fcntl.h>
 #include <signal.h>
 #include <sys/timex.h>
+#include "print_time_structured.h"
 
-static void
-print_timezone(struct tcb *tcp, const long addr)
+static int
+fetch_timezone(struct s_arg *arg, long addr, void *fn_data)
 {
 	struct timezone tz;
 
-	if (umove_or_printaddr(tcp, addr, &tz))
-		return;
+	if (s_umove_verbose(current_tcp, addr, &tz))
+		return -1;
 
-	tprintf("{tz_minuteswest=%d, tz_dsttime=%d}",
-		tz.tz_minuteswest, tz.tz_dsttime);
+	s_insert_d("tz_minuteswest", tz.tz_minuteswest);
+	s_insert_d("tz_dsttime", tz.tz_dsttime);
+
+	return 0;
+}
+
+static void
+s_push_timezone(const char *name)
+{
+	s_push_addr_type(name, S_TYPE_struct, fetch_timezone, NULL);
 }
 
 SYS_FUNC(gettimeofday)
 {
-	if (exiting(tcp)) {
-		print_timeval(tcp, tcp->u_arg[0]);
-		tprints(", ");
-		print_timezone(tcp, tcp->u_arg[1]);
+	if (entering(tcp)) {
+		s_changeable_void("tv");
+		s_changeable_void("tz");
+	} else {
+		s_push_timeval("tv");
+		s_push_timezone("tz");
 	}
 	return 0;
 }
@@ -57,10 +68,12 @@ SYS_FUNC(gettimeofday)
 #ifdef ALPHA
 SYS_FUNC(osf_gettimeofday)
 {
-	if (exiting(tcp)) {
-		print_timeval32(tcp, tcp->u_arg[0]);
-		tprints(", ");
-		print_timezone(tcp, tcp->u_arg[1]);
+	if (entering(tcp)) {
+		s_changeable_void("tv");
+		s_changeable_void("tz");
+	} else {
+		s_push_timeval32("tv"):
+		s_push_timezone("tz");
 	}
 	return 0;
 }
@@ -68,9 +81,8 @@ SYS_FUNC(osf_gettimeofday)
 
 SYS_FUNC(settimeofday)
 {
-	print_timeval(tcp, tcp->u_arg[0]);
-	tprints(", ");
-	print_timezone(tcp, tcp->u_arg[1]);
+	s_push_timeval("tv");
+	s_push_timezone("tz");
 
 	return RVAL_DECODED;
 }
@@ -78,9 +90,8 @@ SYS_FUNC(settimeofday)
 #ifdef ALPHA
 SYS_FUNC(osf_settimeofday)
 {
-	print_timeval32(tcp, tcp->u_arg[0]);
-	tprints(", ");
-	print_timezone(tcp, tcp->u_arg[1]);
+	s_push_timeval32("tv");
+	s_push_timezone("tz");
 
 	return RVAL_DECODED;
 }
@@ -89,8 +100,8 @@ SYS_FUNC(osf_settimeofday)
 SYS_FUNC(nanosleep)
 {
 	if (entering(tcp)) {
-		print_timespec(tcp, tcp->u_arg[0]);
-		tprints(", ");
+		s_push_timespec("req");
+		s_changeable_void("rem");
 	} else {
 
 		/*
@@ -101,10 +112,10 @@ SYS_FUNC(nanosleep)
 		 */
 		if (is_erestart(tcp)) {
 			temporarily_clear_syserror(tcp);
-			print_timespec(tcp, tcp->u_arg[1]);
+			s_push_timespec("rem");
 			restore_cleared_syserror(tcp);
 		} else {
-			printaddr(tcp->u_arg[1]);
+			s_push_addr("rem");
 		}
 	}
 	return 0;
@@ -115,10 +126,10 @@ SYS_FUNC(nanosleep)
 SYS_FUNC(getitimer)
 {
 	if (entering(tcp)) {
-		printxval(itimer_which, tcp->u_arg[0], "ITIMER_???");
-		tprints(", ");
+		s_push_flags_signed("which", itimer_which, "ITIMER_???");
+		s_changeable_void("curr_value");
 	} else {
-		print_itimerval(tcp, tcp->u_arg[1]);
+		s_push_itimerval("curr_value");
 	}
 	return 0;
 }
@@ -127,10 +138,10 @@ SYS_FUNC(getitimer)
 SYS_FUNC(osf_getitimer)
 {
 	if (entering(tcp)) {
-		printxval(itimer_which, tcp->u_arg[0], "ITIMER_???");
-		tprints(", ");
+		s_push_flags_signed("which", itimer_which, "ITIMER_???");
+		s_changeable_void("curr_value");
 	} else {
-		print_itimerval32(tcp, tcp->u_arg[1]);
+		s_push_itimerval32("curr_value");
 	}
 	return 0;
 }
@@ -139,12 +150,11 @@ SYS_FUNC(osf_getitimer)
 SYS_FUNC(setitimer)
 {
 	if (entering(tcp)) {
-		printxval(itimer_which, tcp->u_arg[0], "ITIMER_???");
-		tprints(", ");
-		print_itimerval(tcp, tcp->u_arg[1]);
-		tprints(", ");
+		s_push_flags_signed("which", itimer_which, "ITIMER_???");
+		s_push_itimerval("new_value");
+		s_changeable_void("old_value");
 	} else {
-		print_itimerval(tcp, tcp->u_arg[2]);
+		s_push_itimerval("old_value");
 	}
 	return 0;
 }
@@ -153,12 +163,11 @@ SYS_FUNC(setitimer)
 SYS_FUNC(osf_setitimer)
 {
 	if (entering(tcp)) {
-		printxval(itimer_which, tcp->u_arg[0], "ITIMER_???");
-		tprints(", ");
-		print_itimerval32(tcp, tcp->u_arg[1]);
-		tprints(", ");
+		s_push_flags_signed("which", itimer_which, "ITIMER_???");
+		s_push_itimerval32("new_value");
+		s_changeable_void("old_value");
 	} else {
-		print_itimerval32(tcp, tcp->u_arg[2]);
+		s_push_itimerval32("old_value");
 	}
 	return 0;
 }

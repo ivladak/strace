@@ -237,6 +237,8 @@ strace_SOURCES =	\
 	term.c		\
 	time.c		\
 	times.c		\
+	timespec.c		\
+	timeval.c		\
 	truncate.c	\
 	ubi.c		\
 	uid.c		\

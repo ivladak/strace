@@ -32,34 +32,31 @@
  */
 
 #include "defs.h"
+#include "print_time_structured.h"
 
 SYS_FUNC(utimes)
 {
-	printpath(tcp, tcp->u_arg[0]);
-	tprints(", ");
-	print_timeval_pair(tcp, tcp->u_arg[1]);
+	s_push_path("filename");
+	push_timeval_pair("times");
 
 	return RVAL_DECODED;
 }
 
 SYS_FUNC(futimesat)
 {
-	print_dirfd(tcp, tcp->u_arg[0]);
-	printpath(tcp, tcp->u_arg[1]);
-	tprints(", ");
-	print_timeval_pair(tcp, tcp->u_arg[2]);
+	s_push_dirfd("dirfd");
+	s_push_path("pathname");
+	push_timeval_pair("times");
 
 	return RVAL_DECODED;
 }
 
 SYS_FUNC(utimensat)
 {
-	print_dirfd(tcp, tcp->u_arg[0]);
-	printpath(tcp, tcp->u_arg[1]);
-	tprints(", ");
-	print_timespec_utime_pair(tcp, tcp->u_arg[2]);
-	tprints(", ");
-	printflags(at_flags, tcp->u_arg[3], "AT_???");
+	s_push_dirfd("dirfd");
+	s_push_path("pathname");
+	push_timespec_utime_pair("times");
+	s_push_flags_signed("flags", at_flags, "AT_???");
 
 	return RVAL_DECODED;
 }
@@ -67,9 +64,8 @@ SYS_FUNC(utimensat)
 #ifdef ALPHA
 SYS_FUNC(osf_utimes)
 {
-	printpath(tcp, tcp->u_arg[0]);
-	tprints(", ");
-	print_timeval32_pair(tcp, tcp->u_arg[1]);
+	s_push_path("pathname");
+	push_timeval32_pair("times");
 
 	return RVAL_DECODED;
 }

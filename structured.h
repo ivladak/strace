@@ -255,7 +255,7 @@ struct s_struct {
 
 	struct s_args args;
 	/** Auxiliary non-standard string representation */
-	char *aux_str;
+	const char *aux_str;
 };
 
 /* complex arguments */

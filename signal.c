@@ -92,7 +92,7 @@
 # endif
 #endif
 
-#include "print_time.h"
+#include "print_time_structured.h"
 #include "printsiginfo.h"
 #include "structured_sigmask.h"
 
