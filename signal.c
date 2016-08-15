@@ -653,8 +653,7 @@ SYS_FUNC(rt_sigtimedwait)
 	/* NB: kernel requires arg[3] == NSIG / 8 */
 	if (entering(tcp)) {
 		s_push_sigset_addr_len("uthese", tcp->u_arg[3]);
-		s_push_addr("uinfo");
-		s_changeable();
+		s_changeable_void("uinfo");
 		s_push_timespec("uts");
 		s_push_lu("sigsetsize");
 	} else {
