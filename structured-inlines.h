@@ -48,11 +48,43 @@ s_insert_ellipsis(void)
 	s_ellipsis_new_and_insert();
 }
 
+static inline void
+s_insert_addr(const char *name, long value)
+{
+	s_addr_new_and_insert(name, value, NULL);
+}
+
+static inline void
+s_push_addr(const char *name)
+{
+	unsigned long long addr;
+
+	s_syscall_pop_all(current_tcp->s_syscall);
+	s_syscall_cur_arg_advance(current_tcp->s_syscall, S_TYPE_addr, &addr);
+	s_insert_addr(name, addr);
+}
+
 /* internal */
 static inline void
 s_insert_addr_arg(const char *name, unsigned long value, struct s_arg *arg)
 {
 	s_addr_new_and_insert(name, value, arg);
+}
+
+static inline void
+s_push_addr_addr(const char *name)
+{
+	unsigned long long addr;
+	unsigned long addr_addr = 0;
+	struct s_arg *arg = NULL;
+
+	s_syscall_pop_all(current_tcp->s_syscall);
+	s_syscall_cur_arg_advance(current_tcp->s_syscall, S_TYPE_addr, &addr);
+
+	if (!s_umove_ulong(current_tcp, addr, &addr_addr))
+		arg = S_TYPE_TO_ARG(s_addr_new(name, addr_addr, NULL));
+
+	s_insert_addr_arg(name, addr, arg);
 }
 
 struct s_fetch_wrapper_args {
@@ -383,38 +415,6 @@ DEF_PUSH_INT(unsigned int,   mode_t,  s_umove_verbose)
 
 #undef DEF_PUSH_INT
 
-
-static inline void
-s_insert_addr(const char *name, long value)
-{
-	s_addr_new_and_insert(name, value, NULL);
-}
-
-static inline void
-s_push_addr(const char *name)
-{
-	unsigned long long addr;
-
-	s_syscall_pop_all(current_tcp->s_syscall);
-	s_syscall_cur_arg_advance(current_tcp->s_syscall, S_TYPE_addr, &addr);
-	s_insert_addr(name, addr);
-}
-
-static inline void
-s_push_addr_addr(const char *name)
-{
-	unsigned long long addr;
-	unsigned long addr_addr = 0;
-	struct s_arg *arg = NULL;
-
-	s_syscall_pop_all(current_tcp->s_syscall);
-	s_syscall_cur_arg_advance(current_tcp->s_syscall, S_TYPE_addr, &addr);
-
-	if (!s_umove_ulong(current_tcp, addr, &addr_addr))
-		arg = S_TYPE_TO_ARG(s_addr_new(name, addr_addr, NULL));
-
-	s_insert_addr_arg(name, addr, arg);
-}
 
 static inline void
 s_push_ptrace_uaddr(const char *name)
