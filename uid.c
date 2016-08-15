@@ -54,6 +54,18 @@
 #include "defs.h"
 
 #ifdef STRACE_UID_SIZE
+
+# define s_push_uid_1      s_push_uid16_1
+# define s_push_gid_1      s_push_gid16_1
+# define s_push_uid_addr   s_push_uid16_addr
+# define s_push_gid_addr   s_push_gid16_addr
+# define s_push_uid_1_addr s_push_uid16_1_addr
+# define s_push_gid_1_addr s_push_gid16_1_addr
+# define s_push_uid        SIZEIFY(s_push_uid)
+# define s_push_gid        SIZEIFY(s_push_gid)
+
+# define S_TYPE_gid        SIZEIFY(S_TYPE_gid)
+
 # if !NEED_UID16_PARSERS
 #  undef STRACE_UID_SIZE
 # endif
@@ -75,71 +87,64 @@ SYS_FUNC(getuid)
 
 SYS_FUNC(setfsuid)
 {
-	tprintf("%u", (uid_t) tcp->u_arg[0]);
+	s_push_uid("fsuid");
 
 	return RVAL_UDECIMAL | RVAL_DECODED;
 }
 
 SYS_FUNC(setuid)
 {
-	printuid("", tcp->u_arg[0]);
+	s_push_uid("uid");
 
 	return RVAL_DECODED;
 }
 
-static void
-get_print_uid(struct tcb *tcp, const char *prefix, const long addr)
-{
-	uid_t uid;
-
-	tprints(prefix);
-	if (!umove_or_printaddr(tcp, addr, &uid))
-		tprintf("[%u]", uid);
-}
-
 SYS_FUNC(getresuid)
 {
-	if (entering(tcp))
-		return 0;
-
-	get_print_uid(tcp, "", tcp->u_arg[0]);
-	get_print_uid(tcp, ", ", tcp->u_arg[1]);
-	get_print_uid(tcp, ", ", tcp->u_arg[2]);
+	if (entering(tcp)) {
+		s_changeable_void("ruid");
+		s_changeable_void("euid");
+		s_changeable_void("suid");
+	} else {
+		s_push_uid_addr("ruid");
+		s_push_uid_addr("euid");
+		s_push_uid_addr("suid");
+	}
 
 	return 0;
 }
 
 SYS_FUNC(setreuid)
 {
-	printuid("", tcp->u_arg[0]);
-	printuid(", ", tcp->u_arg[1]);
+	s_push_uid_1("ruid");
+	s_push_uid_1("euid");
 
 	return RVAL_DECODED;
 }
 
 SYS_FUNC(setresuid)
 {
-	printuid("", tcp->u_arg[0]);
-	printuid(", ", tcp->u_arg[1]);
-	printuid(", ", tcp->u_arg[2]);
+	s_push_uid_1("ruid");
+	s_push_uid_1("euid");
+	s_push_uid_1("suid");
 
 	return RVAL_DECODED;
 }
 
 SYS_FUNC(chown)
 {
-	printpath(tcp, tcp->u_arg[0]);
-	printuid(", ", tcp->u_arg[1]);
-	printuid(", ", tcp->u_arg[2]);
+	s_push_path("path");
+	s_push_uid_1("owner");
+	s_push_gid_1("group");
 
 	return RVAL_DECODED;
 }
 
 SYS_FUNC(fchown)
 {
-	printfd(tcp, tcp->u_arg[0]);
-	printuid(", ", tcp->u_arg[1]);
-	printuid(", ", tcp->u_arg[2]);
+	s_push_fd("fd");
+	s_push_uid_1("owner");
+	s_push_gid_1("group");
 
 	return RVAL_DECODED;
 }
@@ -153,46 +158,48 @@ printuid(const char *text, const unsigned int uid)
 		tprintf("%s%u", text, (uid_t) uid);
 }
 
-static bool
-print_gid(struct tcb *tcp, void *elem_buf, size_t elem_size, void *data)
+static int
+fill_group(struct s_arg *arg, void *buf, size_t len, void *fn_data)
 {
-	tprintf("%u", (unsigned int) (* (uid_t *) elem_buf));
+	S_ARG_TO_TYPE(arg, num)->val = (uid_t)(*(uid_t *)buf);
 
-	return true;
+	return 0;
 }
 
 static void
-print_groups(struct tcb *tcp, const unsigned int len, const unsigned long addr)
+s_push_groups(const char *name, const long len)
 {
 	static unsigned long ngroups_max;
 	if (!ngroups_max)
 		ngroups_max = sysconf(_SC_NGROUPS_MAX);
 
-	if (len > ngroups_max) {
-		printaddr(addr);
+	if ((len < 0) || ((unsigned long)len > ngroups_max)) {
+		s_push_addr(name);
 		return;
 	}
 
-	uid_t gid;
-	print_array(tcp, addr, len, &gid, sizeof(gid),
-		    umoven_or_printaddr, print_gid, 0);
+	s_push_array_type(name, len, sizeof(uid_t), S_TYPE_gid, fill_group,
+		NULL);
 }
 
 SYS_FUNC(setgroups)
 {
 	const unsigned int len = tcp->u_arg[0];
 
-	tprintf("%u, ", len);
-	print_groups(tcp, len, tcp->u_arg[1]);
+	s_push_d("len");
+	s_push_groups("list", len);
 	return RVAL_DECODED;
 }
 
 SYS_FUNC(getgroups)
 {
-	if (entering(tcp))
-		tprintf("%u, ", (unsigned int) tcp->u_arg[0]);
-	else
-		print_groups(tcp, tcp->u_rval, tcp->u_arg[1]);
+	if (entering(tcp)) {
+		s_push_d("len");
+		s_changeable_void("list");
+	} else {
+		s_push_groups("list", tcp->u_rval);
+	}
+
 	return 0;
 }
 
