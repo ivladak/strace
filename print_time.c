@@ -111,8 +111,8 @@ MPERS_PRINTER_DECL(ssize_t, s_fetch_fill_timespec,
 	if (s_umove_verbose(current_tcp, addr, &t))
 		return -1;
 
-	s_insert_lx("tv_sec", t.tv_sec);
-	s_insert_lx("tv_nsec", t.tv_nsec);
+	s_insert_ld("tv_sec", t.tv_sec);
+	s_insert_ld("tv_nsec", t.tv_nsec);
 
 	return sizeof(t);
 }
