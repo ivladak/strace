@@ -102,7 +102,8 @@ s_arg_insert(struct s_syscall *syscall, struct s_arg *arg, int force_arg)
 {
 	struct args_queue *ins_point = s_syscall_insertion_point(syscall);
 
-	if (entering(syscall->tcp) || !syscall->last_changeable) {
+	if (entering(syscall->tcp) || !syscall->last_changeable ||
+	    (ins_point != &syscall->args.args)) {
 		if (force_arg >= 0) {
 			arg->arg_num = force_arg;
 		} else if (ins_point == &syscall->args.args) {
