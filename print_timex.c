@@ -40,33 +40,48 @@ typedef struct timex struct_timex;
 #include "xlat/adjtimex_modes.h"
 #include "xlat/adjtimex_status.h"
 
-MPERS_PRINTER_DECL(int, print_timex, struct tcb *tcp, const long addr)
+static int
+push_timex(struct s_arg *arg, unsigned long addr, void *fn_data)
 {
 	struct_timex tx;
 
-	if (umove_or_printaddr(tcp, addr, &tx))
+	if (s_umove_verbose(current_tcp, addr, &tx))
 		return -1;
 
-	tprints("{modes=");
-	printflags(adjtimex_modes, tx.modes, "ADJ_???");
-	tprintf(", offset=%jd, freq=%jd, maxerror=%ju, esterror=%ju, status=",
-		(intmax_t) tx.offset, (intmax_t) tx.freq,
-		(uintmax_t) tx.maxerror, (uintmax_t) tx.esterror);
-	printflags(adjtimex_status, tx.status, "STA_???");
-	tprintf(", constant=%jd, precision=%ju, tolerance=%jd",
-		(intmax_t) tx.constant, (uintmax_t) tx.precision,
-		(intmax_t) tx.tolerance);
-	tprintf(", time={%jd, %jd}",
-		(intmax_t) tx.time.tv_sec, (intmax_t) tx.time.tv_usec);
-	tprintf(", tick=%jd, ppsfreq=%jd, jitter=%jd",
-		(intmax_t) tx.tick, (intmax_t) tx.ppsfreq, (intmax_t) tx.jitter);
-	tprintf(", shift=%d, stabil=%jd, jitcnt=%jd",
-		tx.shift, (intmax_t) tx.stabil, (intmax_t) tx.jitcnt);
-	tprintf(", calcnt=%jd, errcnt=%jd, stbcnt=%jd",
-		(intmax_t) tx.calcnt, (intmax_t) tx.errcnt, (intmax_t) tx.stbcnt);
+	s_insert_flags_int("modes", adjtimex_modes, tx.modes, "ADJ_???");
+	s_insert_lld("offset", tx.offset);
+	s_insert_lld("freq", tx.freq);
+	s_insert_lld("maxerror", tx.maxerror);
+	s_insert_lld("esterror", tx.esterror);
+	s_insert_flags_int("status", adjtimex_status, tx.tx.status, "STA_???");
+	s_insert_lld("constant", tx.constant);
+	s_insert_lld("precision", tx.precision);
+	s_insert_lld("tolerance", tx.tolerance);
+
+	s_insert_struct("time");
+	s_insert_lld("tv_sec", tx.time.tv_sec);
+	s_insert_lld("tv_usec" tx.time.tv_usec);
+	s_struct_finish();
+	s_insert_lld("tick", tx.tick);
+
+
+	s_insert_lld("ppsfreq", tx.ppsfreq);
+	s_insert_lld("jitter", tx.jitter);
+	s_insert_d("shift", tx.shift);
+	s_insert_lld("stabil", tx.stabil);
+	s_insert_lld("jitcnt", tx.jitcnt);
+	s_insert_lld("calcnt", tx.calcnt);
+	s_insert_lld("errcnt", tx.errcnt);
+	s_insert_lld("stbcnt", tx.stbcnt);
+
 #ifdef HAVE_STRUCT_TIMEX_TAI
-	tprintf(", tai=%d", tx.tai);
+	s_insert_d("tai", tx.tai);
 #endif
-	tprints("}");
+
 	return 0;
+}
+
+MPERS_PRINTER_DECL(int, print_timex, void)
+{
+	return s_push_addr_type("timex", S_TYPE_struct, push_timex, NULL);
 }
