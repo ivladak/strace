@@ -100,7 +100,7 @@ fetch_fill_peeksiginfo(struct s_arg *arg, unsigned long addr, void *fn_data)
 	s_insert_llu("off", psi.off);
 	s_insert_flags_int("flags", ptrace_peeksiginfo_flags, psi.flags,
 		"PTRACE_PEEKSIGINFO_???");
-	s_insert_u("n", psi.nr);
+	s_insert_u("nr", psi.nr);
 
 	return sizeof(psi);
 }
