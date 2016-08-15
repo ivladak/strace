@@ -34,14 +34,13 @@
 #include "defs.h"
 
 static int
-decode_readlink(struct tcb *tcp, int offset)
+decode_readlink(struct tcb *tcp)
 {
 	if (entering(tcp)) {
-		printpath(tcp, tcp->u_arg[offset]);
-		tprints(", ");
+		s_push_path("pathname");
 	} else {
 		if (syserror(tcp))
-			printaddr(tcp->u_arg[offset + 1]);
+			s_push_addr("buf");
 		else
 			/* Used to use printpathn(), but readlink
 			 * neither includes NUL in the returned count,
@@ -50,20 +49,20 @@ decode_readlink(struct tcb *tcp, int offset)
 			 * "..." continuation based on garbage
 			 * past return buffer's end.
 			 */
-			printstr(tcp, tcp->u_arg[offset + 1], tcp->u_rval);
-		tprintf(", %lu", tcp->u_arg[offset + 2]);
+			s_push_str("buf", tcp->u_rval);
+		s_push_lu("bufsiz");
 	}
 	return 0;
 }
 
 SYS_FUNC(readlink)
 {
-	return decode_readlink(tcp, 0);
+	return decode_readlink(tcp);
 }
 
 SYS_FUNC(readlinkat)
 {
 	if (entering(tcp))
-		print_dirfd(tcp, tcp->u_arg[0]);
-	return decode_readlink(tcp, 1);
+		s_push_dirfd("dirfd");
+	return decode_readlink(tcp);
 }
