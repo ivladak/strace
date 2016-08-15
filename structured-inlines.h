@@ -134,6 +134,9 @@ s_insert_addr_type(const char *name, unsigned long value, enum s_type type,
 	struct s_addr *addr = s_addr_new_and_insert(name, value, NULL);
 	ssize_t ret = -1;
 
+	if (!value)
+		return -1;
+
 	addr->val = s_arg_new_init(current_tcp, type, name);
 
 	/* XXX Rewrite */
@@ -234,6 +237,8 @@ s_array_fetch_wrapper(struct s_arg *arg, unsigned long addr, void *fn_data)
 	struct s_arg *cur_arg;
 	bool last = false;
 
+	if (!args->nmemb)
+		return 0;
 	if (end_addr <= addr || size / args->memb_size != args->nmemb)
 		return -1;
 
@@ -246,15 +251,23 @@ s_array_fetch_wrapper(struct s_arg *arg, unsigned long addr, void *fn_data)
 	}
 
 	for (cur = addr; cur < end_addr; cur += args->memb_size) {
+		if (s_umoven_verbose(current_tcp, cur, args->memb_size, outbuf))
+		{
+			if (!res)
+				res = -1;
+
+			/* s_insert_ellipsis(); */
+			s_insert_addr(NULL, cur);
+
+			break;
+		}
+
 		if ((cur >= abbrev_end) || last) {
 			s_insert_ellipsis();
 			break;
 		}
 
 		cur_arg = s_arg_new_init(current_tcp, args->type, NULL);
-
-		if (s_umoven_verbose(current_tcp, cur, args->memb_size, outbuf))
-			break;
 
 		s_arg_insert(current_tcp->s_syscall, cur_arg, -1);
 
