@@ -3,6 +3,45 @@
 
 #include <linux/limits.h>
 
+static inline int
+s_umoven_verbose(struct tcb *tcp, const long addr, const unsigned int len,
+	void *our_addr)
+{
+	if (!addr || !verbose(tcp) || (exiting(tcp) && syserror(tcp)) ||
+	    umoven(tcp, addr, len, our_addr) < 0)
+		return -1;
+
+	return 0;
+}
+
+#define s_umove_verbose(pid, addr, objp)	\
+	s_umoven_verbose((pid), (addr), sizeof(*(objp)), (void *) (objp))
+
+#define DEF_UMOVE_LONG(NAME, TYPE) \
+	static inline int \
+	s_umove_##NAME(struct tcb *tcp, unsigned long addr, TYPE *val) \
+	{ \
+		int ret; \
+		\
+		if (current_wordsize > sizeof(int)) { \
+			unsigned long long tmp; \
+			\
+			if (!(ret = s_umove_verbose(tcp, addr, &tmp))) \
+				*val = tmp; \
+		} else { \
+			unsigned int tmp; \
+			\
+			if (!(ret = s_umove_verbose(tcp, addr, &tmp))) \
+				*val = tmp; \
+		} \
+		\
+		return ret; \
+	}
+
+DEF_UMOVE_LONG(slong, long)
+DEF_UMOVE_LONG(ulong, unsigned long)
+
+
 static inline void
 s_insert_ellipsis(void)
 {
@@ -147,20 +186,6 @@ struct s_array_fetch_wrapper_args {
 	enum s_type type;
 };
 
-static inline int
-s_umoven_verbose(struct tcb *tcp, const long addr, const unsigned int len,
-	void *our_addr)
-{
-	if (!addr || !verbose(tcp) || (exiting(tcp) && syserror(tcp)) ||
-	    umoven(tcp, addr, len, our_addr) < 0)
-		return -1;
-
-	return 0;
-}
-
-#define s_umove_verbose(pid, addr, objp)	\
-	s_umoven_verbose((pid), (addr), sizeof(*(objp)), (void *) (objp))
-
 static inline ssize_t
 s_array_fetch_wrapper(struct s_arg *arg, unsigned long addr, void *fn_data)
 {
@@ -285,30 +310,6 @@ s_push_num(enum s_type type, const char *name)
 	s_syscall_cur_arg_advance(syscall, type, &val);
 	s_insert_num(type, name, val);
 }
-
-#define DEF_UMOVE_LONG(NAME, TYPE) \
-	static inline int \
-	s_umove_##NAME(struct tcb *tcp, unsigned long addr, TYPE *val) \
-	{ \
-		int ret; \
-		\
-		if (current_wordsize > sizeof(int)) { \
-			unsigned long long tmp; \
-			\
-			if (!(ret = s_umove_verbose(tcp, addr, &tmp))) \
-				*val = tmp; \
-		} else { \
-			unsigned int tmp; \
-			\
-			if (!(ret = s_umove_verbose(tcp, addr, &tmp))) \
-				*val = tmp; \
-		} \
-		\
-		return ret; \
-	}
-
-DEF_UMOVE_LONG(slong, long)
-DEF_UMOVE_LONG(ulong, unsigned long)
 
 #define DEF_PUSH_INT(TYPE, ENUM, UMOVE_FUNC) \
 	static inline void \
