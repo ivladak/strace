@@ -86,7 +86,7 @@ print_si_code(int si_signo, unsigned int si_code)
 {
 	const struct xlat *xlat_to_use = siginfo_codes;
 
-	if (!si_code) {
+	if (!xlookup(siginfo_codes, si_code)) {
 		switch (si_signo) {
 		case SIGTRAP:
 			xlat_to_use = sigtrap_codes;
