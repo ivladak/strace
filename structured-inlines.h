@@ -370,7 +370,7 @@ DEF_PUSH_INT(int, fd, umove)
 DEF_PUSH_INT(int, dirfd, umove)
 DEF_PUSH_INT(int, signo, umove)
 DEF_PUSH_INT(int, scno, umove)
-DEF_PUSH_INT(int, wstatus, umove)
+DEF_PUSH_INT(int, wstatus, s_umove_verbose)
 DEF_PUSH_INT(unsigned, rlim32, umove)
 DEF_PUSH_INT(unsigned long long, rlim64, umove)
 
