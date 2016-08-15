@@ -113,10 +113,12 @@ s_val_print(struct s_arg *arg)
 
 		JsonNode *chg_obj = json_mkobject();
 		if (s_ch->entering)
-			json_append_member(chg_obj, "entering", s_val_print(s_ch->entering));
+			json_append_member(chg_obj, "entering",
+				s_val_print(s_ch->entering));
 		if (s_ch->exiting)
 			if (!s_arg_equal(s_ch->entering, s_ch->exiting))
-				json_append_member(chg_obj, "exiting", s_val_print(s_ch->exiting));
+				json_append_member(chg_obj, "exiting",
+					s_val_print(s_ch->exiting));
 
 		return chg_obj;
 	}
@@ -124,10 +126,12 @@ s_val_print(struct s_arg *arg)
 	case S_TYPE_path: {
 		struct s_str *s_p = S_ARG_TO_TYPE(arg, str);
 		char *outstr;
-		unsigned int style = QUOTE_ELLIPSIS | (s_p->has_nul ? QUOTE_0_TERMINATED : 0);
+		unsigned int style = QUOTE_ELLIPSIS | (s_p->has_nul ?
+			QUOTE_0_TERMINATED : 0);
 
 		alloc_quoted_string(s_p->str, &outstr, s_p->len + 3, style);
-		string_quote(s_p->str, outstr, (s_p->len ? s_p->len - 1 : 0) , style);
+		string_quote(s_p->str, outstr, (s_p->len ? s_p->len - 1 : 0),
+			style);
 
 		return json_mkstring(outstr);
 	}
@@ -139,7 +143,8 @@ s_val_print(struct s_arg *arg)
 		json_append_member(addr_obj, "addr", json_mknumber(p->addr));
 
 		if (p->val)
-			json_append_member(addr_obj, "value", s_val_print(p->val));
+			json_append_member(addr_obj, "value",
+				s_val_print(p->val));
 
 		return addr_obj;
 	}
