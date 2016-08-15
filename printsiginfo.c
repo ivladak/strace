@@ -75,8 +75,10 @@ printsigsource(const siginfo_t *sip)
 static void
 printsigval(const siginfo_t *sip)
 {
-	s_insert_d("si_value", sip->si_int);
+	s_insert_struct("si_value");
+	s_insert_d("int", sip->si_int);
 	s_insert_addr("ptr", (unsigned long)sip->si_ptr);
+	s_struct_finish();
 }
 
 static void
