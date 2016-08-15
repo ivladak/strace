@@ -105,6 +105,19 @@ s_val_print(struct s_arg *arg)
 		break;
 	}
 
+	case S_TYPE_uid16:
+	case S_TYPE_gid16: {
+		struct s_num *p = S_ARG_TO_TYPE(arg, num);
+
+		if ((arg->type == S_TYPE_uid16) &&
+		    ((int16_t)-1U == (int16_t)p->val))
+			tprints("-1");
+		else
+			tprintf("%hu", (uint16_t)p->val);
+
+		break;
+	}
+
 	case S_TYPE_time: {
 		struct s_num *p = S_ARG_TO_TYPE(arg, num);
 

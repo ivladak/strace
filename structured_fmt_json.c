@@ -78,6 +78,16 @@ s_val_print(struct s_arg *arg)
 			return json_mknumber((uid_t)p->val);
 	}
 
+	case S_TYPE_uid16:
+	case S_TYPE_gid16: {
+		struct s_num *p = S_ARG_TO_TYPE(arg, num);
+
+		if ((uint16_t)-1U == (uint16_t)p->val)
+			return json_mknumber(-1);
+		else
+			return json_mknumber((uint16_t)p->val);
+	}
+
 	case S_TYPE_time: {
 		struct s_num *p = S_ARG_TO_TYPE(arg, num);
 
