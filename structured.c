@@ -623,7 +623,28 @@ s_syscall_cur_arg_advance(struct s_syscall *syscall, enum s_type type,
 		syscall->cur_arg = getllval(current_tcp, local_val,
 			syscall->cur_arg);
 	} else {
-		*local_val = current_tcp->u_arg[syscall->cur_arg];
+		unsigned long long mask = ~0LLU;
+
+		switch (S_TYPE_SIZE(type)) {
+		case S_TYPE_SIZE_c:
+			mask = 0xFF;
+			break;
+		case S_TYPE_SIZE_h:
+			mask = 0xFFFF;
+			break;
+		case S_TYPE_SIZE_i:
+			mask = 0xFFFFFFFF;
+			break;
+		case S_TYPE_SIZE_l:
+			if (current_wordsize == sizeof(int))
+				mask = 0xFFFFFFFF;
+			break;
+		case S_TYPE_SIZE_ll:
+		default:
+			break;
+		}
+
+		*local_val = current_tcp->u_arg[syscall->cur_arg] & mask;
 		syscall->cur_arg++;
 	}
 
