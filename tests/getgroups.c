@@ -67,7 +67,7 @@ get_groups(const long size, GID_TYPE *const g)
 	if (i != ngroups)
 		perror_msg_and_fail("%s(%#lx, %p)", SYSCALL_NAME, size, g);
 
-	printf("%s(%u, [", SYSCALL_NAME, (unsigned) size);
+	printf("%s(%d, [", SYSCALL_NAME, (int)size);
 	for (i = 0; i < ngroups; ++i) {
 		if (i)
 			printf(", ");
@@ -95,29 +95,29 @@ main(void)
 	printf("%s(0, NULL) = %ld\n", SYSCALL_NAME, rc);
 
 	rc = syscall(SYSCALL_NR, -1U, 0);
-	printf("%s(%u, NULL) = %ld %s (%m)\n",
-	       SYSCALL_NAME, -1U, rc, errno2name());
+	printf("%s(%d, NULL) = %ld %s (%m)\n",
+	       SYSCALL_NAME, -1, rc, errno2name());
 
 	rc = syscall(SYSCALL_NR, -1L, 0);
-	printf("%s(%u, NULL) = %ld %s (%m)\n",
-	       SYSCALL_NAME, -1U, rc, errno2name());
+	printf("%s(%d, NULL) = %ld %s (%m)\n",
+	       SYSCALL_NAME, -1, rc, errno2name());
 
 	const unsigned int ngroups_max = sysconf(_SC_NGROUPS_MAX);
 
 	rc = syscall(SYSCALL_NR, ngroups_max, 0);
 	if (rc < 0)
-		printf("%s(%u, NULL) = %ld %s (%m)\n",
+		printf("%s(%d, NULL) = %ld %s (%m)\n",
 		       SYSCALL_NAME, ngroups_max, rc, errno2name());
 	else
-		printf("%s(%u, NULL) = %ld\n",
+		printf("%s(%d, NULL) = %ld\n",
 		       SYSCALL_NAME, ngroups_max, rc);
 
 	rc = syscall(SYSCALL_NR, (long) 0xffffffff00000000ULL | ngroups_max, 0);
 	if (rc < 0)
-		printf("%s(%u, NULL) = %ld %s (%m)\n",
+		printf("%s(%d, NULL) = %ld %s (%m)\n",
 		       SYSCALL_NAME, ngroups_max, rc, errno2name());
 	else
-		printf("%s(%u, NULL) = %ld\n",
+		printf("%s(%d, NULL) = %ld\n",
 		       SYSCALL_NAME, ngroups_max, rc);
 
 	/* check how the second argument is decoded */
@@ -132,7 +132,7 @@ main(void)
 
 	if (ngroups) {
 		rc = syscall(SYSCALL_NR, ngroups, efault);
-		printf("%s(%u, %p) = %ld %s (%m)\n",
+		printf("%s(%d, %p) = %ld %s (%m)\n",
 		       SYSCALL_NAME, (unsigned) ngroups, efault,
 		       rc, errno2name());
 	}

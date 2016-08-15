@@ -81,10 +81,7 @@ main(void)
 		}
 
 		printf("%s(", SYSCALL_NAME);
-		if (num == -1U)
-			printf("-1");
-		else
-			printf("%u", num);
+		printf("%u", num);
 		errno = saved_errno;
 		if (expected)
 			printf(") = -1 %s (%m)\n", errno2name());

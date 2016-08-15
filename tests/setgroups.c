@@ -79,10 +79,10 @@ main(void)
 	printf("%s(1, NULL) = -1 %s (%m)\n", SYSCALL_NAME, errno2name());
 
 	syscall(SYSCALL_NR, -1U, 0);
-	printf("%s(%u, NULL) = -1 %s (%m)\n", SYSCALL_NAME, -1U, errno2name());
+	printf("%s(%d, NULL) = -1 %s (%m)\n", SYSCALL_NAME, -1, errno2name());
 
 	syscall(SYSCALL_NR, -1L, 0);
-	printf("%s(%u, NULL) = -1 %s (%m)\n", SYSCALL_NAME, -1U, errno2name());
+	printf("%s(%d, NULL) = -1 %s (%m)\n", SYSCALL_NAME, -1, errno2name());
 
 	/* check how the second argument is decoded */
 	const GID_TYPE *const g1 = tail_alloc(sizeof(*g1));
@@ -144,19 +144,19 @@ main(void)
 
 	if ((unsigned long) rc == ngroups_max && (int) ngroups_max > 0) {
 		syscall(SYSCALL_NR, ngroups_max, g3);
-		printf("%s(%u, [%u, %u, ...]) = -1 %s (%m)\n", SYSCALL_NAME,
+		printf("%s(%d, [%u, %u, ...]) = -1 %s (%m)\n", SYSCALL_NAME,
 		       ngroups_max, (unsigned) g3[0], (unsigned) g3[1],
 		       errno2name());
 
 		const unsigned long size =
 			(unsigned long) 0xffffffff00000000ULL | ngroups_max;
 		syscall(SYSCALL_NR, size, g3);
-		printf("%s(%u, [%u, %u, ...]) = -1 %s (%m)\n", SYSCALL_NAME,
+		printf("%s(%d, [%u, %u, ...]) = -1 %s (%m)\n", SYSCALL_NAME,
 		       ngroups_max, (unsigned) g3[0], (unsigned) g3[1],
 		       errno2name());
 
 		syscall(SYSCALL_NR, ngroups_max + 1, g3);
-		printf("%s(%u, %p) = -1 %s (%m)\n", SYSCALL_NAME,
+		printf("%s(%d, %p) = -1 %s (%m)\n", SYSCALL_NAME,
 		       ngroups_max + 1, g3, errno2name());
 	}
 
