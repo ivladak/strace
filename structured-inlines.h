@@ -198,7 +198,8 @@ s_array_fetch_wrapper(struct s_arg *arg, unsigned long addr, void *fn_data)
 			break;
 		}
 
-		if (args->fill_fn(arg, outbuf, args->memb_size, args->fill_fn_data) < 0)
+		if (args->fill_fn(cur_arg, outbuf, args->memb_size,
+		    args->fill_fn_data) < 0)
 			last = true;
 
 		switch (args->type) {
