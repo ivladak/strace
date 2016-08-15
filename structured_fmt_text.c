@@ -518,7 +518,11 @@ s_syscall_text_print_signal(struct tcb *tcp)
 	struct s_arg *arg;
 	struct s_arg *tmp;
 
-	tprints("--- stopped by ");
+	if (STAILQ_FIRST(&syscall->args.args) &&
+	    STAILQ_NEXT(STAILQ_FIRST(&syscall->args.args), entry))
+		tprints("--- ");
+	else
+		tprints("--- stopped by ");
 
 	STAILQ_FOREACH_SAFE(arg, &syscall->args.args, entry, tmp) {
 		s_val_print(arg);
