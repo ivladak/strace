@@ -147,6 +147,20 @@ struct s_array_fetch_wrapper_args {
 	enum s_type type;
 };
 
+static inline int
+s_umoven_verbose(struct tcb *tcp, const long addr, const unsigned int len,
+	void *our_addr)
+{
+	if (!addr || !verbose(tcp) || (exiting(tcp) && syserror(tcp)) ||
+	    umoven(tcp, addr, len, our_addr) < 0)
+		return -1;
+
+	return 0;
+}
+
+#define s_umove_verbose(pid, addr, objp)	\
+	s_umoven_verbose((pid), (addr), sizeof(*(objp)), (void *) (objp))
+
 static inline ssize_t
 s_array_fetch_wrapper(struct s_arg *arg, unsigned long addr, void *fn_data)
 {
@@ -182,7 +196,7 @@ s_array_fetch_wrapper(struct s_arg *arg, unsigned long addr, void *fn_data)
 
 		cur_arg = s_arg_new_init(current_tcp, args->type, NULL);
 
-		if (umoven(current_tcp, cur, args->memb_size, outbuf))
+		if (s_umoven_verbose(current_tcp, cur, args->memb_size, outbuf))
 			break;
 
 		s_arg_insert(current_tcp->s_syscall, cur_arg, -1);
@@ -272,20 +286,6 @@ s_push_num(enum s_type type, const char *name)
 	s_insert_num(type, name, val);
 }
 
-static inline int
-s_umoven_verbose(struct tcb *tcp, const long addr, const unsigned int len,
-	void *our_addr)
-{
-	if (!addr || !verbose(tcp) || (exiting(tcp) && syserror(tcp)) ||
-	    umoven(tcp, addr, len, our_addr) < 0)
-		return -1;
-
-	return 0;
-}
-
-#define s_umove_verbose(pid, addr, objp)	\
-	s_umoven_verbose((pid), (addr), sizeof(*(objp)), (void *) (objp))
-
 #define DEF_UMOVE_LONG(NAME, TYPE) \
 	static inline int \
 	s_umove_##NAME(struct tcb *tcp, unsigned long addr, TYPE *val) \
@@ -295,12 +295,12 @@ s_umoven_verbose(struct tcb *tcp, const long addr, const unsigned int len,
 		if (current_wordsize > sizeof(int)) { \
 			unsigned long long tmp; \
 			\
-			if (!(ret = umove(tcp, addr, &tmp))) \
+			if (!(ret = s_umove_verbose(tcp, addr, &tmp))) \
 				*val = tmp; \
 		} else { \
 			unsigned int tmp; \
 			\
-			if (!(ret = umove(tcp, addr, &tmp))) \
+			if (!(ret = s_umove_verbose(tcp, addr, &tmp))) \
 				*val = tmp; \
 		} \
 		\
@@ -347,36 +347,38 @@ DEF_UMOVE_LONG(ulong, unsigned long)
 		s_insert_##ENUM##_addr(name, addr); \
 	}
 
-DEF_PUSH_INT(int, d, umove)
+DEF_PUSH_INT(int, d, s_umove_verbose)
 DEF_PUSH_INT(long, ld, s_umove_slong)
-DEF_PUSH_INT(long long, lld, umove)
+DEF_PUSH_INT(long long, lld, s_umove_verbose)
 
-DEF_PUSH_INT(unsigned, u, umove)
+DEF_PUSH_INT(unsigned, u, s_umove_verbose)
 DEF_PUSH_INT(unsigned long, lu, s_umove_ulong)
-DEF_PUSH_INT(unsigned long long, llu, umove)
+DEF_PUSH_INT(unsigned long long, llu, s_umove_verbose)
 
-DEF_PUSH_INT(unsigned, o, umove)
+DEF_PUSH_INT(unsigned, o, s_umove_verbose)
 DEF_PUSH_INT(unsigned long, lo, s_umove_ulong)
-DEF_PUSH_INT(unsigned long long, llo, umove)
+DEF_PUSH_INT(unsigned long long, llo, s_umove_verbose)
 
-DEF_PUSH_INT(unsigned, x, umove)
+DEF_PUSH_INT(unsigned, x, s_umove_verbose)
 DEF_PUSH_INT(unsigned long, lx, s_umove_ulong)
-DEF_PUSH_INT(unsigned long long, llx, umove)
+DEF_PUSH_INT(unsigned long long, llx, s_umove_verbose)
 
-DEF_PUSH_INT(int, uid, umove)
-DEF_PUSH_INT(int, gid, umove)
-DEF_PUSH_INT(long, time, umove)
-DEF_PUSH_INT(int, fd, umove)
-DEF_PUSH_INT(int, dirfd, umove)
-DEF_PUSH_INT(int, signo, umove)
-DEF_PUSH_INT(int, scno, umove)
+DEF_PUSH_INT(int, uid, s_umove_verbose)
+DEF_PUSH_INT(int, gid, s_umove_verbose)
+DEF_PUSH_INT(short, uid16, s_umove_verbose)
+DEF_PUSH_INT(short, gid16, s_umove_verbose)
+DEF_PUSH_INT(long, time, s_umove_verbose)
+DEF_PUSH_INT(int, fd, s_umove_verbose)
+DEF_PUSH_INT(int, dirfd, s_umove_verbose)
+DEF_PUSH_INT(int, signo, s_umove_verbose)
+DEF_PUSH_INT(int, scno, s_umove_verbose)
 DEF_PUSH_INT(int, wstatus, s_umove_verbose)
-DEF_PUSH_INT(unsigned, rlim32, umove)
-DEF_PUSH_INT(unsigned long long, rlim64, umove)
+DEF_PUSH_INT(unsigned, rlim32, s_umove_verbose)
+DEF_PUSH_INT(unsigned long long, rlim64, s_umove_verbose)
 
 DEF_PUSH_INT(unsigned long,  umask,   s_umove_ulong)
-DEF_PUSH_INT(unsigned short, umode_t, umove)
-DEF_PUSH_INT(unsigned int,   mode_t,  umove)
+DEF_PUSH_INT(unsigned short, umode_t, s_umove_verbose)
+DEF_PUSH_INT(unsigned int,   mode_t,  s_umove_verbose)
 
 #undef DEF_PUSH_INT
 
