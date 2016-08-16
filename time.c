@@ -169,7 +169,7 @@ SYS_FUNC(osf_setitimer)
 static int
 do_adjtimex(struct tcb *tcp, long addr)
 {
-	if (print_timex(tcp, addr))
+	if (s_insert_timex(addr) < 0)
 		return 0;
 	tcp->auxstr = xlookup(adjtimex_state, (unsigned long) tcp->u_rval);
 	if (tcp->auxstr)

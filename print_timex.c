@@ -40,8 +40,8 @@ typedef struct timex struct_timex;
 #include "xlat/adjtimex_modes.h"
 #include "xlat/adjtimex_status.h"
 
-static int
-push_timex(struct s_arg *arg, unsigned long addr, void *fn_data)
+static ssize_t
+fetch_fill_timex(struct s_arg *arg, unsigned long addr, void *fn_data)
 {
 	struct_timex tx;
 
@@ -53,14 +53,14 @@ push_timex(struct s_arg *arg, unsigned long addr, void *fn_data)
 	s_insert_lld("freq", tx.freq);
 	s_insert_lld("maxerror", tx.maxerror);
 	s_insert_lld("esterror", tx.esterror);
-	s_insert_flags_int("status", adjtimex_status, tx.tx.status, "STA_???");
+	s_insert_flags_int("status", adjtimex_status, tx.status, "STA_???");
 	s_insert_lld("constant", tx.constant);
 	s_insert_lld("precision", tx.precision);
 	s_insert_lld("tolerance", tx.tolerance);
 
 	s_insert_struct("time");
 	s_insert_lld("tv_sec", tx.time.tv_sec);
-	s_insert_lld("tv_usec" tx.time.tv_usec);
+	s_insert_lld("tv_usec", tx.time.tv_usec);
 	s_struct_finish();
 	s_insert_lld("tick", tx.tick);
 
@@ -78,10 +78,16 @@ push_timex(struct s_arg *arg, unsigned long addr, void *fn_data)
 	s_insert_d("tai", tx.tai);
 #endif
 
-	return 0;
+	return sizeof(tx);
 }
 
-MPERS_PRINTER_DECL(int, print_timex, void)
+MPERS_PRINTER_DECL(int, s_insert_timex, unsigned long addr)
 {
-	return s_push_addr_type("timex", S_TYPE_struct, push_timex, NULL);
+	return s_insert_addr_type("timex", addr, S_TYPE_struct,
+		fetch_fill_timex, NULL);
+}
+
+MPERS_PRINTER_DECL(int, s_push_timex, void)
+{
+	return s_push_addr_type("timex", S_TYPE_struct, fetch_fill_timex, NULL);
 }
