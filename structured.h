@@ -393,7 +393,8 @@ extern void s_syscall_free(struct tcb *tcp);
 extern int s_syscall_cur_arg_advance(struct s_syscall *syscall,
 	enum s_type type, unsigned long long *val);
 
-extern void s_process_xlat(struct s_xlat *arg, s_print_xlat_fn cb, void *cb_data);
+extern void s_process_xlat(struct s_xlat *arg, s_print_xlat_fn cb,
+	void *cb_data);
 
 extern void s_syscall_print_before(struct tcb *tcp);
 extern void s_syscall_print_entering(struct tcb *tcp);
@@ -402,8 +403,10 @@ extern void s_syscall_print_exiting(struct tcb *tcp);
 extern void s_syscall_print_after(struct tcb *tcp);
 extern void s_syscall_print_resumed(struct tcb *tcp);
 extern void s_syscall_print_tv(struct tcb *tcp, struct timeval *tv);
-extern void s_syscall_print_unavailable_entering(struct tcb *tcp, int scno_good);
+extern void s_syscall_print_unavailable_entering(struct tcb *tcp,
+	int scno_good);
 extern void s_syscall_print_unavailable_exiting(struct tcb *tcp);
-extern void s_syscall_print_signal(struct tcb *tcp, const void *si, unsigned sig);
+extern void s_syscall_print_signal(struct tcb *tcp, const void *si,
+	unsigned sig);
 
 #endif /* #ifndef STRACE_STRUCTURED_H */
