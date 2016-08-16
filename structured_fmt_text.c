@@ -4,6 +4,7 @@
 #include "printresource.h"
 #include "process.h"
 #include "printwait.h"
+#include "structured_sigmask.h"
 
 #include "structured_fmt_text.h"
 
@@ -55,6 +56,26 @@ s_print_xlat_text(enum s_type type, uint64_t value, uint64_t mask,
 		else
 			tprintf(fmt, value);
 	}
+}
+
+void
+s_print_sigmask_text(int bit, const char *str, bool set, void *data)
+{
+	enum sigmask_printer_text_flags {
+		SPT_INVERT,
+		SPT_SEPARATOR,
+	};
+	unsigned *flags = data;
+
+	if (!((*flags) & (1 << SPT_INVERT)) ^ set)
+		return;
+
+	if ((*flags) & (1 << SPT_SEPARATOR))
+		tprints(" ");
+	else
+		*flags |= 1 << SPT_SEPARATOR;
+
+	tprints(str);
 }
 
 #ifndef AT_FDCWD
@@ -284,6 +305,18 @@ s_val_print(struct s_arg *arg)
 		struct s_xlat *f_p = S_ARG_TO_TYPE(arg, xlat);
 
 		s_process_xlat(f_p, s_print_xlat_text, NULL);
+
+		break;
+	}
+	case S_TYPE_sigmask: {
+		struct s_sigmask *p = S_ARG_TO_TYPE(arg, sigmask);
+		unsigned bitcount = popcount32(p->sigmask32,
+			(p->bytes + 3) / 4);
+		unsigned flags = (bitcount >= (p->bytes * 8 * 2 / 3));
+
+		tprints("[");
+		s_process_sigmask(p, s_print_sigmask_text, &flags);
+		tprints("]");
 
 		break;
 	}

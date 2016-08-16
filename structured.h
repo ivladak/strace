@@ -1,6 +1,9 @@
 #ifndef STRACE_STRUCTURED_H
 #define STRACE_STRUCTURED_H
 
+#include <stdbool.h>
+#include <stdint.h>
+
 #include "queue.h"
 
 /* Some trivial utility macros for field manipulation. */
@@ -112,6 +115,7 @@ enum s_type_kind {
 	S_TYPE_KIND_fd,
 	S_TYPE_KIND_path,
 	S_TYPE_KIND_xlat,
+	S_TYPE_KIND_sigmask,
 	S_TYPE_KIND_struct,
 	S_TYPE_KIND_array,
 	S_TYPE_KIND_ellipsis,
@@ -190,6 +194,8 @@ enum s_type {
 	S_TYPE_xlat_d   = S_TYPE_DEF(i,  unsigned, default, xlat),
 	S_TYPE_xlat_ld  = S_TYPE_DEF(l,  unsigned, default, xlat),
 	S_TYPE_xlat_lld = S_TYPE_DEF(ll, unsigned, default, xlat),
+
+	S_TYPE_sigmask  = S_TYPE_DEF(l,  unsigned, default, sigmask),
 
 	S_TYPE_struct   = S_TYPE_DEF(i,  unsigned, default, struct),
 	S_TYPE_array    = S_TYPE_DEF(i,  unsigned, default, array),
@@ -288,6 +294,9 @@ struct s_addr {
 struct s_ellipsis {
 	struct s_arg arg;
 };
+
+/* Stored in structured_sigmask.h due to inclusion of signal.h */
+struct s_sigmask;
 
 struct s_changeable {
 	struct s_arg arg;

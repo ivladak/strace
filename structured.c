@@ -9,6 +9,7 @@
 #include "printsiginfo.h"
 
 #include "structured.h"
+#include "structured_sigmask.h"
 
 #include "structured_fmt_text.h"
 #include "structured_fmt_json.h"
@@ -37,6 +38,7 @@ static struct s_printer *s_printers[] = {
 		\
 		__ARG_TYPE_CASE(addr); \
 		__ARG_TYPE_CASE(xlat); \
+		__ARG_TYPE_CASE(sigmask); \
 		\
 		case S_TYPE_KIND_array: \
 		__ARG_TYPE_CASE(struct); \
@@ -309,6 +311,9 @@ s_arg_new_init(struct tcb *tcp, enum s_type type, const char *name)
 	case S_TYPE_KIND_xlat:
 		return &s_xlat_new(type, name, NULL, 0, NULL, false)->arg;
 
+	case S_TYPE_KIND_sigmask:
+		return &s_sigmask_new(name, NULL, 0)->arg;
+
 	case S_TYPE_KIND_array:
 	case S_TYPE_KIND_struct:
 		return &s_struct_new(type, name)->arg;
@@ -377,6 +382,20 @@ s_arg_equal(struct s_arg *arg1, struct s_arg *arg2)
 			return true;
 
 		return false;
+	}
+	case S_TYPE_KIND_sigmask: {
+		struct s_sigmask *sigmask1 = S_ARG_TO_TYPE(arg1, sigmask);
+		struct s_sigmask *sigmask2 = S_ARG_TO_TYPE(arg2, sigmask);
+		unsigned i;
+
+		if (sigmask1->bytes != sigmask2->bytes)
+			return false;
+
+		for (i = 0; i < sigmask1; i++)
+			if (sigmask1->sigmask[i] != sigmask2->sigmask[i])
+				return false;
+
+		return true;
 	}
 	case S_TYPE_KIND_array:
 	case S_TYPE_KIND_struct: {
