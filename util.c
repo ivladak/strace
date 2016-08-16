@@ -204,6 +204,26 @@ next_set_bit(const void *bit_array, unsigned cur_bit, unsigned size_bits)
 		pos++;
 	}
 }
+
+unsigned int
+popcount32(const uint32_t *a, unsigned int size)
+{
+	unsigned int count = 0;
+
+	for (; size; ++a, --size) {
+		uint32_t x = *a;
+
+#ifdef HAVE___BUILTIN_POPCOUNT
+		count += __builtin_popcount(x);
+#else
+		for (; x; ++count)
+			x &= x - 1;
+#endif
+	}
+
+	return count;
+}
+
 /*
  * Print entry in struct xlat table, if there.
  */

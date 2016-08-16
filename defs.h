@@ -522,6 +522,7 @@ extern const char *xlat_search(const struct xlat *, const size_t, const uint64_t
 extern unsigned long get_pagesize(void);
 extern int string_to_uint(const char *str);
 extern int next_set_bit(const void *bit_array, unsigned cur_bit, unsigned size_bits);
+unsigned int popcount32(const uint32_t *a, unsigned int size);
 
 #define QUOTE_0_TERMINATED			0x01
 #define QUOTE_OMIT_LEADING_TRAILING_QUOTES	0x02
