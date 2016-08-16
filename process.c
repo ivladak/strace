@@ -47,6 +47,7 @@
 #include "ptrace.h"
 #include "regs.h"
 #include "seccomp_structured.h"
+#include "structured_sigmask.h"
 #include "xlat/ptrace_cmds.h"
 #include "xlat/ptrace_setoptions_flags.h"
 #include "xlat/ptrace_peeksiginfo_flags.h"
@@ -108,6 +109,7 @@ fetch_fill_peeksiginfo(struct s_arg *arg, unsigned long addr, void *fn_data)
 SYS_FUNC(ptrace)
 {
 	const unsigned long request = tcp->u_arg[0];
+	const unsigned long addr = tcp->u_arg[2];
 
 	if (entering(tcp)) {
 		s_push_xlat_long("request", ptrace_cmds, "PTRACE_???");
@@ -199,8 +201,7 @@ SYS_FUNC(ptrace)
 			s_push_siginfo("data");
 			break;
 		case PTRACE_SETSIGMASK:
-			/* XXX fix: print_sigset_addr_len(tcp, data, addr); */
-			s_push_addr("data");
+			s_push_sigmask("data", addr);
 			break;
 		case PTRACE_SETREGSET:
 			// XXX fix: tprint_iov(tcp, /*len:*/ 1, data, IOV_DECODE_ADDR);
@@ -248,8 +249,7 @@ SYS_FUNC(ptrace)
 			s_push_siginfo("data");
 			break;
 		case PTRACE_GETSIGMASK:
-			/* XXX print_sigset_addr_len(tcp, data, addr); */
-			s_push_addr("data");
+			s_push_sigmask("data", addr);
 			break;
 		case PTRACE_PEEKSIGINFO:
 			if (syserror(tcp))
