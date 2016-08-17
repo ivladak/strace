@@ -203,6 +203,8 @@ s_val_print(struct s_arg *arg)
 		char *ptr = buf;
 		unsigned i;
 
+		json_append_member(obj, "type", json_mkstring("sigmask"));
+
 		for (i = 0; i < p->bytes; i++) {
 			unsigned cur_byte = i ^ pos_xor_mask;
 
@@ -222,7 +224,7 @@ s_val_print(struct s_arg *arg)
 
 		s_process_sigmask(p, s_print_sigmask_json, obj);
 
-		break;
+		return obj;
 	}
 	case S_TYPE_array: {
 		struct s_struct *p = S_ARG_TO_TYPE(arg, struct);
