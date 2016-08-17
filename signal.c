@@ -94,6 +94,7 @@
 
 #include "print_time.h"
 #include "printsiginfo.h"
+#include "structured_sigmask.h"
 
 /* Note on the size of sigset_t:
  *
@@ -249,26 +250,39 @@ print_sigset_addr_len(struct tcb *tcp, long addr, long len)
 }
 
 void
+s_insert_sigset_addr_len_limit(const char *name, unsigned long addr,
+	unsigned long len, unsigned long min_len)
+{
+	if (len < min_len || len > NSIG / 8) {
+		s_insert_addr(name, addr);
+		return;
+	}
+
+	s_insert_sigmask_addr(name, addr, len);
+}
+
+void
 s_insert_sigset_addr_len(const char *name, unsigned long addr,
 	unsigned long len)
 {
-	/* XXX */
-	s_insert_addr(name, addr);
+	s_insert_sigset_addr_len_limit(name, addr, len, current_wordsize);
 }
 
 void
 s_push_sigset_addr_len(const char *name, unsigned long len)
 {
-	/* XXX */
-	s_push_addr(name);
+	unsigned long long addr;
+
+	s_syscall_pop_all(current_tcp->s_syscall);
+	s_syscall_cur_arg_advance(current_tcp->s_syscall, S_TYPE_addr, &addr);
+	s_insert_sigset_addr_len_limit(name, addr, len, current_wordsize);
 }
 
 SYS_FUNC(sigsetmask)
 {
 	if (entering(tcp)) {
-		tprintsigmask_val("", tcp->u_arg[0]);
-	}
-	else if (!syserror(tcp)) {
+		s_push_sigmask("mask");
+	} else if (!syserror(tcp)) {
 		tcp->auxstr = sprintsigmask_val("old mask ", tcp->u_rval);
 		return RVAL_HEX | RVAL_STR;
 	}
