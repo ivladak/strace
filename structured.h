@@ -89,6 +89,7 @@ enum s_type_fmt {
 	S_TYPE_FMT_rlim32,
 	S_TYPE_FMT_rlim64,
 	S_TYPE_FMT_ptrace_uaddr,
+	S_TYPE_FMT_sa_handler,
 
 	S_TYPE_FMT_umask,
 	S_TYPE_FMT_umode_t,
@@ -177,6 +178,8 @@ enum s_type {
 	S_TYPE_umask    = S_TYPE_DEF(l,  unsigned, umask,   num),
 	S_TYPE_umode_t  = S_TYPE_DEF(h,  unsigned, umode_t, num),
 	S_TYPE_mode_t   = S_TYPE_DEF(i,  unsigned, mode_t,  num),
+
+	S_TYPE_sa_handler = S_TYPE_DEF(l,  unsigned, sa_handler, num),
 
 	S_TYPE_str      = S_TYPE_DEF(l,  unsigned, default, str),
 	S_TYPE_addr     = S_TYPE_DEF(l,  unsigned, default, addr),

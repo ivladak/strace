@@ -226,6 +226,19 @@ s_val_print(struct s_arg *arg)
 
 		return obj;
 	}
+	case S_TYPE_sa_handler: {
+		struct s_num *p = S_ARG_TO_TYPE(arg, num);
+		JsonNode *obj = json_mkobject();
+		const char *str = sa_handler_str(p->val);
+
+		json_append_member(obj, "type", json_mkstring("sa_handler"));
+		json_append_member(obj, "value", json_mknumber(p->val));
+
+		if (str)
+			json_append_member(obj, "str", json_mkstring(str));
+
+		return obj;
+	}
 	case S_TYPE_array: {
 		struct s_struct *p = S_ARG_TO_TYPE(arg, struct);
 		struct s_arg *field;
