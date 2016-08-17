@@ -322,6 +322,8 @@ s_val_print(struct s_arg *arg)
 			(p->bytes + 3) / 4);
 		unsigned flags = (bitcount >= (p->bytes * 8 * 2 / 3));
 
+		if (flags)
+			tprints("~");
 		tprints("[");
 		s_process_sigmask(p, s_print_sigmask_text, &flags);
 		tprints("]");
