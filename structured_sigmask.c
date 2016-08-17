@@ -8,6 +8,9 @@ s_sigmask_new(const char *name, const void *sig_mask, unsigned int bytes)
 	struct s_sigmask *res = S_ARG_TO_TYPE(s_arg_new(current_tcp,
 		S_TYPE_sigmask, name), sigmask);
 
+	if (bytes > sizeof(res->sigmask))
+		bytes = sizeof(res->sigmask);
+
 	res->bytes = bytes;
 	memcpy(&res->sigmask, sig_mask, bytes);
 
