@@ -80,6 +80,24 @@ s_push_sigmask_val(const char *name)
 }
 
 
+/* Anonymous realtime signals. */
+#ifndef ASM_SIGRTMIN
+/* Linux kernel >= 3.18 defines SIGRTMIN to 32 on all architectures. */
+# define ASM_SIGRTMIN 32
+#endif
+#ifndef ASM_SIGRTMAX
+/* Under glibc 2.1, SIGRTMAX et al are functions, but __SIGRTMAX is a
+   constant.  This is what we want.  Otherwise, just use SIGRTMAX. */
+# ifdef SIGRTMAX
+#  ifndef __SIGRTMAX
+#   define __SIGRTMAX SIGRTMAX
+#  endif
+# endif
+# ifdef __SIGRTMAX
+#  define ASM_SIGRTMAX __SIGRTMAX
+# endif
+#endif
+
 /** Helper for processing sigmask during output, similar to s_process_xlat */
 void
 s_process_sigmask(struct s_sigmask *arg, s_print_sigmask_fn cb, void *cb_data)
@@ -96,7 +114,7 @@ s_process_sigmask(struct s_sigmask *arg, s_print_sigmask_fn cb, void *cb_data)
 	const char *str;
 
 	for (i = 1; i < arg->bytes * 8; i++) {
-		cur_byte = (i >> 3) ^ pos_xor_mask;
+		cur_byte = ((i - 1) >> 3) ^ pos_xor_mask;
 
 		if (i < nsignals) {
 			str = signalent[i] + 3;
