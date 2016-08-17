@@ -69,10 +69,9 @@ s_process_sigmask(struct s_sigmask *arg, s_print_sigmask_fn cb, void *cb_data)
 
 	static const size_t MAX_SIG_NAME_SIZE = 16;
 	/* Buffer for storing signal name */
-	const char buf[MAX_SIG_NAME_SIZE];
+	char buf[MAX_SIG_NAME_SIZE];
 	unsigned pos_xor_mask = little_endian ? 0 : current_wordsize - 1;
 	unsigned i;
-	unsigned j;
 	size_t cur_byte;
 	const char *str;
 
