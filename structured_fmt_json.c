@@ -1,6 +1,7 @@
 #include <fcntl.h>
 
 #include "defs.h"
+#include "structured_sigmask.h"
 
 #include "structured_fmt_json.h"
 
@@ -31,6 +32,23 @@ s_print_xlat_json(enum s_type type, uint64_t value, uint64_t mask,
 		json_append_member(obj, "str", json_mkstring(str));
 
 	json_append_element(parent, obj);
+}
+
+void
+s_print_sigmask_json(int bit, const char *str, bool set, void *data)
+{
+	JsonNode *root = data;
+	JsonNode *ins_point = json_find_member(root, set ? "set" : "unset");
+	char buf[sizeof(bit) * 3 + 1];
+
+	if (!ins_point) {
+		ins_point = json_mkobject();
+		json_append_member(root, set ? "set" : "unset", ins_point);
+	}
+
+	snprintf(buf, sizeof(buf), "%u", bit);
+
+	json_append_member(ins_point, buf, json_mkstring(str));
 }
 
 #ifndef AT_FDCWD
@@ -172,6 +190,39 @@ s_val_print(struct s_arg *arg)
 		s_process_xlat(f_p, s_print_xlat_json, arr);
 
 		return arr;
+	}
+	case S_TYPE_sigmask: {
+		const unsigned endian = 1;
+		int little_endian = * (char *) (void *) &endian;
+		unsigned pos_xor_mask = little_endian ? 0 :
+			current_wordsize - 1;
+
+		struct s_sigmask *p = S_ARG_TO_TYPE(arg, sigmask);
+		JsonNode *obj = json_mkobject();
+		char buf[sizeof(p->sigmask) * 8 + 1];
+		char *ptr = buf;
+		unsigned i;
+
+		for (i = 0; i < p->bytes; i++) {
+			unsigned cur_byte = i ^ pos_xor_mask;
+
+			ptr += snprintf(ptr, sizeof(buf) - (ptr - buf),
+				"%d%d%d%d%d%d%d%d",
+				!!(p->sigmask[cur_byte] >> 0),
+				!!(p->sigmask[cur_byte] >> 1),
+				!!(p->sigmask[cur_byte] >> 2),
+				!!(p->sigmask[cur_byte] >> 3),
+				!!(p->sigmask[cur_byte] >> 4),
+				!!(p->sigmask[cur_byte] >> 5),
+				!!(p->sigmask[cur_byte] >> 6),
+				!!(p->sigmask[cur_byte] >> 7));
+		}
+
+		json_append_member(obj, "bitmask", json_mkstring(buf));
+
+		s_process_sigmask(p, s_print_sigmask_json, obj);
+
+		break;
 	}
 	case S_TYPE_array: {
 		struct s_struct *p = S_ARG_TO_TYPE(arg, struct);
