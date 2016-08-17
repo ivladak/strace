@@ -59,6 +59,23 @@ s_push_sigmask(const char *name, unsigned int bytes)
 	s_insert_sigmask_addr(name, addr, bytes);
 }
 
+void
+s_push_sigmask_val(const char *name)
+{
+	unsigned long long val;
+
+	s_syscall_pop_all(current_tcp->s_syscall);
+	s_syscall_cur_arg_advance(current_tcp->s_syscall, S_TYPE_ld, &val);
+
+	if (current_wordsize != sizeof(long long)) {
+		unsigned int int_val = val;
+
+		s_insert_sigmask(name, &int_val, current_wordsize);
+	} else {
+		s_insert_sigmask(name, &val, current_wordsize);
+	}
+}
+
 
 /** Helper for processing sigmask during output, similar to s_process_xlat */
 void

@@ -38,6 +38,7 @@ extern void s_insert_sigmask_addr(const char *name, unsigned long addr,
 	unsigned int bytes);
 /* Equivalent to s_push_sigmask_addr */
 extern void s_push_sigmask(const char *name, unsigned int bytes);
+extern void s_push_sigmask_val(const char *name);
 
 /** Helper for processing sigmask during output, similar to s_process_xlat */
 extern void s_process_sigmask(struct s_sigmask *arg, s_print_sigmask_fn cb,
