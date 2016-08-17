@@ -34,8 +34,7 @@ SYS_FUNC(membarrier)
 	if (entering(tcp)) {
 		int cmd = tcp->u_arg[0];
 
-		s_push_xlat_signed("cmd", membarrier_cmds,
-			"MEMBARRIER_CMD_???");
+		s_push_xlat_int("cmd", membarrier_cmds, "MEMBARRIER_CMD_???");
 		s_push_d("flags");
 
 		return cmd ? RVAL_DECODED : 0;
