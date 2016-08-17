@@ -350,9 +350,9 @@ static void emit_object_indented    (SB *out, const JsonNode *object, const char
 static int write_hex16(char *out, uint16_t val);
 
 static JsonNode *mknode(JsonTag tag);
-static void append_node(JsonNode *parent, JsonNode *child);
-static void prepend_node(JsonNode *parent, JsonNode *child);
-static void append_member(JsonNode *object, char *key, JsonNode *value);
+static JsonNode *append_node(JsonNode *parent, JsonNode *child);
+static JsonNode *prepend_node(JsonNode *parent, JsonNode *child);
+static JsonNode *append_member(JsonNode *object, char *key, JsonNode *value);
 
 /* Assertion-friendly validity checks */
 static bool tag_is_valid(unsigned int tag);
@@ -533,7 +533,7 @@ JsonNode *json_mkobject(void)
 	return mknode(JSON_OBJECT);
 }
 
-static void append_node(JsonNode *parent, JsonNode *child)
+static JsonNode *append_node(JsonNode *parent, JsonNode *child)
 {
 	child->parent = parent;
 	child->prev = parent->children.tail;
@@ -544,9 +544,11 @@ static void append_node(JsonNode *parent, JsonNode *child)
 	else
 		parent->children.head = child;
 	parent->children.tail = child;
+
+	return child;
 }
 
-static void prepend_node(JsonNode *parent, JsonNode *child)
+static JsonNode *prepend_node(JsonNode *parent, JsonNode *child)
 {
 	child->parent = parent;
 	child->prev = NULL;
@@ -557,45 +559,47 @@ static void prepend_node(JsonNode *parent, JsonNode *child)
 	else
 		parent->children.tail = child;
 	parent->children.head = child;
+
+	return child;
 }
 
-static void append_member(JsonNode *object, char *key, JsonNode *value)
+static JsonNode *append_member(JsonNode *object, char *key, JsonNode *value)
 {
 	value->key = key;
-	append_node(object, value);
+	return append_node(object, value);
 }
 
-void json_append_element(JsonNode *array, JsonNode *element)
+JsonNode *json_append_element(JsonNode *array, JsonNode *element)
 {
 	assert(array->tag == JSON_ARRAY);
 	assert(element->parent == NULL);
 	
-	append_node(array, element);
+	return append_node(array, element);
 }
 
-void json_prepend_element(JsonNode *array, JsonNode *element)
+JsonNode *json_prepend_element(JsonNode *array, JsonNode *element)
 {
 	assert(array->tag == JSON_ARRAY);
 	assert(element->parent == NULL);
 	
-	prepend_node(array, element);
+	return prepend_node(array, element);
 }
 
-void json_append_member(JsonNode *object, const char *key, JsonNode *value)
+JsonNode *json_append_member(JsonNode *object, const char *key, JsonNode *value)
 {
 	assert(object->tag == JSON_OBJECT);
 	assert(value->parent == NULL);
 	
-	append_member(object, json_strdup(key), value);
+	return append_member(object, json_strdup(key), value);
 }
 
-void json_prepend_member(JsonNode *object, const char *key, JsonNode *value)
+JsonNode *json_prepend_member(JsonNode *object, const char *key, JsonNode *value)
 {
 	assert(object->tag == JSON_OBJECT);
 	assert(value->parent == NULL);
 	
 	value->key = json_strdup(key);
-	prepend_node(object, value);
+	return prepend_node(object, value);
 }
 
 void json_remove_from_parent(JsonNode *node)

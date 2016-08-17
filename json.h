@@ -97,10 +97,10 @@ JsonNode *json_mknumber(double n);
 JsonNode *json_mkarray(void);
 JsonNode *json_mkobject(void);
 
-void json_append_element(JsonNode *array, JsonNode *element);
-void json_prepend_element(JsonNode *array, JsonNode *element);
-void json_append_member(JsonNode *object, const char *key, JsonNode *value);
-void json_prepend_member(JsonNode *object, const char *key, JsonNode *value);
+JsonNode *json_append_element(JsonNode *array, JsonNode *element);
+JsonNode *json_prepend_element(JsonNode *array, JsonNode *element);
+JsonNode *json_append_member(JsonNode *object, const char *key, JsonNode *value);
+JsonNode *json_prepend_member(JsonNode *object, const char *key, JsonNode *value);
 
 void json_remove_from_parent(JsonNode *node);
 
