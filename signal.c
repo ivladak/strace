@@ -281,7 +281,7 @@ s_push_sigset_addr_len(const char *name, unsigned long len)
 SYS_FUNC(sigsetmask)
 {
 	if (entering(tcp)) {
-		s_push_sigmask("mask");
+		s_push_sigmask("mask", sizeof(int));
 	} else if (!syserror(tcp)) {
 		tcp->auxstr = sprintsigmask_val("old mask ", tcp->u_rval);
 		return RVAL_HEX | RVAL_STR;
