@@ -359,7 +359,7 @@ decode_old_sigaction(struct s_arg *arg, unsigned long addr, void *fn_data)
 	 * be manipulated by strace. In order to prevent the
 	 * compiler from generating code to manipulate
 	 * __sa_handler we cast the function pointers to long. */
-	s_insert_sa_handler("__sa_handler", (unsigned long)sa.__sa_handler);
+	s_insert_sa_handler("sa_handler", (unsigned long)sa.__sa_handler);
 #ifdef MIPS
 	s_insert_sigmask("sa_mask", sa.sa_mask, sizeof(sa.sa_mask));
 #else
@@ -564,7 +564,7 @@ decode_new_sigaction(struct s_arg *arg, unsigned long addr, void *fn_data)
 	 * be manipulated by strace. In order to prevent the
 	 * compiler from generating code to manipulate
 	 * __sa_handler we cast the function pointers to long. */
-	s_insert_sa_handler("__sa_handler", (unsigned long)sa.__sa_handler);
+	s_insert_sa_handler("sa_handler", (unsigned long)sa.__sa_handler);
 	/*
 	 * Sigset size is in tcp->u_arg[4] (SPARC)
 	 * or in tcp->u_arg[3] (all other),
