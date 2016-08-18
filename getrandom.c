@@ -9,9 +9,9 @@ SYS_FUNC(getrandom)
 		s_push_flags_int("flags", getrandom_flags, "GRND_???");
 	} else {
 		if (syserror(tcp))
-			s_push_addr(NULL);
+			s_push_addr("buf");
 		else
-			s_push_str(NULL, tcp->u_rval);
+			s_push_str("buf", tcp->u_rval);
 	}
 	return 0;
 }

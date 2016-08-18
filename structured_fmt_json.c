@@ -3,6 +3,8 @@
 #include "defs.h"
 #include "structured_sigmask.h"
 
+#include "xlat/sa_handler_values.h"
+
 #include "structured_fmt_json.h"
 
 static const char *s_syscall_type_names[] = {
@@ -26,7 +28,7 @@ s_print_xlat_json(enum s_type type, uint64_t value, uint64_t mask,
 	obj = json_mkobject();
 
 	json_append_member(obj, "default", json_mkbool(!!(flags & SPXF_DEFAULT)));
-	json_append_member(obj, "val", json_mknumber(value));
+	json_append_member(obj, "value", json_mknumber(value));
 
 	if (str && value)
 		json_append_member(obj, "str", json_mkstring(str));
@@ -58,10 +60,15 @@ s_print_sigmask_json(int bit, const char *str, bool set, void *data)
 static JsonNode *
 s_val_print(struct s_arg *arg)
 {
+	JsonNode *new_obj = json_mkobject();
+	json_append_member(new_obj, "name", arg->name ? json_mkstring(arg->name) : json_mknull());
+
 	switch (arg->type) {
 #define PRINT_INT(TYPE, ENUM) \
-	case S_TYPE_ ## ENUM: return json_mknumber((TYPE) \
-		(((struct s_num *)s_arg_to_type(arg))->val));
+	case S_TYPE_ ## ENUM: \
+		json_append_member(new_obj, "value", \
+		json_mknumber((TYPE) (((struct s_num *)s_arg_to_type(arg))->val))); \
+		break;
 
 	PRINT_INT(int, d);
 	PRINT_INT(long, ld);
@@ -91,9 +98,11 @@ s_val_print(struct s_arg *arg)
 		struct s_num *p = S_ARG_TO_TYPE(arg, num);
 
 		if ((uid_t) -1U == (uid_t)p->val)
-			return json_mknumber(-1);
+			json_append_member(new_obj, "value", json_mknumber(-1));
 		else
-			return json_mknumber((uid_t)p->val);
+			json_append_member(new_obj, "value", json_mknumber((uid_t)p->val));
+
+		break;
 	}
 
 	case S_TYPE_uid16:
@@ -101,45 +110,55 @@ s_val_print(struct s_arg *arg)
 		struct s_num *p = S_ARG_TO_TYPE(arg, num);
 
 		if ((uint16_t)-1U == (uint16_t)p->val)
-			return json_mknumber(-1);
+			json_append_member(new_obj, "value", json_mknumber(-1));
 		else
-			return json_mknumber((uint16_t)p->val);
+			json_append_member(new_obj, "value", json_mknumber((uint16_t)p->val));
+
+		break;
 	}
 
 	case S_TYPE_time: {
 		struct s_num *p = S_ARG_TO_TYPE(arg, num);
 
-		return json_mkstring(sprinttime(p->val));
+		json_append_member(new_obj, "value", json_mkstring(sprinttime(p->val)));
+
+		break;
 	}
 
 	case S_TYPE_signo: {
 		struct s_num *p = S_ARG_TO_TYPE(arg, num);
-		JsonNode *res = json_mkobject();
 
-		json_append_member(res, "type", json_mkstring("signo"));
-		json_append_member(res, "val", json_mknumber(p->val));
-		json_append_member(res, "name", json_mkstring(signame(p->val)));
+		json_append_member(new_obj, "type", json_mkstring("signo"));
+		json_append_member(new_obj, "value", json_mknumber(p->val));
+		json_append_member(new_obj, "signame", json_mkstring(signame(p->val)));
 
-		return res;
+		break;
 	}
 
 	case S_TYPE_changeable: {
 		struct s_changeable *s_ch = S_ARG_TO_TYPE(arg, changeable);
 
-		if (!s_ch->entering && !s_ch->exiting)
-			return json_mknull();
-
-		JsonNode *chg_obj = json_mkobject();
-		if (s_ch->entering)
-			json_append_member(chg_obj, "entering",
-				s_val_print(s_ch->entering));
-		if (s_ch->exiting)
-			if (!s_arg_equal(s_ch->entering, s_ch->exiting))
-				json_append_member(chg_obj, "exiting",
+		if (!s_ch->entering && !s_ch->exiting) {
+			json_append_member(new_obj, "value", json_mknull());
+		} else {
+			if (s_ch->entering) {
+				if (!s_arg_equal(s_ch->entering, s_ch->exiting))
+					json_append_member(new_obj, "entering_value",
+						s_val_print(s_ch->entering));
+			} else {
+				json_append_member(new_obj, "entering_value", json_mknull());
+			}
+			if (s_ch->exiting) {
+				json_append_member(new_obj, "exiting_value",
 					s_val_print(s_ch->exiting));
+			} else {
+				json_append_member(new_obj, "exiting_value", json_mknull());
+			}
+		}
 
-		return chg_obj;
+		break;
 	}
+
 	case S_TYPE_str:
 	case S_TYPE_path: {
 		struct s_str *s_p = S_ARG_TO_TYPE(arg, str);
@@ -151,30 +170,29 @@ s_val_print(struct s_arg *arg)
 		string_quote(s_p->str, outstr, (s_p->len ? s_p->len - 1 : 0),
 			style);
 
-		return json_mkstring(outstr);
+		json_append_member(new_obj, "value", json_mkstring(outstr));
+
+		break;
 	}
 	case S_TYPE_ptrace_uaddr:
 	case S_TYPE_addr: {
 		struct s_addr *p = S_ARG_TO_TYPE(arg, addr);
 
-		JsonNode *addr_obj = json_mkobject();
-		json_append_member(addr_obj, "addr", json_mknumber(p->addr));
+		json_append_member(new_obj, "addr", json_mknumber(p->addr));
 
 		if (p->val)
-			json_append_member(addr_obj, "value",
-				s_val_print(p->val));
+			json_append_member(new_obj, "value", s_val_print(p->val));
 
-		return addr_obj;
+		break;
 	}
 	case S_TYPE_dirfd:
 	case S_TYPE_fd: {
 		struct s_num *p = S_ARG_TO_TYPE(arg, num);
 
 		if ((int)p->val == AT_FDCWD)
-			return json_mkstring("AT_FDCWD");
+			json_append_member(new_obj, "value", json_mkstring("AT_FDCWD"));
 		else
-			return json_mknumber((int)p->val);
-			// printfd(arg->syscall->tcp, (int)p->val); XXX
+			json_append_member(new_obj, "value", json_mknumber((int)p->val));
 
 		break;
 	}
@@ -189,7 +207,9 @@ s_val_print(struct s_arg *arg)
 
 		s_process_xlat(f_p, s_print_xlat_json, arr);
 
-		return arr;
+		json_append_member(new_obj, "value", arr);
+
+		break;
 	}
 	case S_TYPE_sigmask: {
 		const unsigned endian = 1;
@@ -198,12 +218,11 @@ s_val_print(struct s_arg *arg)
 			current_wordsize - 1;
 
 		struct s_sigmask *p = S_ARG_TO_TYPE(arg, sigmask);
-		JsonNode *obj = json_mkobject();
 		char buf[sizeof(p->sigmask) * 8 + 1];
 		char *ptr = buf;
 		unsigned i;
 
-		json_append_member(obj, "type", json_mkstring("sigmask"));
+		json_append_member(new_obj, "type", json_mkstring("sigmask"));
 
 		for (i = 0; i < p->bytes; i++) {
 			unsigned cur_byte = i ^ pos_xor_mask;
@@ -220,24 +239,24 @@ s_val_print(struct s_arg *arg)
 				!!(p->sigmask[cur_byte] >> 7));
 		}
 
-		json_append_member(obj, "bitmask", json_mkstring(buf));
+		json_append_member(new_obj, "bitmask", json_mkstring(buf));
 
-		s_process_sigmask(p, s_print_sigmask_json, obj);
+		s_process_sigmask(p, s_print_sigmask_json, new_obj);
 
-		return obj;
+		break;
 	}
 	case S_TYPE_sa_handler: {
 		struct s_num *p = S_ARG_TO_TYPE(arg, num);
-		JsonNode *obj = json_mkobject();
-		const char *str = sa_handler_str(p->val);
+		const char *str = xlookup(sa_handler_values,
+			(unsigned long)p->val);
 
-		json_append_member(obj, "type", json_mkstring("sa_handler"));
-		json_append_member(obj, "value", json_mknumber(p->val));
+		json_append_member(new_obj, "type", json_mkstring("sa_handler"));
+		json_append_member(new_obj, "value", json_mknumber(p->val));
 
 		if (str)
-			json_append_member(obj, "str", json_mkstring(str));
+			json_append_member(new_obj, "str", json_mkstring(str));
 
-		return obj;
+		break;
 	}
 	case S_TYPE_array: {
 		struct s_struct *p = S_ARG_TO_TYPE(arg, struct);
@@ -249,7 +268,9 @@ s_val_print(struct s_arg *arg)
 			json_append_element(arr, s_val_print(field));
 		}
 
-		return arr;
+		json_append_member(new_obj, "value", arr);
+
+		break;
 	}
 	case S_TYPE_struct: {
 		struct s_struct *p = S_ARG_TO_TYPE(arg, struct);
@@ -261,17 +282,22 @@ s_val_print(struct s_arg *arg)
 			json_append_member(arr, field->name, s_val_print(field));
 		}
 
-		return arr;
+		json_append_member(new_obj, "value", arr);
+
+		break;
 	}
 	case S_TYPE_ellipsis:
 		// ШАТ
-		return json_mkstring("...");
+		json_append_member(new_obj, "value", json_mkstring("..."));
+		break;
 
 	default:
+		json_append_member(new_obj, "value", json_mkstring(">:["));
 		break;
 	}
 
-	return json_mkstring(">:[");
+	return new_obj;
+
 }
 
 static void
