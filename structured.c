@@ -15,12 +15,13 @@
 #include "structured_fmt_json.h"
 
 /** List of printers used. */
-static struct s_printer *s_printers[] = {
-	//&s_printer_json,
+struct s_printer *s_printers[] = {
 	&s_printer_text,
+	&s_printer_json,
 	NULL
 };
 
+struct s_printer *s_printer_cur;
 
 /* syscall representation */
 
@@ -771,23 +772,17 @@ s_process_xlat(struct s_xlat *arg, s_print_xlat_fn cb, void *cb_data)
 void
 s_syscall_print_before(struct tcb *tcp)
 {
-	struct s_printer **cur = s_printers;
-
-	//for (; *cur; cur++)
-		(*cur)->print_before(tcp);
+	s_printer_cur->print_before(tcp);
 	s_syscall_new(tcp, S_SCT_SYSCALL);
 }
 
 void
 s_syscall_print_entering(struct tcb *tcp)
 {
-	struct s_printer **cur = s_printers;
-
 	tcp->s_syscall->last_changeable =
 		STAILQ_FIRST(&tcp->s_syscall->changeable_args);
 
-	//for (; *cur; cur++)
-		(*cur)->print_entering(tcp);
+	s_printer_cur->print_entering(tcp);
 }
 
 void
@@ -800,56 +795,39 @@ s_syscall_init_exiting(struct tcb *tcp)
 void
 s_syscall_print_exiting(struct tcb *tcp)
 {
-	struct s_printer **cur = s_printers;
-
-	for (; *cur; cur++)
-		(*cur)->print_exiting(tcp);
+	s_printer_cur->print_exiting(tcp);
 }
 
 void
 s_syscall_print_after(struct tcb *tcp)
 {
 	s_syscall_free(tcp);
-	struct s_printer **cur = s_printers;
 
-	//for (; *cur; cur++)
-		(*cur)->print_after(tcp);
+	s_printer_cur->print_after(tcp);
 }
 
 void
 s_syscall_print_resumed(struct tcb *tcp)
 {
-	struct s_printer **cur = s_printers;
-
-	//for (; *cur; cur++)
-		(*cur)->print_resumed(tcp);
+	s_printer_cur->print_resumed(tcp);
 }
 
 void
 s_syscall_print_tv(struct tcb *tcp, struct timeval *tv)
 {
-	struct s_printer **cur = s_printers;
-
-	//for (; *cur; cur++)
-		(*cur)->print_tv(tcp, tv);
+	s_printer_cur->print_tv(tcp, tv);
 }
 
 void
 s_syscall_print_unavailable_entering(struct tcb *tcp, int scno_good)
 {
-	struct s_printer **cur = s_printers;
-
-	//for (; *cur; cur++)
-		(*cur)->print_unavailable_entering(tcp, scno_good);
+	s_printer_cur->print_unavailable_entering(tcp, scno_good);
 }
 
 void
 s_syscall_print_unavailable_exiting(struct tcb *tcp)
 {
-	struct s_printer **cur = s_printers;
-
-	//for (; *cur; cur++)
-		(*cur)->print_unavailable_exiting(tcp);
+	s_printer_cur->print_unavailable_exiting(tcp);
 	s_syscall_free(tcp);
 }
 
@@ -857,7 +835,6 @@ void
 s_syscall_print_signal(struct tcb *tcp, const void *si_void, unsigned sig)
 {
 	const siginfo_t *si = si_void;
-	struct s_printer **cur = s_printers;
 	struct s_syscall *saved_syscall = tcp->s_syscall;
 
 	s_syscall_new(tcp, S_SCT_SIGNAL);
@@ -869,8 +846,7 @@ s_syscall_print_signal(struct tcb *tcp, const void *si_void, unsigned sig)
 		s_struct_finish();
 	}
 
-	//for (; *cur; cur++)
-		(*cur)->print_signal(tcp);
+	s_printer_cur->print_signal(tcp);
 
 	s_syscall_free(tcp);
 

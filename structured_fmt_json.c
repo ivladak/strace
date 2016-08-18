@@ -478,6 +478,7 @@ s_syscall_json_print_signal(struct tcb *tcp)
 }
 
 struct s_printer s_printer_json = {
+	.name = "json",
 	.print_before = s_syscall_json_print_before,
 	.print_entering = s_syscall_json_print_entering,
 	.print_exiting  = s_syscall_json_print_exiting,

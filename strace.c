@@ -206,19 +206,22 @@ usage: strace [-CdffhiqrtttTvVwxxy] [-I n] [-e expr]...\n\
               -p pid... / [-D] [-E var=val]... [-u username] PROG [ARGS]\n\
 \n\
 Output format:\n\
-  -a column      alignment COLUMN for printing syscall results (default %d)\n\
-  -i             print instruction pointer at time of syscall\n\
+  -j formatter   use a formatter other than traditional\n\
+     options:    text, json\n\
   -o file        send trace output to FILE instead of stderr\n\
   -q             suppress messages about attaching, detaching, etc.\n\
-  -r             print relative timestamp\n\
   -s strsize     limit length of print strings to STRSIZE chars (default %d)\n\
+  -y             print paths associated with file descriptor arguments\n\
+  -yy            print protocol specific information associated with socket file descriptors\n\
+Traditional formatter's options:\n\
+  -a column      alignment COLUMN for printing syscall results (default %d)\n\
+  -i             print instruction pointer at time of syscall\n\
+  -r             print relative timestamp\n\
   -t             print absolute timestamp\n\
   -tt            print absolute timestamp with usecs\n\
   -T             print time spent in each syscall\n\
   -x             print non-ascii strings in hex\n\
   -xx            print all strings in hex\n\
-  -y             print paths associated with file descriptor arguments\n\
-  -yy            print protocol specific information associated with socket file descriptors\n\
 \n\
 Statistics:\n\
   -c             count time, calls, and errors for each syscall and report summary\n\
@@ -1551,6 +1554,20 @@ get_os_release(void)
 	return rel;
 }
 
+void
+set_printer_or_die(char *optarg)
+{
+	struct s_printer **cur = s_printers;
+	for (; *cur; cur++) {
+		if (strcmp((*cur)->name, optarg) == 0) {
+			s_printer_cur = *cur;
+			return;
+		}
+	}
+
+	error_msg_and_die("No such formatter '%s'", optarg);
+}
+
 /*
  * Initialization part of main() was eating much stack (~0.5k),
  * which was unused after init.
@@ -1582,6 +1599,7 @@ init(int argc, char *argv[])
 	shared_log = stderr;
 	set_sortby(DEFAULT_SORTBY);
 	set_personality(DEFAULT_PERSONALITY);
+	s_printer_cur = s_printers[0];
 	qualify("trace=all");
 	qualify("abbrev=all");
 	qualify("verbose=all");
@@ -1595,7 +1613,7 @@ init(int argc, char *argv[])
 		"k"
 #endif
 		"D"
-		"a:e:o:O:p:s:S:u:E:P:I:")) != EOF) {
+		"a:e:j:o:O:p:s:S:u:E:P:I:")) != EOF) {
 		switch (c) {
 		case 'b':
 			if (strcmp(optarg, "execve") != 0)
@@ -1632,6 +1650,9 @@ init(int argc, char *argv[])
 			break;
 		case 'i':
 			iflag = 1;
+			break;
+		case 'j':
+			set_printer_or_die(optarg);
 			break;
 		case 'q':
 			qflag++;

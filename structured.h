@@ -307,6 +307,7 @@ struct s_changeable {
 };
 
 struct s_printer {
+	const char *name;
 	void (*print_before)(struct tcb *tcp);
 	void (*print_entering)(struct tcb *tcp);
 	void (*print_exiting)(struct tcb *tcp);
@@ -317,6 +318,9 @@ struct s_printer {
 	void (*print_unavailable_exiting)(struct tcb *tcp);
 	void (*print_signal)(struct tcb *tcp);
 };
+
+extern struct s_printer *s_printer_cur;
+extern struct s_printer *s_printers[];
 
 enum syscall_print_xlat_bits {
 	SPXF_FIRST_BIT,

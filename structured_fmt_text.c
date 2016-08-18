@@ -592,6 +592,7 @@ s_syscall_text_print_signal(struct tcb *tcp)
 }
 
 struct s_printer s_printer_text = {
+	.name = "text",
 	.print_before = s_syscall_text_print_before,
 	.print_entering = s_syscall_text_print_entering,
 	.print_exiting  = s_syscall_text_print_exiting,
