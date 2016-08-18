@@ -76,7 +76,7 @@ fill_timespec_t_utime(struct s_arg *arg, void *buf, unsigned long len, void *fn_
 
 	if (t->tv_nsec == UTIME_NOW) {
 		s_struct_set_aux_str(struct_arg, "UTIME_NOW");
-	} else if (t->tv_nsec == UTIME_NOW) {
+	} else if (t->tv_nsec == UTIME_OMIT) {
 		s_struct_set_aux_str(struct_arg, "UTIME_OMIT");
 	}
 
