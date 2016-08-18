@@ -57,6 +57,15 @@
 # include <stdio.h>
 # include <unistd.h>
 
+void
+printuid(GID_TYPE id)
+{
+	if (id == (GID_TYPE)-1U)
+		printf("-1");
+	else
+		printf("%u", id);
+}
+
 int
 main(void)
 {
@@ -95,12 +104,15 @@ main(void)
 	else
 		printf("%s(0, []) = 0\n", SYSCALL_NAME);
 
-	if (syscall(SYSCALL_NR, 1, g1))
-		printf("%s(1, [%u]) = -1 %s (%m)\n",
-		       SYSCALL_NAME, (unsigned) *g1, errno2name());
-	else
-		printf("%s(1, [%u]) = 0\n",
-		       SYSCALL_NAME, (unsigned) *g1);
+	if (syscall(SYSCALL_NR, 1, g1)) {
+		printf("%s(1, [", SYSCALL_NAME);
+		printuid(*g1);
+		printf("]) = -1 %s (%m)\n", errno2name());
+	} else {
+		printf("%s(1, [", SYSCALL_NAME);
+		printuid(*g1);
+		printf("]) = 0\n");
+	}
 
 	syscall(SYSCALL_NR, 1, g1 + 1);
 	printf("%s(1, %p) = -1 %s (%m)\n",
@@ -110,50 +122,75 @@ main(void)
 	printf("%s(1, %#lx) = -1 %s (%m)\n", SYSCALL_NAME, -1L, errno2name());
 
 	syscall(SYSCALL_NR, 2, g1);
-	printf("%s(2, [%u, %p]) = -1 %s (%m)\n",
-	       SYSCALL_NAME, (unsigned) *g1, g1 + 1, errno2name());
+	printf("%s(2, [", SYSCALL_NAME);
+	printuid(*g1);
+	printf(", %p]) = -1 %s (%m)\n", g1 + 1, errno2name());
 
 	g2[0] = -2;
 	g2[1] = -3;
-	if (syscall(SYSCALL_NR, 2, g2))
-		printf("%s(2, [%u, %u]) = -1 %s (%m)\n", SYSCALL_NAME,
-		       (unsigned) g2[0], (unsigned) g2[1], errno2name());
-	else
-		printf("%s(2, [%u, %u]) = 0\n", SYSCALL_NAME,
-		       (unsigned) g2[0], (unsigned) g2[1]);
+	if (syscall(SYSCALL_NR, 2, g2)) {
+		printf("%s(2, [", SYSCALL_NAME);
+		printuid(g2[0]);
+		printf(", ");
+		printuid(g2[1]);
+		printf("]) = -1 %s (%m)\n", errno2name());
+	} else {
+		printf("%s(2, [", SYSCALL_NAME);
+		printuid(g2[0]);
+		printf(", ");
+		printuid(g2[1]);
+		printf("]) = 0\n");
+	}
 
 	syscall(SYSCALL_NR, 3, g2);
-	printf("%s(3, [%u, %u, %p]) = -1 %s (%m)\n", SYSCALL_NAME,
-	       (unsigned) g2[0], (unsigned) g2[1], g2 + 2, errno2name());
+	printf("%s(3, [", SYSCALL_NAME);
+	printuid(g2[0]);
+	printf(", ");
+	printuid(g2[1]);
+	printf(", %p]) = -1 %s (%m)\n", g2 + 2, errno2name());
 
 	g3[0] = 0;
 	g3[1] = 1;
-	if (syscall(SYSCALL_NR, 3, g3))
-		printf("%s(3, [%u, %u, ...]) = -1 %s (%m)\n", SYSCALL_NAME,
-		       (unsigned) g3[0], (unsigned) g3[1], errno2name());
-	else
-		printf("%s(3, [%u, %u]) = 0\n", SYSCALL_NAME,
-		       (unsigned) g3[0], (unsigned) g3[1]);
+	if (syscall(SYSCALL_NR, 3, g3)) {
+		printf("%s(3, [", SYSCALL_NAME);
+		printuid(g3[0]);
+		printf(", ");
+		printuid(g3[1]);
+		printf(", ...]) = -1 %s (%m)\n", errno2name());
+	} else {
+		printf("%s(3, [", SYSCALL_NAME);
+		printuid(g3[0]);
+		printf(", ");
+		printuid(g3[1]);
+		printf("]) = 0\n");
+	}
 
 	syscall(SYSCALL_NR, 4, g3);
-	printf("%s(4, [%u, %u, ...]) = -1 %s (%m)\n", SYSCALL_NAME,
-	       (unsigned) g3[0], (unsigned) g3[1], errno2name());
+	printf("%s(4, [", SYSCALL_NAME);
+	printuid(g3[0]);
+	printf(", ");
+	printuid(g3[1]);
+	printf(", ...]) = -1 %s (%m)\n", errno2name());
 
 	long rc = sysconf(_SC_NGROUPS_MAX);
 	const unsigned ngroups_max = rc;
 
 	if ((unsigned long) rc == ngroups_max && (int) ngroups_max > 0) {
 		syscall(SYSCALL_NR, ngroups_max, g3);
-		printf("%s(%d, [%u, %u, ...]) = -1 %s (%m)\n", SYSCALL_NAME,
-		       ngroups_max, (unsigned) g3[0], (unsigned) g3[1],
-		       errno2name());
+		printf("%s(%d, [", SYSCALL_NAME, ngroups_max);
+		printuid(g3[0]);
+		printf(", ");
+		printuid(g3[1]);
+		printf(", ...]) = -1 %s (%m)\n", errno2name());
 
 		const unsigned long size =
 			(unsigned long) 0xffffffff00000000ULL | ngroups_max;
 		syscall(SYSCALL_NR, size, g3);
-		printf("%s(%d, [%u, %u, ...]) = -1 %s (%m)\n", SYSCALL_NAME,
-		       ngroups_max, (unsigned) g3[0], (unsigned) g3[1],
-		       errno2name());
+		printf("%s(%d, [", SYSCALL_NAME, ngroups_max);
+		printuid(g3[0]);
+		printf(", ");
+		printuid(g3[1]);
+		printf(", ...]) = -1 %s (%m)\n", errno2name());
 
 		syscall(SYSCALL_NR, ngroups_max + 1, g3);
 		printf("%s(%d, %p) = -1 %s (%m)\n", SYSCALL_NAME,

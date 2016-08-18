@@ -31,6 +31,15 @@
 #include <stdio.h>
 #include <unistd.h>
 
+void
+printuid(unsigned UGID_TYPE id)
+{
+	if (id == (unsigned UGID_TYPE)-1U)
+		printf("-1");
+	else
+		printf("%u", id);
+}
+
 int
 main(void)
 {
@@ -72,7 +81,7 @@ main(void)
 		}
 
 		printf("%s(", SYSCALL_NAME);
-		printf("%u", num);
+		printuid(num);
 		errno = saved_errno;
 		if (expected)
 			printf(") = -1 %s (%m)\n", errno2name());
