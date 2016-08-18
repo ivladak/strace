@@ -66,14 +66,14 @@
 #endif
 
 static void
-printsigsource(const siginfo_t *sip)
+fill_sigsource(const siginfo_t *sip)
 {
 	s_insert_u("si_pid", sip->si_pid);
 	s_insert_u("si_uid", sip->si_uid);
 }
 
 static void
-printsigval(const siginfo_t *sip)
+fill_sigval(const siginfo_t *sip)
 {
 	s_insert_struct("si_value");
 	s_insert_d("int", sip->si_int);
@@ -82,7 +82,7 @@ printsigval(const siginfo_t *sip)
 }
 
 static void
-print_si_code(int si_signo, unsigned int si_code)
+fill_si_code(int si_signo, unsigned int si_code)
 {
 	const struct xlat *xlat_to_use = siginfo_codes;
 
@@ -127,7 +127,7 @@ print_si_code(int si_signo, unsigned int si_code)
 }
 
 static void
-print_si_info(const siginfo_t *sip)
+fill_si_info(const siginfo_t *sip)
 {
 	if (sip->si_errno) {
 		const char *errno_str = NULL;
@@ -141,28 +141,28 @@ print_si_info(const siginfo_t *sip)
 	if (SI_FROMUSER(sip)) {
 		switch (sip->si_code) {
 		case SI_USER:
-			printsigsource(sip);
+			fill_sigsource(sip);
 			break;
 		case SI_TKILL:
-			printsigsource(sip);
+			fill_sigsource(sip);
 			break;
 #if defined HAVE_SIGINFO_T_SI_TIMERID && defined HAVE_SIGINFO_T_SI_OVERRUN
 		case SI_TIMER:
 			s_insert_x("si_timerid", sip->si_timerid);
 			s_insert_d("si_overrun", sip->si_overrun);
-			printsigval(sip);
+			fill_sigval(sip);
 			break;
 #endif
 		default:
-			printsigsource(sip);
+			fill_sigsource(sip);
 			if (sip->si_ptr)
-				printsigval(sip);
+				fill_sigval(sip);
 			break;
 		}
 	} else {
 		switch (sip->si_signo) {
 		case SIGCHLD:
-			printsigsource(sip);
+			fill_sigsource(sip);
 			if (sip->si_code == CLD_EXITED)
 				s_insert_d("si_status", sip->si_status);
 			else
@@ -184,17 +184,19 @@ print_si_info(const siginfo_t *sip)
 			break;
 #ifdef HAVE_SIGINFO_T_SI_SYSCALL
 		case SIGSYS: {
-			s_insert_addr("si_call_addr", (unsigned long) sip->si_call_addr);
+			s_insert_addr("si_call_addr",
+				(unsigned long) sip->si_call_addr);
 			s_insert_scno("si_syscall", (unsigned) sip->si_syscall);
-			s_insert_xlat_int("si_arch", audit_arch, sip->si_arch, "AUDIT_ARCH_???");
+			s_insert_xlat_int("si_arch", audit_arch, sip->si_arch,
+				"AUDIT_ARCH_???");
 			break;
 		}
 #endif
 		default:
 			if (sip->si_pid || sip->si_uid)
-				printsigsource(sip);
+				fill_sigsource(sip);
 			if (sip->si_ptr)
-				printsigval(sip);
+				fill_sigval(sip);
 		}
 	}
 }
@@ -206,39 +208,32 @@ void
 printsiginfo(const siginfo_t *sip)
 {
 	if (sip->si_signo == 0)
-		return;
+		return 0;
 
 	s_insert_signo("si_signo", sip->si_signo);
-	print_si_code(sip->si_signo, sip->si_code);
+	fill_si_code(sip->si_signo, sip->si_code);
 
 #ifdef SI_NOINFO
 	if (sip->si_code != SI_NOINFO)
 #endif
-		print_si_info(sip);
-}
+		fill_si_info(sip);
 
-MPERS_PRINTER_DECL(bool, fetch_siginfo,
-		   struct tcb *tcp, long addr, void *d)
-{
-	return !s_umoven_verbose(tcp, addr, sizeof(siginfo_t), d);
+	return 0;
 }
 
 static int
 fill_siginfo_t(struct s_arg *arg, void *buf, size_t len, void *fn_data)
 {
 	printsiginfo((const siginfo_t *)buf);
-	return 0;
+        return 0;
 }
 
-#ifdef IN_MPERS
-static inline
-#endif
-ssize_t
+static ssize_t
 fetch_fill_siginfo_t(struct s_arg *arg, unsigned long addr, void *fn_data)
 {
 	siginfo_t si;
 
-	if (!MPERS_FUNC_NAME(fetch_siginfo)(current_tcp, addr, &si))
+	if (s_umove_verbose(current_tcp, addr, &si))
 		return -1;
 
 	fill_siginfo_t(arg, &si, sizeof(si), fn_data);
@@ -246,29 +241,27 @@ fetch_fill_siginfo_t(struct s_arg *arg, unsigned long addr, void *fn_data)
 	return sizeof(si);
 }
 
-#ifdef IN_MPERS
-static inline
-#endif
-void
-s_insert_siginfo(const char *name, unsigned long addr)
+MPERS_PRINTER_DECL(void, s_insert_siginfo, const char *name,
+	const void *si_void)
+{
+	struct s_struct *s = s_struct_new_and_insert(S_TYPE_struct, name);
+	s_struct_enter(s);
+	fill_siginfo_t(&s->arg, (void *)si_void, sizeof(siginfo_t), NULL);
+	s_struct_finish();
+}
+
+MPERS_PRINTER_DECL(void, s_insert_siginfo_addr, const char *name, unsigned long addr)
 {
 	s_insert_addr_type(name, addr, S_TYPE_struct, fetch_fill_siginfo_t, NULL);
 }
 
-#ifdef IN_MPERS
-static inline
-#endif
-void
-s_push_siginfo(const char *name)
+MPERS_PRINTER_DECL(void, s_push_siginfo, const char *name)
 {
 	s_push_addr_type(name, S_TYPE_struct, fetch_fill_siginfo_t, NULL);
 }
 
-#ifdef IN_MPERS
-static inline
-#endif
-void
-s_push_siginfo_array(const char *name, unsigned long nmemb)
+MPERS_PRINTER_DECL(void, s_push_siginfo_array, const char *name,
+	unsigned long nmemb)
 {
 	s_push_array_type("data", nmemb, sizeof(siginfo_t), S_TYPE_struct,
 		fill_siginfo_t, NULL);
