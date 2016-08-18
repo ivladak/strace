@@ -215,7 +215,7 @@ s_val_print(struct s_arg *arg)
 		struct s_num *p = S_ARG_TO_TYPE(arg, num);
 
 #if !defined(current_wordsize) || current_wordsize == 4
-		tprintf("%s", sprint_rlim64(p->val));
+		tprintf("%s", sprint_rlim32(p->val));
 #else /* !defined(current_wordsize) || current_wordsize == 4 */
 		tprintf("%u", (unsigned)p->val);
 #endif /* !defined(current_wordsize) || current_wordsize == 4 */
