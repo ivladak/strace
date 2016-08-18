@@ -31,15 +31,6 @@
 #include <stdio.h>
 #include <unistd.h>
 
-static int
-ugid2int(const unsigned UGID_TYPE ugid)
-{
-	if ((unsigned UGID_TYPE) -1U == ugid)
-		return -1;
-	else
-		return ugid;
-}
-
 int
 main(void)
 {
@@ -58,12 +49,12 @@ main(void)
 	unsigned int i;
 
 	for (i = 0; i < ARRAY_SIZE(tests); ++i) {
-		const unsigned int num = ugid2int(tests[i]);
+		const unsigned int num = (unsigned UGID_TYPE) tests[i];
 		long expected;
 
 		if (num == ugid)
 			expected = 0;
-		else if (num == -1U)
+		else if ((UGID_TYPE)num == (UGID_TYPE)-1U)
 			expected = -1;
 		else
 			continue;
