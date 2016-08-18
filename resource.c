@@ -133,6 +133,12 @@ s_push_rlimit_addr(const char *name)
 	s_push_addr_type(name, S_TYPE_struct, fetch_fill_rlimit, NULL);
 }
 
+static void
+s_push_rlimit64_addr(const char *name)
+{
+	s_push_addr_type(name, S_TYPE_struct, print_rlimit64, NULL);
+}
+
 SYS_FUNC(getrlimit)
 {
 	if (entering(tcp)) {
@@ -157,10 +163,10 @@ SYS_FUNC(prlimit64)
 	if (entering(tcp)) {
 		s_push_d("pid");
 		s_push_xlat_signed("resource", resources, "RLIMIT_???");
-		s_push_rlimit_addr("new_limit");
+		s_push_rlimit64_addr("new_limit");
 		s_changeable_void("old_limit");
 	} else {
-		s_push_rlimit_addr("old_limit");
+		s_push_rlimit64_addr("old_limit");
 	}
 	return 0;
 }
