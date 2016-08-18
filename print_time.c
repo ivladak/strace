@@ -155,6 +155,18 @@ MPERS_PRINTER_DECL(void, print_itimerval,
 	tprints("}");
 }
 
+SYS_FUNC(time)
+{
+	if (exiting(tcp)) {
+		time_t t;
+
+		if (!umove_or_printaddr(tcp, tcp->u_arg[0], &t))
+			tprintf("[%jd]", (intmax_t) t);
+	}
+
+	return 0;
+}
+
 #ifdef ALPHA
 
 typedef struct {
