@@ -208,7 +208,7 @@ void
 printsiginfo(const siginfo_t *sip)
 {
 	if (sip->si_signo == 0)
-		return 0;
+		return;
 
 	s_insert_signo("si_signo", sip->si_signo);
 	fill_si_code(sip->si_signo, sip->si_code);
@@ -217,8 +217,6 @@ printsiginfo(const siginfo_t *sip)
 	if (sip->si_code != SI_NOINFO)
 #endif
 		fill_si_info(sip);
-
-	return 0;
 }
 
 static int
