@@ -33,8 +33,8 @@
 #include <sys/timex.h>
 #include "print_time_structured.h"
 
-static int
-fetch_timezone(struct s_arg *arg, long addr, void *fn_data)
+static ssize_t
+fetch_timezone(struct s_arg *arg, unsigned long addr, void *fn_data)
 {
 	struct timezone tz;
 
