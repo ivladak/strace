@@ -392,7 +392,7 @@ s_arg_equal(struct s_arg *arg1, struct s_arg *arg2)
 		if (sigmask1->bytes != sigmask2->bytes)
 			return false;
 
-		for (i = 0; i < sigmask1; i++)
+		for (i = 0; i < sigmask1->bytes; i++)
 			if (sigmask1->sigmask[i] != sigmask2->sigmask[i])
 				return false;
 
