@@ -57,6 +57,9 @@ main(void)
 	ts[1].tv_sec = tv.tv_sec - 1;
 	ts[1].tv_usec = tv.tv_usec + 1;
 
+	rc = syscall(__NR_utimes, 0, ts + 2);
+	printf("utimes(NULL, %p) = %ld %s (%m)\n", ts + 2, rc, errno2name());
+
 	rc = syscall(__NR_utimes, 0, ts + 1);
 	printf("utimes(NULL, [{tv_sec=%jd, tv_usec=%jd}, %p]) = "
 	       "%ld %s (%m)\n",
