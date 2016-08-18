@@ -55,12 +55,8 @@
 
 #ifdef STRACE_UID_SIZE
 
-# define s_push_uid_1      s_push_uid16_1
-# define s_push_gid_1      s_push_gid16_1
 # define s_push_uid_addr   s_push_uid16_addr
 # define s_push_gid_addr   s_push_gid16_addr
-# define s_push_uid_1_addr s_push_uid16_1_addr
-# define s_push_gid_1_addr s_push_gid16_1_addr
 # define s_push_uid        SIZEIFY(s_push_uid)
 # define s_push_gid        SIZEIFY(s_push_gid)
 
@@ -116,17 +112,17 @@ SYS_FUNC(getresuid)
 
 SYS_FUNC(setreuid)
 {
-	s_push_uid_1("ruid");
-	s_push_uid_1("euid");
+	s_push_uid("ruid");
+	s_push_uid("euid");
 
 	return RVAL_DECODED;
 }
 
 SYS_FUNC(setresuid)
 {
-	s_push_uid_1("ruid");
-	s_push_uid_1("euid");
-	s_push_uid_1("suid");
+	s_push_uid("ruid");
+	s_push_uid("euid");
+	s_push_uid("suid");
 
 	return RVAL_DECODED;
 }
@@ -134,8 +130,8 @@ SYS_FUNC(setresuid)
 SYS_FUNC(chown)
 {
 	s_push_path("path");
-	s_push_uid_1("owner");
-	s_push_gid_1("group");
+	s_push_uid("owner");
+	s_push_gid("group");
 
 	return RVAL_DECODED;
 }
@@ -143,8 +139,8 @@ SYS_FUNC(chown)
 SYS_FUNC(fchown)
 {
 	s_push_fd("fd");
-	s_push_uid_1("owner");
-	s_push_gid_1("group");
+	s_push_uid("owner");
+	s_push_gid("group");
 
 	return RVAL_DECODED;
 }
