@@ -255,7 +255,11 @@ struct s_struct {
 
 	struct s_args args;
 	/** Auxiliary non-standard string representation */
-	const char *aux_str;
+	union {
+		const char *aux_str;
+		char *own_aux_str;
+	};
+	bool own;
 };
 
 /* complex arguments */
@@ -382,6 +386,10 @@ extern struct s_changeable *s_changeable_new_and_insert(const char *name,
 
 extern struct s_xlat *s_xlat_append(enum s_type type, const char *name,
 	const struct xlat *x, uint64_t val, const char *dflt, bool flags);
+extern struct s_struct *s_struct_set_aux_str(struct s_struct *s,
+	const char *aux_str);
+extern struct s_struct *s_struct_set_own_aux_str(struct s_struct *s,
+	char *aux_str);
 
 extern struct args_queue *s_struct_enter(struct s_struct *s);
 extern struct args_queue *s_syscall_insertion_point(struct s_syscall *s);

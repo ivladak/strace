@@ -287,9 +287,9 @@ fill_bpf_filter(struct s_arg *arg, void *buf, size_t len, void *data)
 	s_insert_x("k", filter->k);
 
 	if (filter->jt || filter->jf)
-		struct_arg->aux_str = decode_bpf_jump(filter);
+		s_struct_set_own_aux_str(struct_arg, decode_bpf_jump(filter));
 	else
-		struct_arg->aux_str = decode_bpf_stmt(filter);
+		s_struct_set_own_aux_str(struct_arg, decode_bpf_stmt(filter));
 
 	if ((*pn)++ >= BPF_MAXINSNS)
 		return -1;

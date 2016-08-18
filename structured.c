@@ -158,7 +158,8 @@ s_arg_free(struct s_arg *arg)
 		STAILQ_FOREACH_SAFE(arg, &p->args.args, entry, tmp)
 			s_arg_free(arg);
 
-		free(p->aux_str);
+		if (p->own)
+			free(p->own_aux_str);
 
 		break;
 	}
@@ -543,6 +544,30 @@ s_xlat_append(enum s_type type, const char *name, const struct xlat *x,
 	last_xlat->last = res;
 
 	return res;
+}
+
+struct s_struct *
+s_struct_set_aux_str(struct s_struct *s, const char *aux_str)
+{
+	if (s->own)
+		free(s->own_aux_str);
+
+	s->own = false;
+	s->aux_str = aux_str;
+
+	return s;
+}
+
+struct s_struct *
+s_struct_set_own_aux_str(struct s_struct *s, char *aux_str)
+{
+	if (s->own)
+		free(s->own_aux_str);
+
+	s->own = true;
+	s->own_aux_str = aux_str;
+
+	return s;
 }
 
 struct args_queue *
