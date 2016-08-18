@@ -120,7 +120,7 @@ printstatus(int status)
 }
 
 static int
-printwaitn(struct tcb *tcp, s_fetch_fill_arg_fn rusage_fn)
+printwaitn(struct tcb *tcp, void (*push_fn)(const char *))
 {
 	if (entering(tcp)) {
 		/* On Linux, kernel-side pid_t is typedef'ed to int
@@ -132,7 +132,7 @@ printwaitn(struct tcb *tcp, s_fetch_fill_arg_fn rusage_fn)
 		s_push_d("pid");
 		s_changeable_void("wstatus");
 		s_push_flags_signed("options", wait4_options, "W???");
-		if (rusage_fn)
+		if (push_fn)
 			s_changeable_void("rusage");
 	} else {
 		/* status */
@@ -141,10 +141,10 @@ printwaitn(struct tcb *tcp, s_fetch_fill_arg_fn rusage_fn)
 		else
 			s_push_wstatus_addr("wstatus");
 
-		if (rusage_fn) {
+		if (push_fn) {
 			/* usage */
 			if (tcp->u_rval > 0)
-				s_push_addr_type("ru", S_TYPE_struct, rusage_fn, NULL);
+				push_fn("ru");
 			else
 				s_push_addr("ru");
 		}
@@ -159,13 +159,13 @@ SYS_FUNC(waitpid)
 
 SYS_FUNC(wait4)
 {
-	return printwaitn(tcp, fetch_fill_rusage);
+	return printwaitn(tcp, s_push_rusage);
 }
 
 #ifdef ALPHA
 SYS_FUNC(osf_wait4)
 {
-	return printwaitn(tcp, fetch_fill_rusage32);
+	return printwaitn(tcp, s_push_rusage32);
 }
 #endif
 

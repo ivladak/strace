@@ -37,8 +37,8 @@ typedef struct rusage rusage_t;
 
 #include MPERS_DEFS
 
-MPERS_PRINTER_DECL(ssize_t, fetch_fill_rusage, struct s_arg *arg,
-	unsigned long addr, void *fn_data)
+static ssize_t
+fetch_fill_rusage(struct s_arg *arg, unsigned long addr, void *fn_data)
 {
 	rusage_t ru;
 
@@ -77,28 +77,18 @@ MPERS_PRINTER_DECL(ssize_t, fetch_fill_rusage, struct s_arg *arg,
 	return sizeof(ru);
 }
 
-#ifdef IN_MPERS
-static inline
-#endif
-void
-s_insert_rusage(const char *name, unsigned long addr)
+MPERS_PRINTER_DECL(void, s_insert_rusage, const char *name, unsigned long addr)
 {
-	s_insert_addr_type(name, addr, S_TYPE_struct,
-		MPERS_FUNC_NAME(fetch_fill_rusage), NULL);
+	s_insert_addr_type(name, addr, S_TYPE_struct, fetch_fill_rusage, NULL);
 }
 
-#ifdef IN_MPERS
-static inline
-#endif
-void
-s_push_rusage(const char *name)
+MPERS_PRINTER_DECL(void, s_push_rusage, const char *name)
 {
-	s_push_addr_type(name, S_TYPE_struct,
-		MPERS_FUNC_NAME(fetch_fill_rusage), NULL);
+	s_push_addr_type(name, S_TYPE_struct, fetch_fill_rusage, NULL);
 }
 
 #ifdef ALPHA
-ssize_t
+static ssize_t
 fetch_fill_rusage32(struct s_arg *arg, long addr, void *fn_data)
 {
 	struct timeval32 {
