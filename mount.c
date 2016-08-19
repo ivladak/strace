@@ -65,11 +65,10 @@ SYS_FUNC(mount)
 		s_push_str("filesystemtype", -1);
 
 	if (old_magic)
-		s_insert_xlat_long("mountflags", NULL, MS_MGC_VAL,
-			"MS_MGC_VAL");
-	s_append_flags_long_val("mountflags", mount_flags, flags, "MS_???");
-
-	s_push_empty(S_TYPE_xlat_l);
+		s_push_xlat_flags_long("mountflags", mount_flags, NULL,
+			MS_MGC_MSK, "MS_???", "MS_MGC_VAL", true, 0);
+	else
+		s_push_flags_long("mountflags", mount_flags, "MS_???");
 
 	if (ignore_data)
 		s_push_addr("data");
