@@ -332,7 +332,7 @@ enum syscall_print_xlat_flags {
 	SPXF_DEFAULT  = POW2(SPXF_DEFAULT_BIT),
 };
 
-typedef void (*s_print_xlat_fn)(enum s_type type, uint64_t value, uint64_t mask,
+typedef void (*s_print_xlat_fn)(struct s_xlat *x, uint64_t value, uint64_t mask,
 	const char *str, uint32_t flags, void *fn_data);
 /** Returns amount of bytes read. */
 typedef ssize_t (*s_fetch_fill_arg_fn)(struct s_arg *arg, unsigned long addr,

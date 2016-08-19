@@ -9,12 +9,12 @@
 #include "structured_fmt_text.h"
 
 static void
-s_print_xlat_text(enum s_type type, uint64_t value, uint64_t mask,
+s_print_xlat_text(struct s_xlat *x, uint64_t value, uint64_t mask,
 	const char *str, uint32_t flags, void *fn_data)
 {
 	const char *fmt;
 
-	switch (type) {
+	switch (x->arg.type) {
 	case S_TYPE_xlat:
 		fmt = "%#" PRIx32;
 		break;

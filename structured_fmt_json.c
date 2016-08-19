@@ -15,7 +15,7 @@ static const char *s_syscall_type_names[] = {
 JsonNode *root_node;
 
 static void
-s_print_xlat_json(enum s_type type, uint64_t value, uint64_t mask,
+s_print_xlat_json(struct s_xlat *x, uint64_t value, uint64_t mask,
 	const char *str, uint32_t flags, void *fn_data)
 {
 	JsonNode *parent = fn_data;
