@@ -530,11 +530,11 @@ s_xlat_append(enum s_type type, const char *name, const struct xlat *x,
 	struct s_xlat *last_xlat;
 	struct s_xlat *res;
 
-	if (!last_arg && (last_arg->type == S_TYPE_addr))
+	if (last_arg && (last_arg->type == S_TYPE_addr))
 		last_arg = S_ARG_TO_TYPE(last_arg, addr)->val;
 
 	if (!last_arg || (S_TYPE_KIND(last_arg->type) != S_TYPE_KIND_xlat))
-		return s_xlat_new_and_insert(type, last_arg->name, x, val, dflt,
+		return s_xlat_new_and_insert(type, name, x, val, dflt,
 			flags, scale);
 
 	res = s_xlat_new(type, name, x, val, dflt, flags, scale);
