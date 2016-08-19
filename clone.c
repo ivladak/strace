@@ -142,16 +142,15 @@ SYS_FUNC(clone)
 
 SYS_FUNC(setns)
 {
-	printfd(tcp, tcp->u_arg[0]);
-	tprints(", ");
-	printflags(clone_flags, tcp->u_arg[1], "CLONE_???");
+	s_push_fd("fd");
+	s_push_flags_int("nstype", clone_flags, "CLONE_???");
 
 	return RVAL_DECODED;
 }
 
 SYS_FUNC(unshare)
 {
-	printflags_long(clone_flags, tcp->u_arg[0], "CLONE_???");
+	s_push_flags_long("flags", clone_flags, "CLONE_???");
 	return RVAL_DECODED;
 }
 
