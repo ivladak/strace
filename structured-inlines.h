@@ -727,9 +727,6 @@ s_insert_xlat_flags(enum s_type ftype, enum s_type vtype, const char *name,
 	if (!flags && !preceding_xlat) {
 		s_insert_xlat(vtype, name, vx, val, val_dflt, false,
 			xlat_scale);
-	} else if (!val && preceding_xlat) {
-		s_insert_xlat(ftype, name, fx, flags, flags_dflt,
-			true, 0);
 	} else {
 		if (preceding_xlat) {
 			s_insert_xlat(vtype, name, vx, val, val_dflt, false,
