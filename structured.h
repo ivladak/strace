@@ -188,9 +188,9 @@ enum s_type {
 	S_TYPE_xlat_l   = S_TYPE_DEF(l,  unsigned, hex,     xlat),
 	S_TYPE_xlat_ll  = S_TYPE_DEF(ll, unsigned, hex,     xlat),
 
-	S_TYPE_xlat_d   = S_TYPE_DEF(i,  unsigned, default, xlat),
-	S_TYPE_xlat_ld  = S_TYPE_DEF(l,  unsigned, default, xlat),
-	S_TYPE_xlat_lld = S_TYPE_DEF(ll, unsigned, default, xlat),
+	S_TYPE_xlat_d   = S_TYPE_DEF(i,  signed,   default, xlat),
+	S_TYPE_xlat_ld  = S_TYPE_DEF(l,  signed,   default, xlat),
+	S_TYPE_xlat_lld = S_TYPE_DEF(ll, signed,   default, xlat),
 
 	S_TYPE_sigmask  = S_TYPE_DEF(l,  unsigned, default, sigmask),
 
