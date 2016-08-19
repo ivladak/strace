@@ -38,34 +38,31 @@
 #include <sys/sysmacros.h>
 
 static void
-decode_mknod(struct tcb *tcp, int offset)
+decode_mknod(void)
 {
-	unsigned short mode = tcp->u_arg[offset + 1];
-	unsigned int dev;
+	s_push_path("pathname");
 
-	printpath(tcp, tcp->u_arg[offset]);
-	tprints(", ");
-	print_symbolic_mode_t(mode);
+	unsigned short mode = current_tcp->u_arg[current_tcp->s_syscall->cur_arg];
+	s_push_mode_t("mode");
 	switch (mode & S_IFMT) {
 	case S_IFCHR:
 	case S_IFBLK:
-		dev = tcp->u_arg[offset + 2];
-		tprintf(", makedev(%u, %u)", major(dev), minor(dev));
+		s_push_dev_t("dev");
 		break;
 	}
 }
 
 SYS_FUNC(mknod)
 {
-	decode_mknod(tcp, 0);
+	decode_mknod();
 
 	return RVAL_DECODED;
 }
 
 SYS_FUNC(mknodat)
 {
-	print_dirfd(tcp, tcp->u_arg[0]);
-	decode_mknod(tcp, 1);
+	s_push_dirfd("dirfd");
+	decode_mknod();
 
 	return RVAL_DECODED;
 }
