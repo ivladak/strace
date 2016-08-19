@@ -41,27 +41,28 @@
 #include "xlat/sigaltstack_flags.h"
 
 static void
-print_stack_t(struct tcb *tcp, unsigned long addr)
+fetch_fill_stack_t(struct s_arg *arg, unsigned long addr, void *fn_data)
 {
 	stack_t ss;
 
-	if (umove_or_printaddr(tcp, addr, &ss))
-		return;
+	if (s_umove_verbose(current_tcp, addr, &ss))
+		return -1;
 
-	tprints("{ss_sp=");
-	printaddr((unsigned long) ss.ss_sp);
-	tprints(", ss_flags=");
-	printflags(sigaltstack_flags, ss.ss_flags, "SS_???");
-	tprintf(", ss_size=%lu}", (unsigned long) ss.ss_size);
+	s_insert_addr("ss_sp", (unsigned long)ss.ss_sp);
+	s_insert_flags_int("ss_flags", sigaltstack_flags, ss.ss_flags,
+		"SS_???");
+	s_insert_lu("ss_size", (unsigned long) ss.ss_size);
 }
 
 SYS_FUNC(sigaltstack)
 {
 	if (entering(tcp)) {
-		print_stack_t(tcp, tcp->u_arg[0]);
-		tprints(", ");
+		s_push_addr_type("ss", S_TYPE_struct, fetch_fill_stack_t, NULL);
+		s_changeable_void("oss");
 	} else {
-		print_stack_t(tcp, tcp->u_arg[1]);
+		s_push_addr_type("oss", S_TYPE_struct, fetch_fill_stack_t,
+			NULL);
 	}
+
 	return 0;
 }
