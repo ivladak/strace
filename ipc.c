@@ -45,7 +45,7 @@ SYS_FUNC(ipc)
 		static const char *names[] =
 			{ "first", "second", "third", "ptr", "fifth" };
 
-		s_push_lx(names - 1);
+		s_push_lx(names[i - 1]);
 	}
 
 	return RVAL_DECODED;
