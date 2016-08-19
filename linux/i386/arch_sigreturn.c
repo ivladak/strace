@@ -14,11 +14,14 @@ arch_sigreturn(struct tcb *tcp)
 		uint32_t extramask;
 	} frame;
 
+	s_insert_struct("sigcontext");
+
 	if (umove(tcp, *i386_esp_ptr, &frame) < 0) {
-		tprintf("{mask=%#lx}", (unsigned long) *i386_esp_ptr);
+		s_insert_addr("mask", (unsigned long) *i386_esp_ptr);
 	} else {
 		uint32_t mask[2] = { frame.oldmask, frame.extramask };
-		tprintsigmask_addr("{mask=", mask);
-		tprints("}");
+		s_insert_sigmask("mask", mask, sizeof(mask));
 	}
+
+	s_struct_finish();
 }

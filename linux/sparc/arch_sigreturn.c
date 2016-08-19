@@ -20,16 +20,17 @@ arch_sigreturn(struct tcb *tcp)
 		unsigned int extramask[NSIG / 8 / sizeof(int) - 1];
 	} frame;
 
+	s_insert_struct("sigcontext");
 	if (umove(tcp, fp, &frame) < 0) {
-		tprintf("{mask=%#lx}", fp);
+		s_insert_addr("mask", fp);
 	} else {
 		unsigned int mask[NSIG / 8 / sizeof(int)];
 
 		mask[0] = frame.mask;
 		memcpy(mask + 1, frame.extramask, sizeof(frame.extramask));
-		tprintsigmask_addr("{mask=", mask);
-		tprints("}");
+		s_insert_sigmask("mask", mask, sizeof(mask));
 	}
+	s_struct_finish();
 }
 
 #undef PERSONALITY_WORDSIZE

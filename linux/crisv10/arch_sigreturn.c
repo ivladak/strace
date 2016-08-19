@@ -9,7 +9,5 @@ arch_sigreturn(struct tcb *tcp)
 	}
 	const long addr = regs[PT_USP] + offsetof(struct sigcontext, oldmask);
 
-	tprints("{mask=");
-	print_sigset_addr_len(tcp, addr, NSIG / 8);
-	tprints("}");
+	s_insert_sigcontext(addr);
 }

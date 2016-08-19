@@ -6,7 +6,6 @@ arch_sigreturn(struct tcb *tcp)
 	const long addr = *ia64_frame_ptr + 16 +
 			  OFFSETOF_STRUCT_SIGFRAME_SC +
 			  offsetof(struct sigcontext, sc_mask);
-	tprints("{mask=");
-	print_sigset_addr_len(tcp, addr, NSIG / 8);
-	tprints("}");
+
+	s_insert_sigcontext(addr);
 }

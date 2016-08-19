@@ -6,7 +6,5 @@ arch_sigreturn(struct tcb *tcp)
 	const long addr = tile_regs.sp + SIGFRAME_UC_OFFSET +
 			  offsetof(struct ucontext, uc_sigmask);
 
-	tprints("{mask=");
-	print_sigset_addr_len(tcp, addr, NSIG / 8);
-	tprints("}");
+	s_insert_sigcontext(addr);
 }

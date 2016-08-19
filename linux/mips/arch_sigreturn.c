@@ -20,7 +20,5 @@ arch_sigreturn(struct tcb *tcp)
 			  offsetof(struct ucontext, uc_sigmask);
 #endif
 
-	tprints("{mask=");
-	print_sigset_addr_len(tcp, addr, NSIG / 8);
-	tprints("}");
+	s_insert_sigcontext(addr);
 }

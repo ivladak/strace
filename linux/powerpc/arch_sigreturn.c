@@ -12,8 +12,9 @@ arch_sigreturn(struct tcb *tcp)
 #endif
 		esp += 64;
 
+	s_insert_struct("sigcontext");
 	if (umove(tcp, esp, &sc) < 0) {
-		tprintf("{mask=%#lx}", esp);
+		s_insert_addr("mask", esp);
 	} else {
 		unsigned long mask[NSIG / 8 / sizeof(long)];
 #ifdef POWERPC64
@@ -22,7 +23,7 @@ arch_sigreturn(struct tcb *tcp)
 		mask[0] = sc.oldmask;
 		mask[1] = sc._unused[3];
 #endif
-		tprintsigmask_addr("{mask=", mask);
-		tprints("}");
+		s_insert_sigmask("mask", mask, sizeof(mask));
 	}
+	s_struct_finish();
 }

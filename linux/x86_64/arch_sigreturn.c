@@ -26,7 +26,6 @@ arch_sigreturn(struct tcb *tcp)
 					   X86_64_SIGMASK_OFFSET;
 #endif
 	const unsigned long addr = (unsigned long) *x86_64_rsp_ptr + offset;
-	tprints("{mask=");
-	print_sigset_addr_len(tcp, addr, NSIG / 8);
-	tprints("}");
+
+	s_insert_sigcontext(addr);
 }

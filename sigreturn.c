@@ -14,6 +14,17 @@
 # error NSIG < 32
 #endif
 
+#include "signal_structured.h"
+#include "structured_sigmask.h"
+
+void
+s_insert_sigcontext(long addr)
+{
+	s_insert_struct("sigcontext");
+	s_insert_sigset_addr_len("mask", addr, NSIG / 8);
+	s_struct_finish();
+}
+
 #include "arch_sigreturn.c"
 
 SYS_FUNC(sigreturn)
