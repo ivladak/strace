@@ -31,19 +31,19 @@
 # include <sys/signalfd.h>
 #endif
 
+#include "signal_structured.h"
+
 #include "xlat/sfd_flags.h"
 
 static int
-do_signalfd(struct tcb *tcp, int flags_arg)
+do_signalfd(struct tcb *tcp, bool flags_arg)
 {
 	/* NB: kernel requires arg[2] == NSIG / 8 */
-	printfd(tcp, tcp->u_arg[0]);
-	tprints(", ");
-	print_sigset_addr_len(tcp, tcp->u_arg[1], tcp->u_arg[2]);
-	tprintf(", %lu", tcp->u_arg[2]);
-	if (flags_arg >= 0) {
-		tprints(", ");
-		printflags(sfd_flags, tcp->u_arg[flags_arg], "SFD_???");
+	s_push_fd("fd");
+	s_push_sigset_addr_len("mask", tcp->u_arg[2]);
+	s_push_lu("sizemask");
+	if (flags_arg) {
+		s_push_flags_int("flags", sfd_flags, "SFD_???");
 	}
 
 	return RVAL_DECODED | RVAL_FD;
@@ -51,10 +51,10 @@ do_signalfd(struct tcb *tcp, int flags_arg)
 
 SYS_FUNC(signalfd)
 {
-	return do_signalfd(tcp, -1);
+	return do_signalfd(tcp, false);
 }
 
 SYS_FUNC(signalfd4)
 {
-	return do_signalfd(tcp, 3);
+	return do_signalfd(tcp, true);
 }
