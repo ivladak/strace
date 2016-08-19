@@ -36,6 +36,9 @@ s_print_xlat_text(struct s_xlat *x, uint64_t value, uint64_t mask,
 	case S_TYPE_xlat_lld:
 		fmt = "%" PRId64;
 		break;
+	case S_TYPE_xlat_u:
+		fmt = "%" PRIu32;
+		break;
 	default:
 		fmt = "%#" PRIx64;
 	}
@@ -310,6 +313,7 @@ s_val_print(struct s_arg *arg)
 	case S_TYPE_xlat:
 	case S_TYPE_xlat_l:
 	case S_TYPE_xlat_ll:
+	case S_TYPE_xlat_u:
 	case S_TYPE_xlat_d:
 	case S_TYPE_xlat_ld:
 	case S_TYPE_xlat_lld: {

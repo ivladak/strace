@@ -192,6 +192,8 @@ enum s_type {
 	S_TYPE_xlat_ld  = S_TYPE_DEF(l,  signed,   default, xlat),
 	S_TYPE_xlat_lld = S_TYPE_DEF(ll, signed,   default, xlat),
 
+	S_TYPE_xlat_u   = S_TYPE_DEF(i,  unsigned, default, xlat),
+
 	S_TYPE_sigmask  = S_TYPE_DEF(l,  unsigned, default, sigmask),
 
 	S_TYPE_struct   = S_TYPE_DEF(i,  unsigned, default, struct),
