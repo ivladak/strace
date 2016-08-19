@@ -30,20 +30,14 @@
 SYS_FUNC(sendfile64)
 {
 	if (entering(tcp)) {
-		printfd(tcp, tcp->u_arg[0]);
-		tprints(", ");
-		printfd(tcp, tcp->u_arg[1]);
-		tprints(", ");
-		if (!printnum_int64(tcp, tcp->u_arg[2], "%" PRIu64)) {
-			tprintf(", %lu", tcp->u_arg[3]);
-			return RVAL_DECODED;
-		}
+		s_push_fd("out_fd");
+		s_push_fd("in_fd");
+		s_push_llu_addr("offset");
+		s_changeable();
+		s_push_lu("count");
 	} else {
-		if (!syserror(tcp) && tcp->u_rval) {
-			tprints(" => ");
-			printnum_int64(tcp, tcp->u_arg[2], "%" PRIu64);
-		}
-		tprintf(", %lu", tcp->u_arg[3]);
+		if (!syserror(tcp) && tcp->u_rval)
+			s_push_llu_addr("offset");
 	}
 
 	return 0;
