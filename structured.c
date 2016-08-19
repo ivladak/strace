@@ -253,6 +253,8 @@ s_xlat_new(enum s_type type, const char *name, const struct xlat *x,
 	struct s_xlat *res = S_ARG_TO_TYPE(s_arg_new(current_tcp, type, name),
 		xlat);
 
+	assert((abs(scale) < 64) && !(val & ~(~0 << abs(scale))));
+
 	res->x = x;
 	res->val = val;
 	res->dflt = dflt;
@@ -703,7 +705,9 @@ static int
 s_process_xlat_val(struct s_xlat *arg, s_print_xlat_fn cb, void *cb_data,
 	bool first)
 {
-	const char *str = arg->x ? xlookup(arg->x, arg->val) : NULL;
+	uint64_t lookup_val = (arg->scale > 0) ? (arg->val >> arg->scale) :
+		arg->val;
+	const char *str = arg->x ? xlookup(arg->x, lookup_val) : NULL;
 
 	cb(arg, arg->val, ~0, str ? str : arg->dflt,
 		(first ? SPXF_FIRST : 0) | ((str || !arg->x) ? 0 : SPXF_DEFAULT),
@@ -720,6 +724,7 @@ s_process_xlat_flags(struct s_xlat *arg, s_print_xlat_fn cb, void *cb_data,
 	int n;
 	const struct xlat *xlat;
 	uint64_t flags;
+	uint64_t lookup_flags;
 
 	if (arg->val == 0 && arg->x && arg->x->val == 0 && arg->x->str) {
 		cb(arg, arg->val, 0, arg->x->str,
@@ -735,13 +740,18 @@ s_process_xlat_flags(struct s_xlat *arg, s_print_xlat_fn cb, void *cb_data,
 
 	xlat = arg->x;
 	flags = arg->val;
+	lookup_flags = (arg->scale > 0) ? (flags >> arg->scale) : flags;
 
 	for (n = 0; xlat->str; xlat++) {
-		if (xlat->val && (flags & xlat->val) == xlat->val) {
-			cb(arg, xlat->val, xlat->val, xlat->str,
+		if (xlat->val && (lookup_flags & xlat->val) == xlat->val) {
+			uint64_t cb_val = (arg->scale > 0) ?
+				(xlat->val << arg->scale) : xlat->val;
+
+			cb(arg, cb_val, cb_val, xlat->str,
 				first ? SPXF_FIRST : 0, cb_data);
 			first = false;
-			flags &= ~xlat->val;
+			flags &= ~cb_val;
+			lookup_flags &= ~xlat->val;
 			n++;
 		}
 	}
