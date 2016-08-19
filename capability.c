@@ -55,105 +55,96 @@ enum {
 typedef struct user_cap_header_struct {
 	uint32_t version;
 	int pid;
-} *cap_user_header_t;
+} cap_user_header_t;
 
 typedef struct user_cap_data_struct {
 	uint32_t effective;
 	uint32_t permitted;
 	uint32_t inheritable;
-} *cap_user_data_t;
-
-static cap_user_header_t
-get_cap_header(struct tcb *tcp, unsigned long addr)
-{
-	static struct user_cap_header_struct header;
-
-	if (!addr || !verbose(tcp))
-		return NULL;
-
-	if (umove(tcp, addr, &header) < 0)
-		return NULL;
-
-	return &header;
-}
+} cap_user_data_t;
 
 static void
-print_cap_header(struct tcb *tcp, unsigned long addr, cap_user_header_t h)
+push_cap_bits(const char *name, const uint32_t lo, const uint32_t hi)
 {
-	if (!addr || !h) {
-		printaddr(addr);
-		return;
-	}
-
-	tprints("{");
-	printxval(cap_version, h->version,
-		  "_LINUX_CAPABILITY_VERSION_???");
-	tprintf(", %d}", h->pid);
-}
-
-static void
-print_cap_bits(const uint32_t lo, const uint32_t hi)
-{
-	if (lo || !hi)
-		printflags(cap_mask0, lo, "CAP_???");
-
-	if (hi) {
-		if (lo)
-			tprints("|");
-		printflags(cap_mask1, hi, "CAP_???");
+	if (lo && !hi) {
+		s_insert_flags_int(name, cap_mask0, lo, "CAP_???");
+	} else if (hi && !lo) {
+		s_insert_flags_int(name, cap_mask1, hi, "CAP_???");
+	} else if (!lo && !hi) {
+		s_insert_flags_int(name, cap_mask0, lo, "CAP_???");
+	} else {
+		s_insert_struct(name);
+		s_insert_flags_int("low", cap_mask0, lo, "CAP_???");
+		s_insert_flags_int("high", cap_mask1, hi, "CAP_???");
+		s_struct_finish();
 	}
 }
 
-static void
-print_cap_data(struct tcb *tcp, unsigned long addr, const cap_user_header_t h)
+static long
+fetch_fill_cap_user_data(struct s_arg *arg, unsigned long addr, void *fn_data)
 {
 	struct user_cap_data_struct data[2];
 	unsigned int len;
+	unsigned h = (unsigned long) fn_data;
 
-	if (!addr || !h) {
-		printaddr(addr);
-		return;
+	if (!h) {
+		return -1;
 	}
 
-	if (_LINUX_CAPABILITY_VERSION_2 == h->version ||
-	    _LINUX_CAPABILITY_VERSION_3 == h->version)
+	if (_LINUX_CAPABILITY_VERSION_2 == h ||
+	    _LINUX_CAPABILITY_VERSION_3 == h)
 		len = 2;
 	else
 		len = 1;
 
-	if (umoven_or_printaddr(tcp, addr, len * sizeof(data[0]), data))
-		return;
+	if (s_umoven_verbose(current_tcp, addr, len * sizeof(data[0]), data))
+		return -1;
 
-	tprints("{");
-	print_cap_bits(data[0].effective, len > 1 ? data[1].effective : 0);
-	tprints(", ");
-	print_cap_bits(data[0].permitted, len > 1 ? data[1].permitted : 0);
-	tprints(", ");
-	print_cap_bits(data[0].inheritable, len > 1 ? data[1].inheritable : 0);
-	tprints("}");
+	push_cap_bits("effective", data[0].effective, len > 1 ? data[1].effective : 0);
+	push_cap_bits("permitted", data[0].permitted, len > 1 ? data[1].permitted : 0);
+	push_cap_bits("inheritable", data[0].inheritable, len > 1 ? data[1].inheritable : 0);
+
+	return 0;
+}
+
+static int
+fill_cap_user_header(struct s_arg *arg, void *buf, unsigned long len,
+	void *fn_data)
+{
+	unsigned *version = (unsigned *) fn_data;
+	cap_user_header_t *h = buf;
+
+	s_insert_xlat_int("version", cap_version, h->version,
+		"_LINUX_CAPABILITY_VERSION_???");
+	*version = h->version;
+	s_insert_d("pid", h->pid);
+
+	return 0;
 }
 
 SYS_FUNC(capget)
 {
-	cap_user_header_t h;
+	unsigned *version = 0;
 
 	if (entering(tcp)) {
-		h = get_cap_header(tcp, tcp->u_arg[0]);
-		print_cap_header(tcp, tcp->u_arg[0], h);
-		tprints(", ");
+		s_push_addr_type_sized("hdrp", sizeof(cap_user_header_t), S_TYPE_struct,
+			fill_cap_user_header, &version);
+		current_tcp->_priv_data = version;
+		s_changeable_void("datap");
 	} else {
-		h = syserror(tcp) ? NULL : get_cap_header(tcp, tcp->u_arg[0]);
-		print_cap_data(tcp, tcp->u_arg[1], h);
+		s_push_addr_type("datap", S_TYPE_struct, fetch_fill_cap_user_data,
+			(void *) current_tcp->_priv_data);
 	}
 	return 0;
 }
 
 SYS_FUNC(capset)
 {
-	cap_user_header_t h = get_cap_header(tcp, tcp->u_arg[0]);
-	print_cap_header(tcp, tcp->u_arg[0], h);
-	tprints(", ");
-	print_cap_data(tcp, tcp->u_arg[1], h);
+	unsigned *version = 0;
+	s_push_addr_type_sized("hdrp", sizeof(cap_user_header_t),
+		S_TYPE_struct, fill_cap_user_header, &version);
+	s_push_addr_type("datap", S_TYPE_struct, fetch_fill_cap_user_data,
+		(void *) version);
 
 	return RVAL_DECODED;
 }
