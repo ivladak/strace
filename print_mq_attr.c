@@ -41,18 +41,34 @@ typedef struct mq_attr mq_attr_t;
 
 #include MPERS_DEFS
 
-MPERS_PRINTER_DECL(void, printmqattr, struct tcb *tcp, const long addr)
+MPERS_PRINTER_DECL(int, fillmqattr, struct s_arg *arg, void *buf,
+	unsigned long len, void *fn_data)
+{
+	mq_attr_t *attr = buf;
+
+	s_insert_open_modes("mq_flags", attr->mq_flags);
+	s_insert_ld("mq_maxmsg", (long) attr->mq_maxmsg);
+	s_insert_ld("mq_msgsize", (long) attr->mq_msgsize);
+	s_insert_ld("mq_curmsgs", (long) attr->mq_curmsgs);
+
+	return 0;
+}
+
+static ssize_t
+fetchmqattr(struct s_arg *arg, unsigned long addr, void *fn_data)
 {
 #if defined HAVE_MQUEUE_H || defined HAVE_LINUX_MQUEUE_H
 	mq_attr_t attr;
-	if (umove_or_printaddr(tcp, addr, &attr))
-		return;
-	tprints("{mq_flags=");
-	tprint_open_modes(attr.mq_flags);
-	tprintf(", mq_maxmsg=%ld, mq_msgsize=%ld, mq_curmsg=%ld}",
-		(long) attr.mq_maxmsg, (long) attr.mq_msgsize,
-		(long) attr.mq_curmsgs);
+	if (s_umove_verbose(current_tcp, addr, &attr))
+		return -1;
+
+	return MPERS_FUNC_NAME(fillmqattr)(arg, &attr, sizeof(attr), fn_data);
 #else
-	printaddr(addr);
+	return -1;
 #endif
+}
+
+MPERS_PRINTER_DECL(void, s_push_mqattr, const char *name)
+{
+	s_push_addr_type(name, S_TYPE_struct, fetchmqattr, NULL);
 }

@@ -28,47 +28,41 @@
 
 #include "defs.h"
 #include <fcntl.h>
+#include "print_time_structured.h"
 
 SYS_FUNC(mq_open)
 {
-	printpath(tcp, tcp->u_arg[0]);
-	tprints(", ");
-	/* flags */
-	tprint_open_modes(tcp->u_arg[1]);
+	s_push_path("name");
+	s_push_open_modes("oflag");
 	if (tcp->u_arg[1] & O_CREAT) {
-		/* mode */
-		tprints(", ");
-		print_numeric_umode_t(tcp->u_arg[2]);
-		tprints(", ");
-		printmqattr(tcp, tcp->u_arg[3]);
+		s_insert_umode_t("mode", tcp->u_arg[2]);
+		s_push_mqattr("attr");
 	}
 	return RVAL_DECODED;
 }
 
 SYS_FUNC(mq_timedsend)
 {
-	tprintf("%ld, ", tcp->u_arg[0]);
-	printstr(tcp, tcp->u_arg[1], tcp->u_arg[2]);
-	tprintf(", %lu, %ld, ", tcp->u_arg[2], tcp->u_arg[3]);
-	print_timespec(tcp, tcp->u_arg[4]);
+	s_push_ld("mqdes");
+	s_insert_str("msg", tcp->u_arg[1], tcp->u_arg[2]);
+	s_push_empty(S_TYPE_lu);
+	s_push_lu("msg_len");
+	s_push_ld("msg_prio");
+	s_push_timespec("abs_timeout");
 	return RVAL_DECODED;
 }
 
 SYS_FUNC(mq_timedreceive)
 {
-	if (entering(tcp))
-		tprintf("%ld, ", tcp->u_arg[0]);
-	else {
-		printstr(tcp, tcp->u_arg[1], tcp->u_arg[2]);
-		tprintf(", %lu, %ld, ", tcp->u_arg[2], tcp->u_arg[3]);
-		/*
-		 * Since the timeout parameter is read by the kernel
-		 * on entering syscall, it has to be decoded the same way
-		 * whether the syscall has failed or not.
-		 */
-		temporarily_clear_syserror(tcp);
-		print_timespec(tcp, tcp->u_arg[4]);
-		restore_cleared_syserror(tcp);
+	if (entering(tcp)) {
+		s_push_ld("mqdes");
+		s_push_addr("msg");
+		s_changeable();
+		s_push_lu("msg_len");
+		s_push_ld("msg_prio");
+		s_push_timespec("abs_timeout");
+	} else {
+		s_insert_str("msg", tcp->u_arg[1], tcp->u_arg[2]);
 	}
 	return 0;
 }
@@ -83,10 +77,10 @@ SYS_FUNC(mq_notify)
 SYS_FUNC(mq_getsetattr)
 {
 	if (entering(tcp)) {
-		tprintf("%ld, ", tcp->u_arg[0]);
-		printmqattr(tcp, tcp->u_arg[1]);
-		tprints(", ");
+		s_push_ld("mqdes");
+		s_push_mqattr("newattr");
+		s_changeable_void("oldattr");
 	} else
-		printmqattr(tcp, tcp->u_arg[2]);
+		s_push_mqattr("oldattr");
 	return 0;
 }
