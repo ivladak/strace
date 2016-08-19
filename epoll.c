@@ -33,7 +33,7 @@
 
 SYS_FUNC(epoll_create)
 {
-	tprintf("%d", (int) tcp->u_arg[0]);
+	s_push_d("size");
 
 	return RVAL_DECODED | RVAL_FD;
 }
@@ -42,7 +42,7 @@ SYS_FUNC(epoll_create)
 
 SYS_FUNC(epoll_create1)
 {
-	printflags(epollflags, tcp->u_arg[0], "EPOLL_???");
+	s_push_flags_int("flags", epollflags, "EPOLL_???");
 
 	return RVAL_DECODED | RVAL_FD;
 }
