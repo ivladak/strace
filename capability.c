@@ -66,17 +66,13 @@ typedef struct user_cap_data_struct {
 static void
 push_cap_bits(const char *name, const uint32_t lo, const uint32_t hi)
 {
-	if (lo && !hi) {
+	if (!hi) {
 		s_insert_flags_int(name, cap_mask0, lo, "CAP_???");
-	} else if (hi && !lo) {
+	} else if (!lo) {
 		s_insert_flags_int(name, cap_mask1, hi, "CAP_???");
-	} else if (!lo && !hi) {
-		s_insert_flags_int(name, cap_mask0, lo, "CAP_???");
 	} else {
-		s_insert_struct(name);
-		s_insert_flags_int("low", cap_mask0, lo, "CAP_???");
-		s_insert_flags_int("high", cap_mask1, hi, "CAP_???");
-		s_struct_finish();
+		s_insert_flags_int(name, cap_mask0, lo, "CAP_???");
+		s_append_flags_int_val(name, cap_mask1, hi, "CAP_???");
 	}
 }
 
