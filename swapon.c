@@ -8,7 +8,7 @@ SYS_FUNC(swapon)
 {
 	s_push_path("path");
 	s_push_xlat_flags_int("swapflags", swap_flags, NULL,
-		SWAP_FLAG_PRIO_MASK, "SWAP_FLAG_???", NULL);
+		SWAP_FLAG_PRIO_MASK, "SWAP_FLAG_???", NULL, false, 0);
 
 	return RVAL_DECODED;
 }

@@ -248,7 +248,7 @@ s_addr_new(const char *name, long addr, struct s_arg *arg)
 
 struct s_xlat *
 s_xlat_new(enum s_type type, const char *name, const struct xlat *x,
-	uint64_t val, const char *dflt, bool flags)
+	uint64_t val, const char *dflt, bool flags, int8_t scale)
 {
 	struct s_xlat *res = S_ARG_TO_TYPE(s_arg_new(current_tcp, type, name),
 		xlat);
@@ -257,6 +257,7 @@ s_xlat_new(enum s_type type, const char *name, const struct xlat *x,
 	res->val = val;
 	res->dflt = dflt;
 	res->flags = flags;
+	res->scale = scale;
 
 	return res;
 }
@@ -311,7 +312,7 @@ s_arg_new_init(struct tcb *tcp, enum s_type type, const char *name)
 		return &s_addr_new(name, 0, NULL)->arg;
 
 	case S_TYPE_KIND_xlat:
-		return &s_xlat_new(type, name, NULL, 0, NULL, false)->arg;
+		return &s_xlat_new(type, name, NULL, 0, NULL, false, 0)->arg;
 
 	case S_TYPE_KIND_sigmask:
 		return &s_sigmask_new(name, NULL, 0)->arg;
@@ -473,12 +474,13 @@ s_addr_new_and_insert(const char *name, long addr, struct s_arg *arg)
 
 struct s_xlat *
 s_xlat_new_and_insert(enum s_type type, const char *name, const struct xlat *x,
-	uint64_t val, const char *dflt, bool flags)
+	uint64_t val, const char *dflt, bool flags, int8_t scale)
 {
 	struct s_xlat *res;
 
 	s_arg_insert(current_tcp->s_syscall,
-		&(res = s_xlat_new(type, name, x, val, dflt, flags))->arg, -1);
+		&(res = s_xlat_new(type, name, x, val, dflt, flags,
+			scale))->arg, -1);
 
 	return res;
 }
@@ -519,7 +521,7 @@ extern struct s_changeable *s_changeable_new_and_insert(const char *name,
 
 struct s_xlat *
 s_xlat_append(enum s_type type, const char *name, const struct xlat *x,
-	uint64_t val, const char *dflt, bool flags)
+	uint64_t val, const char *dflt, bool flags, int8_t scale)
 {
 	struct s_arg *last_arg = STAILQ_LAST(&current_tcp->s_syscall->args.args,
 		s_arg, entry);
@@ -531,9 +533,9 @@ s_xlat_append(enum s_type type, const char *name, const struct xlat *x,
 
 	if (!last_arg || (S_TYPE_KIND(last_arg->type) != S_TYPE_KIND_xlat))
 		return s_xlat_new_and_insert(type, last_arg->name, x, val, dflt,
-			flags);
+			flags, scale);
 
-	res = s_xlat_new(type, name, x, val, dflt, flags);
+	res = s_xlat_new(type, name, x, val, dflt, flags, scale);
 
 	last_xlat = S_ARG_TO_TYPE(last_arg, xlat);
 
