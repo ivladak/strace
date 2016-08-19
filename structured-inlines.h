@@ -778,6 +778,7 @@ s_push_xlat_flags(enum s_type ftype, enum s_type vtype, const char *name,
 	}
 
 DEF_XLAT_FLAGS(int,  S_TYPE_xlat,    S_TYPE_xlat_d)
+DEF_XLAT_FLAGS(x,    S_TYPE_xlat,    S_TYPE_xlat)
 DEF_XLAT_FLAGS(long, S_TYPE_xlat_l,  S_TYPE_xlat_ld)
 DEF_XLAT_FLAGS(64,   S_TYPE_xlat_ll, S_TYPE_xlat_lld)
 
