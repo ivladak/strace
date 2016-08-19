@@ -53,16 +53,10 @@ static const struct xlat cacheflush_flags[] = {
 
 SYS_FUNC(cacheflush)
 {
-	/* addr */
-	printaddr(tcp->u_arg[0]);
-	tprints(", ");
-	/* scope */
-	printxval(cacheflush_scope, tcp->u_arg[1], "FLUSH_SCOPE_???");
-	tprints(", ");
-	/* flags */
-	printflags(cacheflush_flags, tcp->u_arg[2], "FLUSH_CACHE_???");
-	/* len */
-	tprintf(", %lu", tcp->u_arg[3]);
+	s_push_addr("addr");
+	s_push_xlat_int("scope", cacheflush_scope, "FLUSH_SCOPE_???");
+	s_push_flags_int("flags", cacheflush_flags, "FLUSH_CACHE_???");
+	s_push_lu("len");
 
 	return RVAL_DECODED;
 }
@@ -78,12 +72,9 @@ static const struct xlat cacheflush_flags[] = {
 
 SYS_FUNC(cacheflush)
 {
-	/* start addr */
-	printaddr(tcp->u_arg[0]);
-	/* length */
-	tprintf(", %lu, ", tcp->u_arg[1]);
-	/* flags */
-	printxval(cacheflush_flags, tcp->u_arg[2], "?CACHE");
+	s_push_addr("addr");
+	s_push_lu("len");
+	s_push_xlat_int("flags", cacheflush_flags, "?CACHE");
 
 	return RVAL_DECODED;
 }
@@ -108,12 +99,9 @@ static const struct xlat cacheflush_flags[] = {
 
 SYS_FUNC(cacheflush)
 {
-	/* addr */
-	printaddr(tcp->u_arg[0]);
-	/* len */
-	tprintf(", %lu, ", tcp->u_arg[1]);
-	/* flags */
-	printflags(cacheflush_flags, tcp->u_arg[2], "CACHEFLUSH_???");
+	s_push_addr("addr");
+	s_push_lu("len");
+	s_push_flags_int("flags", cacheflush_flags, "CACHEFLUSH_???");
 
 	return RVAL_DECODED;
 }
@@ -122,10 +110,8 @@ SYS_FUNC(cacheflush)
 #ifdef NIOS2
 SYS_FUNC(cacheflush)
 {
-	/* addr */
-	printaddr(tcp->u_arg[0]);
-	/* len */
-	tprintf(", %lu, ", tcp->u_arg[3]);
+	s_push_addr("addr");
+	s_insert_lu("len", tcp->u_arg[3]);
 	/* scope and flags (cache type) are currently ignored */
 
 	return RVAL_DECODED;
