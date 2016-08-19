@@ -126,7 +126,7 @@ SYS_FUNC(nanosleep)
 SYS_FUNC(getitimer)
 {
 	if (entering(tcp)) {
-		s_push_flags_signed("which", itimer_which, "ITIMER_???");
+		s_push_xlat_signed("which", itimer_which, "ITIMER_???");
 		s_changeable_void("curr_value");
 	} else {
 		s_push_itimerval("curr_value");
@@ -138,7 +138,7 @@ SYS_FUNC(getitimer)
 SYS_FUNC(osf_getitimer)
 {
 	if (entering(tcp)) {
-		s_push_flags_signed("which", itimer_which, "ITIMER_???");
+		s_push_xlat_signed("which", itimer_which, "ITIMER_???");
 		s_changeable_void("curr_value");
 	} else {
 		s_push_itimerval32("curr_value");
@@ -150,7 +150,7 @@ SYS_FUNC(osf_getitimer)
 SYS_FUNC(setitimer)
 {
 	if (entering(tcp)) {
-		s_push_flags_signed("which", itimer_which, "ITIMER_???");
+		s_push_xlat_signed("which", itimer_which, "ITIMER_???");
 		s_push_itimerval("new_value");
 		s_changeable_void("old_value");
 	} else {
@@ -163,7 +163,7 @@ SYS_FUNC(setitimer)
 SYS_FUNC(osf_setitimer)
 {
 	if (entering(tcp)) {
-		s_push_flags_signed("which", itimer_which, "ITIMER_???");
+		s_push_xlat_signed("which", itimer_which, "ITIMER_???");
 		s_push_itimerval32("new_value");
 		s_changeable_void("old_value");
 	} else {
