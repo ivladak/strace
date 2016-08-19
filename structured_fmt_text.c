@@ -12,6 +12,7 @@ static void
 s_print_xlat_text(struct s_xlat *x, uint64_t value, uint64_t mask,
 	const char *str, uint32_t flags, void *fn_data)
 {
+	uint64_t descaled_val = value >> abs(x->scale);
 	const char *fmt;
 
 	switch (x->arg.type) {
@@ -47,14 +48,21 @@ s_print_xlat_text(struct s_xlat *x, uint64_t value, uint64_t mask,
 		tprints("|");
 
 	if (flags & SPXF_DEFAULT) {
-		tprintf(fmt, value);
+		tprintf(fmt, descaled_val);
+		if (x->scale)
+			tprintf("<<%d", (int)abs(x->scale));
 		if (str && value)
 			tprintf(" /* %s */", str);
 	} else {
-		if (str)
+		if (str) {
 			tprintf("%s", str);
-		else
-			tprintf(fmt, value);
+			if (x->scale > 0)
+				tprintf("<<%d", (int)x->scale);
+		} else {
+			tprintf(fmt, descaled_val);
+			if (descaled_val && x->scale)
+				tprintf("<<%d", (int)abs(x->scale));
+		}
 	}
 }
 
