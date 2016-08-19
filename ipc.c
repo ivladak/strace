@@ -31,21 +31,22 @@
 SYS_FUNC(ipc)
 {
 	unsigned int call = tcp->u_arg[0];
-	unsigned int version = call >> 16;
+	unsigned int version = call & ~0xffff;
 	call &= 0xffff;
-	const char *str = xlookup(ipccalls, call);
 
 	if (version)
-		tprintf("%u<<16|", version);
+		s_insert_xlat_uint_scaled("call", NULL, version, NULL, 16);
 
-	if (str)
-		tprints(str);
-	else
-		tprintf("%u", call);
+	s_append_xlat_uint_val(NULL, ipccalls, call, NULL);
+	s_push_empty(S_TYPE_u);
 
 	unsigned int i;
-	for (i = 1; i < tcp->s_ent->nargs; ++i)
-		tprintf(", %#lx", tcp->u_arg[i]);
+	for (i = 1; i < tcp->s_ent->nargs; ++i) {
+		static const char *names[] =
+			{ "first", "second", "third", "ptr", "fifth" };
+
+		s_push_lx(names - 1);
+	}
 
 	return RVAL_DECODED;
 }
