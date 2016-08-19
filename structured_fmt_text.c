@@ -44,7 +44,8 @@ s_print_xlat_text(struct s_xlat *x, uint64_t value, uint64_t mask,
 	}
 
 	/* Corner case */
-	if (!(flags & SPXF_FIRST) && (flags & SPXF_DEFAULT) && !value)
+	if (!(flags & SPXF_FIRST) && (flags & SPXF_DEFAULT) && !value &&
+	    x->flags)
 		return;
 
 	if (!(flags & SPXF_FIRST))
