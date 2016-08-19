@@ -234,6 +234,26 @@ s_str_new_fail:
 	return NULL;
 }
 
+struct s_str *
+s_str_val_new(enum s_type type, const char *name, const char *str, long len,
+	bool has_nul)
+{
+	struct s_str *res = S_ARG_TO_TYPE(s_arg_new(current_tcp, type, name),
+		str);
+
+	if (len >= 0) {
+		res->str = strndup(str, len);
+		res->len = len;
+		res->has_nul = has_nul;
+	} else {
+		res->str = strdup(str);
+		res->len = strlen(res->str);
+		res->has_nul = true;
+	}
+
+	return res;
+}
+
 struct s_addr *
 s_addr_new(const char *name, long addr, struct s_arg *arg)
 {

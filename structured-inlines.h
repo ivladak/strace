@@ -496,6 +496,14 @@ s_insert_str(const char *name, unsigned long addr, long len)
 	s_insert_string(S_TYPE_str, name, addr, len, len == -1);
 }
 
+static inline void
+s_insert_str_val(const char *name, const char *str, long len)
+{
+	struct s_str *s = s_str_val_new(S_TYPE_str, name, str, len, true);
+
+	s_arg_insert(current_tcp->s_syscall, &s->arg, -1);
+}
+
 /* Equivalent to s_push_str_addr */
 static inline void
 s_push_str(const char *name, long len)
