@@ -621,7 +621,7 @@ s_append_xlat(const char *name, const struct xlat *x, const char *dflt,
 	\
 	static inline void \
 	s_insert_##WHAT##_##ENUM##_scaled(const char *name, \
-		const struct xlat *x,TYPE val, const char *dflt, int8_t scale) \
+		const struct xlat *x, TYPE val, const char *dflt, int8_t scale)\
 	{ \
 		s_insert_xlat(S_TYPE_##FLAGS_TYPE, name, x, val, dflt, FLAGS, \
 			scale); \
