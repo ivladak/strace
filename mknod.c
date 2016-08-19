@@ -43,7 +43,7 @@ decode_mknod(void)
 	s_push_path("pathname");
 
 	unsigned short mode = current_tcp->u_arg[current_tcp->s_syscall->cur_arg];
-	s_push_mode_t("mode");
+	s_push_short_mode_t("mode");
 	switch (mode & S_IFMT) {
 	case S_IFCHR:
 	case S_IFBLK:

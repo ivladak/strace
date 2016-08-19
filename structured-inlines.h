@@ -425,6 +425,7 @@ DEF_PUSH_INT(unsigned long long, rlim64, s_umove_verbose)
 DEF_PUSH_INT(unsigned long,  umask,   s_umove_ulong)
 DEF_PUSH_INT(unsigned short, umode_t, s_umove_verbose)
 DEF_PUSH_INT(unsigned int,   mode_t,  s_umove_verbose)
+DEF_PUSH_INT(unsigned short, short_mode_t,  s_umove_verbose)
 DEF_PUSH_INT(unsigned long,  sa_handler, s_umove_ulong)
 DEF_PUSH_INT(unsigned int,   dev_t,   s_umove_verbose)
 

@@ -174,6 +174,7 @@ s_val_print(struct s_arg *arg)
 		break;
 	}
 
+	case S_TYPE_short_mode_t:
 	case S_TYPE_mode_t: {
 		struct s_num *p = S_ARG_TO_TYPE(arg, num);
 

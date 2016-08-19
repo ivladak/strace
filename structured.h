@@ -173,6 +173,7 @@ enum s_type {
 	S_TYPE_umask    = S_TYPE_DEF(l,  unsigned, umask,   num),
 	S_TYPE_umode_t  = S_TYPE_DEF(h,  unsigned, umode_t, num),
 	S_TYPE_mode_t   = S_TYPE_DEF(i,  unsigned, mode_t,  num),
+	S_TYPE_short_mode_t = S_TYPE_DEF(h,  unsigned, mode_t,  num),
 	S_TYPE_dev_t    = S_TYPE_DEF(i,  unsigned, dev_t,   num),
 
 	S_TYPE_sa_handler = S_TYPE_DEF(l,  unsigned, sa_handler, num),
