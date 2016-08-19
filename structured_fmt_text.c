@@ -338,6 +338,11 @@ s_val_print(struct s_arg *arg)
 
 		break;
 	}
+	case S_TYPE_dev_t: {
+		struct s_num *p = S_ARG_TO_TYPE(arg, num);
+		tprintf("makedev(%u, %u)", major(p->val), minor(p->val));
+		break;
+	}
 	case S_TYPE_array:
 	case S_TYPE_struct: {
 		struct s_struct *p = S_ARG_TO_TYPE(arg, struct);

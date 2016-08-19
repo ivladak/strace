@@ -93,6 +93,17 @@ s_val_print(struct s_arg *arg)
 
 #undef PRINT_INT
 
+	case S_TYPE_dev_t: {
+		struct s_num *p = S_ARG_TO_TYPE(arg, num);
+		JsonNode *dev_obj = json_mkobject();
+		json_append_member(dev_obj, "major",
+			json_mknumber(major((dev_t)p->val)));
+		json_append_member(dev_obj, "minor",
+			json_mknumber(minor((dev_t)p->val)));
+		json_append_member(new_obj, "value", dev_obj);
+		break;
+	}
+
 	case S_TYPE_uid:
 	case S_TYPE_gid: {
 		struct s_num *p = S_ARG_TO_TYPE(arg, num);
