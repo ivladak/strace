@@ -41,84 +41,79 @@
 #include "xlat/futexwakeops.h"
 #include "xlat/futexwakecmps.h"
 
+#include "print_time_structured.h"
+
 SYS_FUNC(futex)
 {
-	const long uaddr = tcp->u_arg[0];
 	const int op = tcp->u_arg[1];
 	const int cmd = op & 127;
-	const long timeout = tcp->u_arg[3];
+
 	const long uaddr2 = tcp->u_arg[4];
-	const unsigned int val = tcp->u_arg[2];
-	const unsigned int val2 = tcp->u_arg[3];
+
 	const unsigned int val3 = tcp->u_arg[5];
 
-	printaddr(uaddr);
-	tprints(", ");
-	printxval(futexops, op, "FUTEX_???");
+	s_push_addr("uaddr");
+	s_push_xlat_int("futex_op", futexops, "FUTEX_???");
+
 	switch (cmd) {
 	case FUTEX_WAIT:
-		tprintf(", %u", val);
-		tprints(", ");
-		print_timespec(tcp, timeout);
+		s_push_u("val");
+		s_push_timespec("timeout");
 		break;
 	case FUTEX_LOCK_PI:
-		tprints(", ");
-		print_timespec(tcp, timeout);
+		s_push_timespec("timeout");
 		break;
 	case FUTEX_WAIT_BITSET:
-		tprintf(", %u", val);
-		tprints(", ");
-		print_timespec(tcp, timeout);
-		tprintf(", %#x", val3);
+		s_push_u("val");
+		s_push_timespec("timeout");
+		s_insert_x("val3", val3);
 		break;
 	case FUTEX_WAKE_BITSET:
-		tprintf(", %u", val);
-		tprintf(", %#x", val3);
+		s_push_u("val");
+		s_insert_x("val3", val3);
 		break;
 	case FUTEX_REQUEUE:
-		tprintf(", %u", val);
-		tprintf(", %u, ", val2);
-		printaddr(uaddr2);
+		s_push_u("val");
+		s_push_u("val2");
+		s_push_addr("uaddr2");
 		break;
 	case FUTEX_CMP_REQUEUE:
 	case FUTEX_CMP_REQUEUE_PI:
-		tprintf(", %u", val);
-		tprintf(", %u, ", val2);
-		printaddr(uaddr2);
-		tprintf(", %u", val3);
+		s_push_u("val");
+		s_push_u("val2");
+		s_push_addr("uaddr2");
+		s_push_u("val3");
 		break;
 	case FUTEX_WAKE_OP:
-		tprintf(", %u", val);
-		tprintf(", %u, ", val2);
-		printaddr(uaddr2);
-		tprints(", {");
-		if ((val3 >> 28) & 8)
-			tprints("FUTEX_OP_OPARG_SHIFT|");
-		printxval(futexwakeops, (val3 >> 28) & 0x7, "FUTEX_OP_???");
-		tprintf(", %u, ", (val3 >> 12) & 0xfff);
-		printxval(futexwakecmps, (val3 >> 24) & 0xf, "FUTEX_OP_CMP_???");
-		tprintf(", %u}", val3 & 0xfff);
+		s_push_u("val");
+		s_push_u("val2");
+		s_push_addr("uaddr2");
+		s_insert_xlat_int("op", futexwakeops, (val3 >> 28) & 0x7,
+			"FUTEX_OP_???");
+		s_append_xlat_int_val("op", NULL, ((val3 >> 28) & 8) << 28,
+			"FUTEX_OP_OPARG_SHIFT");
+		s_insert_u("oparg", (val3 >> 12) & 0xfff);
+		s_insert_xlat_int("cmp", futexwakecmps, (val3 >> 24) & 0xf,
+			"FUTEX_OP_CMP_???");
+		s_insert_u("cmparg", val3 & 0xfff);
 		break;
 	case FUTEX_WAIT_REQUEUE_PI:
-		tprintf(", %u", val);
-		tprints(", ");
-		print_timespec(tcp, timeout);
-		tprints(", ");
-		printaddr(uaddr2);
+		s_push_u("val");
+		s_push_timespec("timeout");
+		s_insert_addr("uaddr2", uaddr2);
 		break;
 	case FUTEX_FD:
 	case FUTEX_WAKE:
-		tprintf(", %u", val);
+		s_push_u("val");
 		break;
 	case FUTEX_UNLOCK_PI:
 	case FUTEX_TRYLOCK_PI:
 		break;
 	default:
-		tprintf(", %u", val);
-		tprintf(", %#lx", timeout);
-		tprints(", ");
-		printaddr(uaddr2);
-		tprintf(", %#x", val3);
+		s_push_u("val");
+		s_push_lx("val2");
+		s_push_addr("uaddr2");
+		s_push_x("val3");
 		break;
 	}
 
