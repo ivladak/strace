@@ -291,7 +291,7 @@ fill_bpf_filter(struct s_arg *arg, void *buf, size_t len, void *data)
 	else
 		s_struct_set_own_aux_str(struct_arg, decode_bpf_stmt(filter));
 
-	if ((*pn)++ >= BPF_MAXINSNS)
+	if (++(*pn) >= BPF_MAXINSNS)
 		return -1;
 
 	return 0;
