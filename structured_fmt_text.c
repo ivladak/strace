@@ -198,7 +198,7 @@ s_val_print(struct s_arg *arg)
 		if (str)
 			tprintf("__NR_%s", str);
 		else
-			tprintf("%lu", (long)p->val);
+			tprintf("%lu", (unsigned long)p->val);
 
 		break;
 	}
