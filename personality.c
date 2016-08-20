@@ -38,7 +38,7 @@ SYS_FUNC(personality)
 	if (entering(tcp)) {
 		pers = tcp->u_arg[0];
 		if (0xffffffff == pers)
-			s_push_x(0xffffffff);
+			s_push_x("persona");
 		else
 			s_push_xlat_flags_x("persona", personality_flags,
 				personality_types, PER_MASK, NULL, "PER_???",
