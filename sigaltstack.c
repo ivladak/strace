@@ -40,7 +40,7 @@
 
 #include "xlat/sigaltstack_flags.h"
 
-static void
+static ssize_t
 fetch_fill_stack_t(struct s_arg *arg, unsigned long addr, void *fn_data)
 {
 	stack_t ss;
@@ -52,6 +52,8 @@ fetch_fill_stack_t(struct s_arg *arg, unsigned long addr, void *fn_data)
 	s_insert_flags_int("ss_flags", sigaltstack_flags, ss.ss_flags,
 		"SS_???");
 	s_insert_lu("ss_size", (unsigned long) ss.ss_size);
+
+	return sizeof(ss);
 }
 
 SYS_FUNC(sigaltstack)
