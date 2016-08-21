@@ -78,6 +78,9 @@ run_strace()
 	args="$*"
 	$STRACE -o "$LOG" "$@" ||
 		dump_log_and_fail_with "$STRACE $args failed with code $?"
+	[ "$CHECK_JSON" = 1 ] &&
+		{ $STRACE -o "${LOG}.json" -j json "$@" > /dev/null &&
+			validate_json "${LOG}.json"; }
 }
 
 run_strace_merge()
@@ -99,6 +102,29 @@ check_gawk()
 		gawk '@include "/dev/null"' < /dev/null ||
 			framework_skip_ 'gawk does not support @include'
 	fi
+}
+
+validate_json()
+{
+	if [ $# -eq 0 ]; then
+		output="${LOG}.json"
+	else
+		output="$1"; shift
+	fi
+	if [ $# -eq 0 ]; then
+		error="$STRACE $args JSON validation failed"
+	else
+		error="$1"; shift
+	fi
+
+	check_prog "${JSON_VALIDATOR}"
+
+	"${JSON_VALIDATOR}" "${output}" || {
+		cat < "${output}"
+		fail_ "${error}"
+	}
+
+	return 0;
 }
 
 # Usage: [FILE_TO_CHECK [AWK_PROGRAM [ERROR_MESSAGE [EXTRA_AWK_OPTIONS...]]]]
@@ -222,8 +248,10 @@ check_prog rm
 rm -f "$LOG"
 
 : "${STRACE:=../strace}"
+: "${JSON_VALIDATOR=../json_validate}"
 : "${TIMEOUT_DURATION:=60}"
 : "${SLEEP_A_BIT:=sleep 1}"
+: "${CHECK_JSON=0}"
 
 [ -z "${VERBOSE-}" ] ||
 	set -x
