@@ -96,6 +96,7 @@ s_val_print(struct s_arg *arg)
 	case S_TYPE_dev_t: {
 		struct s_num *p = S_ARG_TO_TYPE(arg, num);
 		JsonNode *dev_obj = json_mkobject();
+		json_append_member(new_obj, "type", json_mkstring("dev_t"));
 		json_append_member(dev_obj, "major",
 			json_mknumber(major((dev_t)p->val)));
 		json_append_member(dev_obj, "minor",
@@ -107,6 +108,10 @@ s_val_print(struct s_arg *arg)
 	case S_TYPE_uid:
 	case S_TYPE_gid: {
 		struct s_num *p = S_ARG_TO_TYPE(arg, num);
+
+		json_append_member(new_obj, "type",
+			json_mkstring((arg->type == S_TYPE_uid) ?
+				"uid" : "gid"));
 
 		if ((uid_t) -1U == (uid_t)p->val)
 			json_append_member(new_obj, "value", json_mknumber(-1));
@@ -120,6 +125,10 @@ s_val_print(struct s_arg *arg)
 	case S_TYPE_gid16: {
 		struct s_num *p = S_ARG_TO_TYPE(arg, num);
 
+		json_append_member(new_obj, "type",
+			json_mkstring((arg->type == S_TYPE_uid) ?
+				"uid16" : "gid16"));
+
 		if ((uint16_t)-1U == (uint16_t)p->val)
 			json_append_member(new_obj, "value", json_mknumber(-1));
 		else
@@ -131,6 +140,7 @@ s_val_print(struct s_arg *arg)
 	case S_TYPE_time: {
 		struct s_num *p = S_ARG_TO_TYPE(arg, num);
 
+		json_append_member(new_obj, "type", json_mkstring("time"));
 		json_append_member(new_obj, "value", json_mkstring(sprinttime(p->val)));
 
 		break;
@@ -148,6 +158,9 @@ s_val_print(struct s_arg *arg)
 
 	case S_TYPE_changeable: {
 		struct s_changeable *s_ch = S_ARG_TO_TYPE(arg, changeable);
+
+		json_append_member(new_obj, "type",
+			json_mkstring("changeable"));
 
 		if (!s_ch->entering && !s_ch->exiting) {
 			json_append_member(new_obj, "value", json_mknull());
@@ -181,6 +194,7 @@ s_val_print(struct s_arg *arg)
 		string_quote(s_p->str, outstr, (s_p->len ? s_p->len - 1 : 0),
 			style);
 
+		json_append_member(new_obj, "type", json_mkstring("str"));
 		json_append_member(new_obj, "value", json_mkstring(outstr));
 
 		break;
@@ -189,6 +203,7 @@ s_val_print(struct s_arg *arg)
 	case S_TYPE_addr: {
 		struct s_addr *p = S_ARG_TO_TYPE(arg, addr);
 
+		json_append_member(new_obj, "type", json_mkstring("address"));
 		json_append_member(new_obj, "addr", json_mknumber(p->addr));
 
 		if (p->val)
@@ -199,6 +214,8 @@ s_val_print(struct s_arg *arg)
 	case S_TYPE_dirfd:
 	case S_TYPE_fd: {
 		struct s_num *p = S_ARG_TO_TYPE(arg, num);
+
+		json_append_member(new_obj, "type", json_mkstring("fd"));
 
 		if ((int)p->val == AT_FDCWD)
 			json_append_member(new_obj, "value", json_mkstring("AT_FDCWD"));
@@ -218,6 +235,7 @@ s_val_print(struct s_arg *arg)
 
 		s_process_xlat(f_p, s_print_xlat_json, arr);
 
+		json_append_member(new_obj, "type", json_mkstring("xlat"));
 		json_append_member(new_obj, "value", arr);
 
 		break;
