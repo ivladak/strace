@@ -2100,9 +2100,8 @@ maybe_switch_tcbs(struct tcb *tcp, const int pid)
 	tcp = execve_thread;
 	tcp->pid = pid;
 	if (cflag != CFLAG_ONLY_STATS) {
-		printleader(tcp);
-		tprintf("+++ superseded by execve in pid %lu +++\n", old_pid);
-		line_ended();
+		s_print_message(tcp, S_MSG_INFO,
+			"superseded by execve in pid %lu", old_pid);
 		tcp->flags |= TCB_REPRINT;
 	}
 
@@ -2120,16 +2119,14 @@ print_signalled(struct tcb *tcp, const int pid, int status)
 	if (cflag != CFLAG_ONLY_STATS
 	 && (qual_flags[WTERMSIG(status)] & QUAL_SIGNAL)
 	) {
-		printleader(tcp);
 #ifdef WCOREDUMP
-		tprintf("+++ killed by %s %s+++\n",
+		s_print_message(tcp, S_MSG_INFO, "killed by %s%s",
 			signame(WTERMSIG(status)),
-			WCOREDUMP(status) ? "(core dumped) " : "");
+			WCOREDUMP(status) ? " (core dumped)" : "");
 #else
-		tprintf("+++ killed by %s +++\n",
+		s_print_message(tcp, S_MSG_INFO, "killed by %s",
 			signame(WTERMSIG(status)));
 #endif
-		line_ended();
 	}
 }
 
@@ -2143,9 +2140,8 @@ print_exited(struct tcb *tcp, const int pid, int status)
 
 	if (cflag != CFLAG_ONLY_STATS &&
 	    qflag < 2) {
-		printleader(tcp);
-		tprintf("+++ exited with %d +++\n", WEXITSTATUS(status));
-		line_ended();
+		s_print_message(tcp, S_MSG_INFO, "exited with %d",
+			WEXITSTATUS(status));
 	}
 }
 
