@@ -69,12 +69,14 @@ struct JsonNode
 /*** Encoding, decoding, and validation ***/
 
 JsonNode   *json_decode         (const char *json);
+JsonNode   *json_decode_to      (const char *json, const char *end);
 char       *json_encode         (const JsonNode *node);
 char       *json_encode_string  (const char *str);
 char       *json_stringify      (const JsonNode *node, const char *space);
 void        json_delete         (JsonNode *node);
 
 bool        json_validate       (const char *json);
+bool        json_validate_to    (const char *json, const char *end);
 
 /*** Lookup and traversal ***/
 
