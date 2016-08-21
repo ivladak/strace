@@ -116,7 +116,8 @@ s_val_print(struct s_arg *arg)
 		if ((uid_t) -1U == (uid_t)p->val)
 			json_append_member(new_obj, "value", json_mknumber(-1));
 		else
-			json_append_member(new_obj, "value", json_mknumber((uid_t)p->val));
+			json_append_member(new_obj, "value",
+				json_mknumber((uid_t)p->val));
 
 		break;
 	}
@@ -132,7 +133,8 @@ s_val_print(struct s_arg *arg)
 		if ((uint16_t)-1U == (uint16_t)p->val)
 			json_append_member(new_obj, "value", json_mknumber(-1));
 		else
-			json_append_member(new_obj, "value", json_mknumber((uint16_t)p->val));
+			json_append_member(new_obj, "value",
+				json_mknumber((uint16_t)p->val));
 
 		break;
 	}
@@ -141,7 +143,8 @@ s_val_print(struct s_arg *arg)
 		struct s_num *p = S_ARG_TO_TYPE(arg, num);
 
 		json_append_member(new_obj, "type", json_mkstring("time"));
-		json_append_member(new_obj, "value", json_mkstring(sprinttime(p->val)));
+		json_append_member(new_obj, "value",
+			json_mkstring(sprinttime(p->val)));
 
 		break;
 	}
@@ -167,16 +170,19 @@ s_val_print(struct s_arg *arg)
 		} else {
 			if (s_ch->entering) {
 				if (!s_arg_equal(s_ch->entering, s_ch->exiting))
-					json_append_member(new_obj, "entering_value",
+					json_append_member(new_obj,
+						"entering_value",
 						s_val_print(s_ch->entering));
 			} else {
-				json_append_member(new_obj, "entering_value", json_mknull());
+				json_append_member(new_obj, "entering_value",
+					json_mknull());
 			}
 			if (s_ch->exiting) {
 				json_append_member(new_obj, "exiting_value",
 					s_val_print(s_ch->exiting));
 			} else {
-				json_append_member(new_obj, "exiting_value", json_mknull());
+				json_append_member(new_obj, "exiting_value",
+					json_mknull());
 			}
 		}
 
@@ -218,9 +224,11 @@ s_val_print(struct s_arg *arg)
 		json_append_member(new_obj, "type", json_mkstring("fd"));
 
 		if ((int)p->val == AT_FDCWD)
-			json_append_member(new_obj, "value", json_mkstring("AT_FDCWD"));
+			json_append_member(new_obj, "value",
+				json_mkstring("AT_FDCWD"));
 		else
-			json_append_member(new_obj, "value", json_mknumber((int)p->val));
+			json_append_member(new_obj, "value",
+				json_mknumber((int)p->val));
 
 		break;
 	}
@@ -279,7 +287,8 @@ s_val_print(struct s_arg *arg)
 		const char *str = xlookup(sa_handler_values,
 			(unsigned long)p->val);
 
-		json_append_member(new_obj, "type", json_mkstring("sa_handler"));
+		json_append_member(new_obj, "type",
+			json_mkstring("sa_handler"));
 		json_append_member(new_obj, "value", json_mknumber(p->val));
 
 		if (str)
