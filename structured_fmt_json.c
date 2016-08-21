@@ -194,7 +194,8 @@ s_val_print(struct s_arg *arg)
 		struct s_str *s_p = S_ARG_TO_TYPE(arg, str);
 		char *outstr;
 		unsigned int style = QUOTE_ELLIPSIS | (s_p->has_nul ?
-			QUOTE_0_TERMINATED : 0);
+			QUOTE_0_TERMINATED : 0) |
+			QUOTE_OMIT_LEADING_TRAILING_QUOTES;
 
 		alloc_quoted_string(s_p->str, &outstr, s_p->len + 3, style);
 		string_quote(s_p->str, outstr, (s_p->len ? s_p->len - 1 : 0),
