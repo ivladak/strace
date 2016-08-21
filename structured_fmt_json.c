@@ -326,13 +326,12 @@ s_val_print(struct s_arg *arg)
 		break;
 	}
 	case S_TYPE_ellipsis:
-		// ШАТ
-		json_append_member(new_obj, "value", json_mkstring("..."));
-		break;
+		json_delete(new_obj);
+		return json_mkstring("...");
 
 	default:
-		json_append_member(new_obj, "value", json_mkstring(">:["));
-		break;
+		json_delete(new_obj);
+		return json_mkstring(">:[");
 	}
 
 	return new_obj;
