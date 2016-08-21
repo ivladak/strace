@@ -828,6 +828,11 @@ failure:
 	return false;
 }
 
+bool json_parse_object(const char **sp, const char *end, JsonNode **out)
+{
+	return parse_object(sp, end, out);
+}
+
 static bool parse_string(const char **sp, const char *end, char **out)
 {
 	const char *s = *sp;
@@ -1042,6 +1047,11 @@ static void skip_space(const char **sp, const char *end)
 	while (is_space(*s) && (s < end))
 		s++;
 	*sp = s;
+}
+
+void json_skip_space(const char **sp, const char *end)
+{
+	skip_space(sp, end);
 }
 
 static void emit_value(SB *out, const JsonNode *node)

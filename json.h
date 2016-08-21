@@ -78,6 +78,10 @@ void        json_delete         (JsonNode *node);
 bool        json_validate       (const char *json);
 bool        json_validate_to    (const char *json, const char *end);
 
+bool        json_parse_object   (const char **sp, const char *end,
+	JsonNode **out);
+void        json_skip_space     (const char **sp, const char *end);
+
 /*** Lookup and traversal ***/
 
 JsonNode   *json_find_element   (JsonNode *array, int index);
