@@ -431,6 +431,37 @@ DEF_PUSH_INT(unsigned int,   dev_t,   s_umove_verbose)
 
 #undef DEF_PUSH_INT
 
+/* long only */
+#define DEF_PUSH_PAIR(TYPE, DEST, ENUM, IS_LONG) \
+	static inline void \
+	s_insert_##DEST##_##ENUM##_pair(const char *name, TYPE lo, TYPE hi) \
+	{ \
+		if (current_wordsize == sizeof(unsigned long long)) \
+			s_insert_num(S_TYPE_##DEST, name, \
+				(uint64_t) lo); \
+		else \
+			s_insert_num(S_TYPE_##DEST, name, (uint64_t) lo | \
+				((uint64_t) hi << (current_wordsize * 8ULL))); \
+	} \
+	\
+	static inline void \
+	s_push_##DEST##_##ENUM##_pair(const char *name) \
+	{ \
+		unsigned long long val_lo; \
+		unsigned long long val_hi; \
+		\
+		s_syscall_pop_all(current_tcp->s_syscall); \
+		s_syscall_cur_arg_advance(current_tcp->s_syscall, \
+			S_TYPE_##ENUM, &val_lo); \
+		s_syscall_cur_arg_advance(current_tcp->s_syscall, \
+			S_TYPE_##ENUM, &val_hi); \
+		\
+		s_insert_##DEST##_##ENUM##_pair(name, val_lo, val_hi); \
+	}
+
+DEF_PUSH_PAIR(unsigned long, lld, lu, 1)
+
+#undef DEF_PUSH_PAIR
 
 static inline void
 s_push_ptrace_uaddr(const char *name)
