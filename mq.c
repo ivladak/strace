@@ -35,7 +35,7 @@ SYS_FUNC(mq_open)
 	s_push_path("name");
 	s_push_open_modes("oflag");
 	if (tcp->u_arg[1] & O_CREAT) {
-		s_insert_umode_t("mode", tcp->u_arg[2]);
+		s_push_umode_t("mode");
 		s_push_mqattr("attr");
 	}
 	return RVAL_DECODED;
@@ -44,7 +44,7 @@ SYS_FUNC(mq_open)
 SYS_FUNC(mq_timedsend)
 {
 	s_push_ld("mqdes");
-	s_insert_str("msg", tcp->u_arg[1], tcp->u_arg[2]);
+	s_push_str("msg", tcp->u_arg[2]);
 	s_push_empty(S_TYPE_lu);
 	s_push_lu("msg_len");
 	s_push_ld("msg_prio");
@@ -62,7 +62,7 @@ SYS_FUNC(mq_timedreceive)
 		s_push_ld("msg_prio");
 		s_push_timespec("abs_timeout");
 	} else {
-		s_insert_str("msg", tcp->u_arg[1], tcp->u_arg[2]);
+		s_push_str("msg", tcp->u_arg[2]);
 	}
 	return 0;
 }
