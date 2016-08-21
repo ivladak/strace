@@ -4,6 +4,7 @@
 
 #include <assert.h>
 #include <signal.h>
+#include <stdarg.h>
 
 #include "defs.h"
 #include "printsiginfo.h"
@@ -884,4 +885,15 @@ s_syscall_print_signal(struct tcb *tcp, const void *si_void, unsigned sig)
 	s_syscall_free(tcp);
 
 	tcp->s_syscall = saved_syscall;
+}
+
+void
+s_print_message(struct tcb *tcp, enum s_msg_type type, const char *msg,
+	...)
+{
+	va_list args;
+
+	va_start(args, msg);
+	s_printer_cur->print_message(tcp, type, msg, args);
+	va_end(args);
 }

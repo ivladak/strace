@@ -1,4 +1,5 @@
 #include <fcntl.h>
+#include <stdarg.h>
 
 #include "defs.h"
 #include "printresource.h"
@@ -610,6 +611,29 @@ s_syscall_text_print_signal(struct tcb *tcp)
 	line_ended();
 }
 
+static void
+s_text_print_message(struct tcb *tcp, enum s_msg_type type, const char *msg,
+	va_list args)
+{
+	switch (type) {
+	case S_MSG_INFO:
+		printleader(tcp);
+		tprints("+++ ");
+		vtprintf(msg, args);
+		tprints(" +++\n");
+		line_ended();
+		break;
+
+	case S_MSG_ERROR:
+	default:
+		printleader(tcp);
+		tprintf("Message of unknown type (%d): ", type);
+		vtprintf(msg, args);
+		tprints("\n");
+		line_ended();
+	}
+}
+
 struct s_printer s_printer_text = {
 	.name = "text",
 	.print_before = s_syscall_text_print_before,
@@ -621,4 +645,5 @@ struct s_printer s_printer_text = {
 	.print_unavailable_entering = s_syscall_text_print_unavailable_entering,
 	.print_unavailable_exiting = s_syscall_text_print_unavailable_exiting,
 	.print_signal = s_syscall_text_print_signal,
+	.print_message = s_text_print_message,
 };

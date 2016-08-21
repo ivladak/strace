@@ -1,4 +1,5 @@
 #include <fcntl.h>
+#include <stdarg.h>
 
 #include "defs.h"
 #include "structured_sigmask.h"
@@ -541,6 +542,51 @@ s_syscall_json_print_signal(struct tcb *tcp)
 	tprints(json_stringify(root_node, "\t"));
 }
 
+static void
+s_json_print_message(struct tcb *tcp, enum s_msg_type type, const char *msg,
+	va_list args)
+{
+	static const char *msg_type_names[] = {
+		[S_MSG_INFO] = "info",
+		[S_MSG_ERROR] = "error"
+	};
+	JsonNode *root_node;
+	char *buf = NULL;
+	ssize_t size;
+	va_list args_copy;
+
+	root_node = json_mkobject();
+
+	json_append_member(root_node, "type", json_mkstring("message"));
+
+	if ((type < ARRAY_SIZE(msg_type_names)) && msg_type_names[type])
+		json_append_member(root_node, "msg_type",
+			json_mkstring(msg_type_names[type]));
+	else
+		json_append_member(root_node, "msg_type",
+			json_mkstring("unknown"));
+
+	va_copy(args_copy, args);
+	size = vsnprintf(buf, 0, msg, args_copy);
+	va_end(args_copy);
+
+	if (size < 0) {
+		json_append_member(root_node, "error",
+			json_mkstring("printf"));
+		json_append_member(root_node, "msg_format",
+			json_mkstring(msg));
+	} else {
+		buf = xmalloc(size + 1);
+		vsnprintf(buf, size + 1, msg, args);
+
+		json_append_member(root_node, "msg", json_mkstring(buf));
+	}
+
+	tprints(json_stringify(root_node, "\t"));
+
+	free(buf);
+}
+
 struct s_printer s_printer_json = {
 	.name = "json",
 	.print_before = s_syscall_json_print_before,
@@ -552,4 +598,5 @@ struct s_printer s_printer_json = {
 	.print_unavailable_entering = s_syscall_json_print_unavailable_entering,
 	.print_unavailable_exiting = s_syscall_json_print_unavailable_exiting,
 	.print_signal = s_syscall_json_print_signal,
+	.print_message = s_json_print_message,
 };

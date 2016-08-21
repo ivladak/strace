@@ -32,6 +32,11 @@ enum s_syscall_type {
 	S_SCT_SIGNAL,
 };
 
+enum s_msg_type {
+	S_MSG_INFO,
+	S_MSG_ERROR,
+};
+
 enum s_type_size {
 	S_TYPE_SIZE_c,
 	S_TYPE_SIZE_h,
@@ -335,6 +340,8 @@ struct s_printer {
 	void (*print_unavailable_entering)(struct tcb *tcp, int scno_good);
 	void (*print_unavailable_exiting)(struct tcb *tcp);
 	void (*print_signal)(struct tcb *tcp);
+	void (*print_message)(struct tcb *tcp, enum s_msg_type type,
+		const char *msg, va_list args);
 };
 
 extern struct s_printer *s_printer_cur;
@@ -439,5 +446,7 @@ extern void s_syscall_print_unavailable_entering(struct tcb *tcp,
 extern void s_syscall_print_unavailable_exiting(struct tcb *tcp);
 extern void s_syscall_print_signal(struct tcb *tcp, const void *si,
 	unsigned sig);
+extern void s_print_message(struct tcb *tcp, enum s_msg_type type,
+	const char *msg, ...);
 
 #endif /* #ifndef STRACE_STRUCTURED_H */
