@@ -130,3 +130,99 @@ decode_netlink(struct tcb *tcp, unsigned long addr, unsigned long len)
 		tprints("]");
 	}
 }
+
+
+static int
+fetch_nlmsg_hdr(const char *name, struct nlmsghdr *nlmsghdr,
+	       const unsigned long addr, const unsigned long len)
+{
+	if (len < sizeof(struct nlmsghdr)) {
+		s_insert_str(name, addr, len);
+		return false;
+	}
+
+	if (s_umove_verbose(current_tcp, addr, nlmsghdr)) {
+		s_insert_addr(name, addr);
+		return false;
+	}
+
+	return true;
+}
+
+static void
+fill_nlmsghdr(const struct nlmsghdr *const nlmsghdr)
+{
+	/* print the whole structure regardless of its nlmsg_len */
+
+	s_insert_u("len", nlmsghdr->nlmsg_len);
+	s_insert_xlat_int("type", netlink_types, nlmsghdr->nlmsg_type,
+		"NLMSG_???");
+	s_insert_flags_int("flags", netlink_flags, nlmsghdr->nlmsg_flags,
+		"NLM_F_???");
+	s_insert_u("seq", nlmsghdr->nlmsg_seq);
+	s_insert_u("pid", nlmsghdr->nlmsg_pid);
+}
+
+static void
+fill_nlmsghdr_with_payload(const struct nlmsghdr *const nlmsghdr,
+	const unsigned long addr, const unsigned long len)
+{
+	fill_nlmsghdr(nlmsghdr);
+
+	unsigned long nlmsg_len =
+		nlmsghdr->nlmsg_len > len ? len : nlmsghdr->nlmsg_len;
+
+	if (nlmsg_len > sizeof(struct nlmsghdr))
+		s_insert_str("payload", addr + sizeof(struct nlmsghdr),
+			 nlmsg_len - sizeof(struct nlmsghdr));
+}
+
+void
+s_insert_netlink(const char *name, unsigned long addr, unsigned long len)
+{
+	struct nlmsghdr nlmsghdr;
+	bool print_array = false;
+	unsigned int elt;
+
+	while (true) {
+		if (abbrev(current_tcp) && elt == max_strlen) {
+			if (print_array)
+				s_insert_ellipsis();
+			else
+				s_insert_addr(name, addr);
+			break;
+		}
+
+		if (fetch_nlmsg_hdr(name, &nlmsghdr, addr, len))
+			break;
+
+		unsigned long nlmsg_len = NLMSG_ALIGN(nlmsghdr.nlmsg_len);
+		unsigned long next_addr = 0, next_len = 0;
+
+		if (nlmsghdr.nlmsg_len >= sizeof(struct nlmsghdr)) {
+			next_len = (len >= nlmsg_len) ? len - nlmsg_len : 0;
+
+			if (next_len && addr + nlmsg_len > addr)
+				next_addr = addr + nlmsg_len;
+		}
+
+		if (!print_array && next_addr) {
+			s_insert_array(name);
+			print_array = true;
+		}
+
+		s_insert_struct(NULL);
+		fill_nlmsghdr_with_payload(&nlmsghdr, addr, len);
+		s_struct_finish();
+
+		if (!next_addr)
+			break;
+
+		addr = next_addr;
+		len = next_len;
+		elt++;
+	}
+
+	if (print_array)
+		s_array_finish();
+}
