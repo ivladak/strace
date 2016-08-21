@@ -567,6 +567,13 @@ tprintf(const char *fmt, ...)
 	va_list args;
 
 	va_start(args, fmt);
+	vtprintf(fmt, args);
+	va_end(args);
+}
+
+void
+vtprintf(const char *fmt, va_list args)
+{
 	if (current_tcp) {
 		int n = strace_vfprintf(current_tcp->outf, fmt, args);
 		if (n < 0) {
@@ -575,7 +582,6 @@ tprintf(const char *fmt, ...)
 		} else
 			current_tcp->curcol += n;
 	}
-	va_end(args);
 }
 
 #ifndef HAVE_FPUTS_UNLOCKED

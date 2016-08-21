@@ -732,6 +732,7 @@ extern void printleader(struct tcb *);
 extern void line_ended(void);
 extern void tabto(void);
 extern void tprintf(const char *fmt, ...) ATTRIBUTE_FORMAT((printf, 1, 2));
+extern void vtprintf(const char *fmt, va_list args);
 extern void tprints(const char *str);
 
 #if SUPPORTED_PERSONALITIES > 1
