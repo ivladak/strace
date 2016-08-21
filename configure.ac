@@ -251,6 +251,13 @@ esac
 AC_DEFINE_UNQUOTED([ENABLE_ARM_OABI], [$enable_arm_oabi],
 		   [Define to 1 if you want OABI support on ARM EABI.])
 
+AC_ARG_ENABLE([json-validator],
+	[AS_HELP_STRING(
+		[--enable-json-validator],
+		[enable building of JSON formatter validator which is used when
+		 "make check CHECK_JSON=1" is performed])])
+AM_CONDITIONAL([ENABLE_JSON_VALIDATOR], [test "x$enable_json_validator" = xyes])
+
 gl_WARN_ADD([-Wall])
 gl_WARN_ADD([-Wempty-body])
 gl_WARN_ADD([-Wformat-security])

@@ -729,6 +729,22 @@ news-check: NEWS
 		exit 1;						\
 	fi
 
+if ENABLE_JSON_VALIDATOR
+bin_PROGRAMS += json_validate
+
+json_validate_SOURCES = \
+	json.c \
+	json.h \
+	json_validate.c
+
+json_validate_CC = $(CC_FOR_BUILD)
+json_validate_DEFS = $(DEFS)
+json_validate_INCLUDES = $(DEFAULT_INCLUDES) $(INCLUDES)
+json_validate_CPPFLAGS = $(AM_CPPFLAGS) $(CPPFLAGS_FOR_BUILD)
+json_validate_CFLAGS = $(AM_CFLAGS) $(CFLAGS_FOR_BUILD)
+json_validate_LDFLAGS = $(AM_LDFLAGS) $(LDFLAGS_FOR_BUILD)
+endif
+
 ioctlsort_CC = $(CC_FOR_BUILD)
 ioctlsort_DEFS = $(DEFS)
 ioctlsort_INCLUDES = $(DEFAULT_INCLUDES) $(INCLUDES)
