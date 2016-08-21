@@ -637,6 +637,8 @@ extern void tprint_iov_upto(struct tcb *, unsigned long, unsigned long,
 extern void decode_netlink(struct tcb *, unsigned long, unsigned long);
 extern void tprint_open_modes(unsigned int);
 extern const char *sprint_open_modes(unsigned int);
+extern void s_insert_open_modes(const char *name, unsigned int flags);
+extern void s_push_open_modes(const char *name);
 
 struct strace_stat;
 extern void print_struct_stat(struct tcb *tcp, const struct strace_stat *const st);

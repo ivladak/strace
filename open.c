@@ -115,6 +115,23 @@ tprint_open_modes(unsigned int flags)
 	tprints(sprint_open_modes(flags) + sizeof("flags"));
 }
 
+void
+s_insert_open_modes(const char *name, unsigned int flags)
+{
+	s_insert_xlat_int(name, open_access_modes, flags & 3, NULL);
+	s_append_flags_int_val(name, open_mode_flags, flags & ~3, NULL);
+}
+
+void
+s_push_open_modes(const char *name)
+{
+	unsigned long long val;
+
+	s_syscall_pop_all(current_tcp->s_syscall);
+	s_syscall_cur_arg_advance(current_tcp->s_syscall, S_TYPE_u, &val);
+	s_insert_open_modes(name, val);
+}
+
 static int
 decode_open(struct tcb *tcp, int offset)
 {
