@@ -806,7 +806,8 @@ s_process_xlat(struct s_xlat *arg, s_print_xlat_fn cb, void *cb_data)
 void
 s_syscall_print_before(struct tcb *tcp)
 {
-	s_printer_cur->print_before(tcp);
+	if (s_printer_cur->print_before)
+		s_printer_cur->print_before(tcp);
 	s_syscall_new(tcp, S_SCT_SYSCALL);
 }
 
@@ -816,7 +817,8 @@ s_syscall_print_entering(struct tcb *tcp)
 	tcp->s_syscall->last_changeable =
 		STAILQ_FIRST(&tcp->s_syscall->changeable_args);
 
-	s_printer_cur->print_entering(tcp);
+	if (s_printer_cur->print_entering)
+		s_printer_cur->print_entering(tcp);
 }
 
 void
@@ -829,7 +831,8 @@ s_syscall_init_exiting(struct tcb *tcp)
 void
 s_syscall_print_exiting(struct tcb *tcp)
 {
-	s_printer_cur->print_exiting(tcp);
+	if (s_printer_cur->print_exiting)
+		s_printer_cur->print_exiting(tcp);
 }
 
 void
@@ -837,31 +840,36 @@ s_syscall_print_after(struct tcb *tcp)
 {
 	s_syscall_free(tcp);
 
-	s_printer_cur->print_after(tcp);
+	if (s_printer_cur->print_after)
+		s_printer_cur->print_after(tcp);
 }
 
 void
 s_syscall_print_resumed(struct tcb *tcp)
 {
-	s_printer_cur->print_resumed(tcp);
+	if (s_printer_cur->print_resumed)
+		s_printer_cur->print_resumed(tcp);
 }
 
 void
 s_syscall_print_tv(struct tcb *tcp, struct timeval *tv)
 {
-	s_printer_cur->print_tv(tcp, tv);
+	if (s_printer_cur->print_tv)
+		s_printer_cur->print_tv(tcp, tv);
 }
 
 void
 s_syscall_print_unavailable_entering(struct tcb *tcp, int scno_good)
 {
-	s_printer_cur->print_unavailable_entering(tcp, scno_good);
+	if (s_printer_cur->print_unavailable_entering)
+		s_printer_cur->print_unavailable_entering(tcp, scno_good);
 }
 
 void
 s_syscall_print_unavailable_exiting(struct tcb *tcp)
 {
-	s_printer_cur->print_unavailable_exiting(tcp);
+	if (s_printer_cur->print_unavailable_exiting)
+		s_printer_cur->print_unavailable_exiting(tcp);
 	s_syscall_free(tcp);
 }
 
@@ -880,7 +888,8 @@ s_syscall_print_signal(struct tcb *tcp, const void *si_void, unsigned sig)
 		s_struct_finish();
 	}
 
-	s_printer_cur->print_signal(tcp);
+	if (s_printer_cur->print_signal)
+		s_printer_cur->print_signal(tcp);
 
 	s_syscall_free(tcp);
 
@@ -894,6 +903,7 @@ s_print_message(struct tcb *tcp, enum s_msg_type type, const char *msg,
 	va_list args;
 
 	va_start(args, msg);
-	s_printer_cur->print_message(tcp, type, msg, args);
+	if (s_printer_cur->print_message)
+		s_printer_cur->print_message(tcp, type, msg, args);
 	va_end(args);
 }
