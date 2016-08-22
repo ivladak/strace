@@ -160,6 +160,18 @@ s_val_print(struct s_arg *arg)
 		break;
 	}
 
+	case S_TYPE_clockid: {
+		struct s_num *p = S_ARG_TO_TYPE(arg, num);
+
+		json_append_member(new_obj, "type", json_mkstring("clockid"));
+		json_append_member(new_obj, "value",
+			json_mknumber((int)p->val));
+		json_append_member(new_obj, "clockname",
+			json_mkstring(sprintclockname((int)p->val)));
+
+		break;
+	}
+
 	case S_TYPE_changeable: {
 		struct s_changeable *s_ch = S_ARG_TO_TYPE(arg, changeable);
 

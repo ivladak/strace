@@ -102,6 +102,7 @@ enum s_type_fmt {
 	S_TYPE_FMT_umode_t,
 	S_TYPE_FMT_mode_t,
 	S_TYPE_FMT_dev_t,
+	S_TYPE_FMT_clockid,
 
 	S_TYPE_FMT_COUNT
 };
@@ -188,6 +189,7 @@ enum s_type {
 	S_TYPE_mode_t   = S_TYPE_DEF(i,  unsigned, mode_t,  num),
 	S_TYPE_short_mode_t = S_TYPE_DEF(h,  unsigned, mode_t,  num),
 	S_TYPE_dev_t    = S_TYPE_DEF(i,  unsigned, dev_t,   num),
+	S_TYPE_clockid  = S_TYPE_DEF(i,  signed,   clockid, num),
 
 	S_TYPE_sa_handler = S_TYPE_DEF(l,  unsigned, sa_handler, num),
 

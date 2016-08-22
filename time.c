@@ -176,9 +176,9 @@ SYS_FUNC(osf_setitimer)
 #include "xlat/adjtimex_state.h"
 
 static int
-do_adjtimex(struct tcb *tcp, long addr)
+do_adjtimex(struct tcb *tcp)
 {
-	if (s_insert_timex(addr) < 0)
+	if (s_push_timex() < 0)
 		return 0;
 	tcp->auxstr = xlookup(adjtimex_state, (unsigned long) tcp->u_rval);
 	if (tcp->auxstr)
@@ -188,42 +188,82 @@ do_adjtimex(struct tcb *tcp, long addr)
 
 SYS_FUNC(adjtimex)
 {
-	if (exiting(tcp))
-		return do_adjtimex(tcp, tcp->u_arg[0]);
+	if (entering(tcp)) {
+		s_changeable_void("timex");
+	} else {
+		return do_adjtimex(tcp);
+	}
 	return 0;
 }
 
 #include "xlat/clockflags.h"
 #include "xlat/clocknames.h"
 
-static void
-printclockname(int clockid)
+const char *
+sprintclockname(int clockid)
 {
+	static char buf[sizeof("MAKE_PROCESS_CPUCLOCK(1234567890,"
+		"1234567890 /* CPUCLOCK_??? */)")];
+	const char *str;
+	ssize_t pos = 0;
+
 #ifdef CLOCKID_TO_FD
 # include "xlat/cpuclocknames.h"
 
 	if (clockid < 0) {
-		if ((clockid & CLOCKFD_MASK) == CLOCKFD)
-			tprintf("FD_TO_CLOCKID(%d)", CLOCKID_TO_FD(clockid));
-		else {
-			if(CPUCLOCK_PERTHREAD(clockid))
-				tprintf("MAKE_THREAD_CPUCLOCK(%d,", CPUCLOCK_PID(clockid));
+		ssize_t pos2 = 0;
+
+		if ((clockid & CLOCKFD_MASK) == CLOCKFD) {
+			snprintf(buf, sizeof(buf), "FD_TO_CLOCKID(%d)",
+				CLOCKID_TO_FD(clockid));
+		} else {
+			if (CPUCLOCK_PERTHREAD(clockid))
+				pos = snprintf(buf, sizeof(buf),
+					"MAKE_THREAD_CPUCLOCK(%d,",
+					CPUCLOCK_PID(clockid));
 			else
-				tprintf("MAKE_PROCESS_CPUCLOCK(%d,", CPUCLOCK_PID(clockid));
-			printxval(cpuclocknames, clockid & CLOCKFD_MASK, "CPUCLOCK_???");
-			tprints(")");
+				pos = snprintf(buf, sizeof(buf),
+					"MAKE_PROCESS_CPUCLOCK(%d,",
+					CPUCLOCK_PID(clockid));
+
+			if ((pos < 0) || ((size_t)pos >= sizeof(buf)))
+				return "CLOCK_???";
+
+			str = xlookup(cpuclocknames, clockid & CLOCKFD_MASK);
+
+			if (str)
+				pos2 = snprintf(buf + pos, sizeof(buf) - pos,
+					"%s)", str);
+			else
+				pos2 = snprintf(buf + pos, sizeof(buf) - pos,
+					"%#x /* CPUCLOCK_??? */)",
+					clockid & CLOCKFD_MASK);
+
+			if ((pos2 < 0) || ((size_t)pos2 >= (sizeof(buf) - pos)))
+				return "CLOCK_???";
 		}
+
+		return buf;
 	}
-	else
 #endif
-		printxval(clocknames, clockid, "CLOCK_???");
+
+	str = xlookup(clocknames, clockid);
+
+	if (!str) {
+		pos = snprintf(buf, sizeof(buf),
+			"%#x /* CLOCK_??? */", (unsigned)clockid);
+
+		if ((pos < 0) || ((size_t)pos >= sizeof(buf)))
+			return "CLOCK_???";
+	}
+
+	return str ? str : buf;
 }
 
 SYS_FUNC(clock_settime)
 {
-	printclockname(tcp->u_arg[0]);
-	tprints(", ");
-	print_timespec(tcp, tcp->u_arg[1]);
+	s_push_clockid("clk_id");
+	s_push_timespec("tp");
 
 	return RVAL_DECODED;
 }
@@ -231,10 +271,10 @@ SYS_FUNC(clock_settime)
 SYS_FUNC(clock_gettime)
 {
 	if (entering(tcp)) {
-		printclockname(tcp->u_arg[0]);
-		tprints(", ");
+		s_push_clockid("clk_id");
+		s_changeable_void("tp");
 	} else {
-		print_timespec(tcp, tcp->u_arg[1]);
+		s_push_timespec("tp");
 	}
 	return 0;
 }
@@ -242,12 +282,10 @@ SYS_FUNC(clock_gettime)
 SYS_FUNC(clock_nanosleep)
 {
 	if (entering(tcp)) {
-		printclockname(tcp->u_arg[0]);
-		tprints(", ");
-		printflags(clockflags, tcp->u_arg[1], "TIMER_???");
-		tprints(", ");
-		print_timespec(tcp, tcp->u_arg[2]);
-		tprints(", ");
+		s_push_clockid("clk_id");
+		s_push_flags_int("flags", clockflags, "TIMER_???");
+		s_push_timespec("request");
+		s_changeable_void("remain");
 	} else {
 		/*
 		 * Second (returned) timespec is only significant
@@ -255,10 +293,10 @@ SYS_FUNC(clock_nanosleep)
 		 */
 		if (!tcp->u_arg[1] && is_erestart(tcp)) {
 			temporarily_clear_syserror(tcp);
-			print_timespec(tcp, tcp->u_arg[3]);
+			s_push_timespec("remain");
 			restore_cleared_syserror(tcp);
 		} else {
-			printaddr(tcp->u_arg[3]);
+			s_push_addr("remain");
 		}
 	}
 	return 0;
@@ -266,22 +304,23 @@ SYS_FUNC(clock_nanosleep)
 
 SYS_FUNC(clock_adjtime)
 {
-	if (exiting(tcp))
-		return do_adjtimex(tcp, tcp->u_arg[1]);
-	printclockname(tcp->u_arg[0]);
-	tprints(", ");
+	if (entering(tcp)) {
+		s_push_clockid("clk_id");
+		s_changeable_void("timex");
+	} else {
+		return do_adjtimex(tcp);
+	}
 	return 0;
 }
 
 SYS_FUNC(timer_create)
 {
 	if (entering(tcp)) {
-		printclockname(tcp->u_arg[0]);
-		tprints(", ");
-		print_sigevent(tcp, tcp->u_arg[1]);
-		tprints(", ");
+		s_push_clockid("clockid");
+		s_push_sigevent("sevp");
+		s_changeable_void("timerid");
 	} else {
-		printnum_int(tcp, tcp->u_arg[2], "%d");
+		s_push_d_addr("timerid");
 	}
 	return 0;
 }
@@ -289,13 +328,12 @@ SYS_FUNC(timer_create)
 SYS_FUNC(timer_settime)
 {
 	if (entering(tcp)) {
-		tprintf("%d, ", (int) tcp->u_arg[0]);
-		printflags(clockflags, tcp->u_arg[1], "TIMER_???");
-		tprints(", ");
-		print_itimerspec(tcp, tcp->u_arg[2]);
-		tprints(", ");
+		s_push_d("timerid");
+		s_push_flags_int("flags", clockflags, "TIMER_???");
+		s_push_itimerspec("new_value");
+		s_changeable_void("old_value");
 	} else {
-		print_itimerspec(tcp, tcp->u_arg[3]);
+		s_push_itimerspec("old_value");
 	}
 	return 0;
 }
@@ -303,9 +341,10 @@ SYS_FUNC(timer_settime)
 SYS_FUNC(timer_gettime)
 {
 	if (entering(tcp)) {
-		tprintf("%d, ", (int) tcp->u_arg[0]);
+		s_push_d("timerid");
+		s_changeable_void("curr_value");
 	} else {
-		print_itimerspec(tcp, tcp->u_arg[1]);
+		s_push_itimerspec("curr_value");
 	}
 	return 0;
 }
@@ -314,9 +353,8 @@ SYS_FUNC(timer_gettime)
 
 SYS_FUNC(timerfd_create)
 {
-	printclockname(tcp->u_arg[0]);
-	tprints(", ");
-	printflags(timerfdflags, tcp->u_arg[1], "TFD_???");
+	s_push_clockid("clockid");
+	s_push_flags_int("flags", timerfdflags, "TFD_???");
 
 	return RVAL_DECODED | RVAL_FD;
 }
@@ -324,25 +362,24 @@ SYS_FUNC(timerfd_create)
 SYS_FUNC(timerfd_settime)
 {
 	if (entering(tcp)) {
-		printfd(tcp, tcp->u_arg[0]);
-		tprints(", ");
-		printflags(timerfdflags, tcp->u_arg[1], "TFD_???");
-		tprints(", ");
-		print_itimerspec(tcp, tcp->u_arg[2]);
-		tprints(", ");
+		s_push_fd("fd");
+		s_push_flags_int("flags", timerfdflags, "TFD_???");
+		s_push_itimerspec("new_value");
+		s_changeable_void("old_value");
 	} else {
-		print_itimerspec(tcp, tcp->u_arg[3]);
+		s_push_itimerspec("old_value");
 	}
+
 	return 0;
 }
 
 SYS_FUNC(timerfd_gettime)
 {
 	if (entering(tcp)) {
-		printfd(tcp, tcp->u_arg[0]);
-		tprints(", ");
+		s_push_fd("fd");
+		s_changeable_void("curr_value");
 	} else {
-		print_itimerspec(tcp, tcp->u_arg[1]);
+		s_push_itimerspec("curr_value");
 	}
 	return 0;
 }

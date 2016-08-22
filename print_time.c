@@ -99,21 +99,6 @@ MPERS_PRINTER_DECL(void, print_timespec_utime_pair,
 	tprints("]");
 }
 
-MPERS_PRINTER_DECL(void, print_itimerspec,
-		   struct tcb *tcp, const long addr)
-{
-	timespec_t t[2];
-
-	if (umove_or_printaddr(tcp, addr, &t))
-		return;
-
-	tprints("{it_interval=");
-	print_timespec_t(&t[0]);
-	tprints(", it_value=");
-	print_timespec_t(&t[1]);
-	tprints("}");
-}
-
 MPERS_PRINTER_DECL(void, print_timeval,
 		   struct tcb *tcp, const long addr)
 {

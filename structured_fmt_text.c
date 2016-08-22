@@ -240,6 +240,14 @@ s_val_print(struct s_arg *arg)
 		break;
 	}
 
+	case S_TYPE_clockid: {
+		struct s_num *p = S_ARG_TO_TYPE(arg, num);
+
+		tprintf("%s", sprintclockname((int)p->val));
+
+		break;
+	}
+
 	case S_TYPE_changeable: {
 		struct s_changeable *s_ch = S_ARG_TO_TYPE(arg, changeable);
 		if (s_ch->entering)

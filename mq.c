@@ -69,8 +69,8 @@ SYS_FUNC(mq_timedreceive)
 
 SYS_FUNC(mq_notify)
 {
-	tprintf("%ld, ", tcp->u_arg[0]);
-	print_sigevent(tcp, tcp->u_arg[1]);
+	s_push_ld("mq_des");
+	s_push_sigevent("sevp");
 	return RVAL_DECODED;
 }
 

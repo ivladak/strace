@@ -35,45 +35,56 @@
 #include <signal.h>
 #include "xlat/sigev_value.h"
 
-MPERS_PRINTER_DECL(void, print_sigevent, struct tcb *tcp, const long addr)
+static ssize_t
+fetch_fill_sigevent(struct s_arg *arg, unsigned long addr, void *fn_data)
 {
 	struct_sigevent sev;
 
-	if (umove_or_printaddr(tcp, addr, &sev))
-		return;
+	if (s_umove_verbose(current_tcp, addr, &sev))
+		return -1;
 
-	tprints("{");
 	if (sev.sigev_value.sival_ptr) {
-		tprintf("sigev_value={int=%d, ptr=",
-			sev.sigev_value.sival_int);
-		printaddr((unsigned long) sev.sigev_value.sival_ptr);
-		tprints("}, ");
+		s_insert_struct("sigev_value");
+		s_insert_d("sival_int", sev.sigev_value.sival_int);
+		s_insert_addr("sival_ptr",
+			(unsigned long) sev.sigev_value.sival_ptr);
+		s_struct_finish();
 	}
 
-	tprints("sigev_signo=");
 	switch (sev.sigev_notify) {
 	case SIGEV_SIGNAL:
 	case SIGEV_THREAD:
 	case SIGEV_THREAD_ID:
-		tprints(signame(sev.sigev_signo));
+		s_insert_signo("sigev_signo", sev.sigev_signo);
 		break;
 	default:
-		tprintf("%u", sev.sigev_signo);
+		s_insert_u("sigev_signo", sev.sigev_signo);
 	}
 
-	tprints(", sigev_notify=");
-	printxval(sigev_value, sev.sigev_notify, "SIGEV_???");
+	s_insert_xlat_int("sigev_notify", sigev_value, sev.sigev_notify,
+		"SIGEV_???");
 
 	switch (sev.sigev_notify) {
 	case SIGEV_THREAD_ID:
-		tprintf(", sigev_notify_thread_id=%d", sev.sigev_un.tid);
+		s_insert_d("sigev_notify_thread_id", sev.sigev_un.tid);
 		break;
 	case SIGEV_THREAD:
-		tprints(", sigev_notify_function=");
-		printaddr(sev.sigev_un.sigev_thread.function);
-		tprints(", sigev_notify_attributes=");
-		printaddr(sev.sigev_un.sigev_thread.attribute);
+		s_insert_addr("sigev_notify_function",
+			(unsigned long) sev.sigev_un.sigev_thread.function);
+		s_insert_addr("sigev_notify_attributes",
+			(unsigned long) sev.sigev_un.sigev_thread.attribute);
 		break;
 	}
-	tprints("}");
+}
+
+MPERS_PRINTER_DECL(void, s_insert_sigevent, const char *name,
+	unsigned long addr)
+{
+	s_insert_addr_type(name, addr, S_TYPE_struct, fetch_fill_sigevent,
+		NULL);
+}
+
+MPERS_PRINTER_DECL(void, s_push_sigevent, const char *name)
+{
+	s_push_addr_type(name, S_TYPE_struct, fetch_fill_sigevent, NULL);
 }

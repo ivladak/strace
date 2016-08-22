@@ -429,6 +429,8 @@ DEF_PUSH_INT(unsigned short, short_mode_t,  s_umove_verbose)
 DEF_PUSH_INT(unsigned long,  sa_handler, s_umove_ulong)
 DEF_PUSH_INT(unsigned int,   dev_t,   s_umove_verbose)
 
+DEF_PUSH_INT(int, clockid, s_umove_verbose)
+
 #undef DEF_PUSH_INT
 
 /* long only */

@@ -106,14 +106,36 @@ MPERS_PRINTER_DECL(void, push_timespec_utime_pair, const char *name)
 		fill_timespec_t_utime, NULL);
 }
 
-MPERS_PRINTER_DECL(void, insert_itimerspec,
-		   struct tcb *tcp, const long addr)
+static ssize_t
+fetch_fill_itimerspec(struct s_arg *arg, unsigned long addr, void *fn_data)
 {
-	s_insert_struct("itimerspec");
-	s_insert_addr_type("it_interval", addr, S_TYPE_struct, fetch_timespec_t, NULL);
-	s_insert_addr_type("it_value", addr + sizeof(timespec_t), S_TYPE_struct,
-		fetch_timespec_t, NULL);
+	struct s_struct *s;
+	timespec_t t[2];
+
+	if (s_umove_verbose(current_tcp, addr, &t))
+		return -1;
+
+	s = s_insert_struct("it_interval");
+	fill_timespec_t(&s->arg, t, sizeof(t[0]), fn_data);
 	s_struct_finish();
+	s = s_insert_struct("it_value");
+	fill_timespec_t(&s->arg, t + 1, sizeof(t[1]), fn_data);
+	s_struct_finish();
+
+	return sizeof(t);
+}
+
+MPERS_PRINTER_DECL(void, s_insert_itimerspec, const char *name,
+	unsigned long addr)
+{
+	s_insert_addr_type(name, addr, S_TYPE_struct, fetch_fill_itimerspec,
+		NULL);
+}
+
+MPERS_PRINTER_DECL(void, s_push_itimerspec, const char *name)
+{
+	s_push_addr_type(name, S_TYPE_struct, fetch_fill_itimerspec,
+		NULL);
 }
 
 MPERS_PRINTER_DECL(const char *, sprint_timespec,

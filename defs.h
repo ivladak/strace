@@ -652,6 +652,8 @@ extern ssize_t fill_struct_statfs64(struct s_arg *arg, unsigned long addr,
 
 extern void print_ifindex(unsigned int);
 
+extern const char *sprintclockname(int clockid);
+
 extern int file_ioctl(struct tcb *, const unsigned int, long);
 extern int fs_x_ioctl(struct tcb *, const unsigned int, long);
 extern int loop_ioctl(struct tcb *, const unsigned int, long);
