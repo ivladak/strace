@@ -374,8 +374,6 @@ extern void *s_arg_to_type(struct s_arg *arg);
 extern struct s_arg *s_arg_new(struct tcb *tcp, enum s_type type,
 	const char *name);
 extern void s_arg_free(struct s_arg *arg);
-extern struct s_arg *s_arg_next(struct tcb *tcp, enum s_type type,
-	const char *name);
 extern void s_arg_insert(struct s_syscall *syscall, struct s_arg *arg,
 	int force_arg);
 
