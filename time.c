@@ -229,15 +229,9 @@ sprintclockname(int clockid)
 			if ((pos < 0) || ((size_t)pos >= sizeof(buf)))
 				return "CLOCK_???";
 
-			str = xlookup(cpuclocknames, clockid & CLOCKFD_MASK);
-
-			if (str)
-				pos2 = snprintf(buf + pos, sizeof(buf) - pos,
-					"%s)", str);
-			else
-				pos2 = snprintf(buf + pos, sizeof(buf) - pos,
-					"%#x /* CPUCLOCK_??? */)",
-					clockid & CLOCKFD_MASK);
+			pos2 = sprintxval(buf + pos, sizeof(buf) - pos,
+				cpuclocknames, clockid & CLOCKFD_MASK,
+				"CPUCLOCK_???");
 
 			if ((pos2 < 0) || ((size_t)pos2 >= (sizeof(buf) - pos)))
 				return "CLOCK_???";
@@ -247,17 +241,13 @@ sprintclockname(int clockid)
 	}
 #endif
 
-	str = xlookup(clocknames, clockid);
+	pos = sprintxval(buf, sizeof(buf), clocknames, (unsigned)clockid,
+		"CLOCK_???");
 
-	if (!str) {
-		pos = snprintf(buf, sizeof(buf),
-			"%#x /* CLOCK_??? */", (unsigned)clockid);
+	if ((pos < 0) || ((size_t)pos >= sizeof(buf)))
+		return "CLOCK_???";
 
-		if ((pos < 0) || ((size_t)pos >= sizeof(buf)))
-			return "CLOCK_???";
-	}
-
-	return str ? str : buf;
+	return buf;
 }
 
 SYS_FUNC(clock_settime)
