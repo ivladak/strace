@@ -182,7 +182,7 @@ s_insert_netlink(const char *name, unsigned long addr, unsigned long len)
 {
 	struct nlmsghdr nlmsghdr;
 	bool print_array = false;
-	unsigned int elt;
+	unsigned int elt = 0;
 
 	while (true) {
 		if (abbrev(current_tcp) && elt == max_strlen) {
