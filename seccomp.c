@@ -76,20 +76,6 @@ static const size_t BPF_STR_BUF_SIZE = 4096;
 		} \
 	} while (0)
 
-static int
-sprintxval(char *buf, size_t size, const struct xlat *x, const unsigned int val,
-	const char *dflt)
-{
-	const char *str = xlookup(x, val);
-
-	if (str)
-		return snprintf(buf, size, "%s", str);
-	if (dflt)
-		return snprintf(buf, size, "%#x /* %s */", val, dflt);
-
-	return snprintf(buf, size, "%#x", val);
-}
-
 #ifdef HAVE_LINUX_FILTER_H
 
 static size_t

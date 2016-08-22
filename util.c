@@ -248,6 +248,20 @@ printxvals(const uint64_t val, const char *dflt, const struct xlat *xlat, ...)
 	va_end(args);
 }
 
+int
+sprintxval(char *buf, size_t size, const struct xlat *x, const unsigned int val,
+	const char *dflt)
+{
+	const char *str = xlookup(x, val);
+
+	if (str)
+		return snprintf(buf, size, "%s", str);
+	if (dflt)
+		return snprintf(buf, size, "%#x /* %s */", val, dflt);
+
+	return snprintf(buf, size, "%#x", val);
+}
+
 /*
  * Fetch 64bit argument at position arg_no and
  * return the index of the next argument.

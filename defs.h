@@ -550,6 +550,8 @@ extern int printllval(struct tcb *, const char *, int)
 extern void printaddr(long);
 extern void printxvals(const uint64_t, const char *, const struct xlat *, ...)
 	ATTRIBUTE_SENTINEL;
+extern int sprintxval(char *buf, size_t size, const struct xlat *x,
+	const unsigned int val, const char *dflt);
 extern int printargs(struct tcb *);
 extern int printargs_u(struct tcb *);
 extern int printargs_d(struct tcb *);
