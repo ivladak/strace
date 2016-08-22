@@ -859,4 +859,14 @@ s_push_empty(enum s_type type)
 	s_syscall_cur_arg_advance(current_tcp->s_syscall, type, &val);
 }
 
+static inline unsigned long long
+s_get_cur_arg(enum s_type type)
+{
+	unsigned long long res;
+
+	s_syscall_cur_arg_advance(current_tcp->s_syscall, type, &res);
+
+	return res;
+}
+
 #endif /* #ifndef STRACE_STRUCTURED_INLINES_H */
