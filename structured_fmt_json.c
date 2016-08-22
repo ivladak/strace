@@ -237,7 +237,7 @@ s_val_print(struct s_arg *arg)
 
 		json_append_member(new_obj, "type", json_mkstring("fd"));
 
-		if ((int)p->val == AT_FDCWD)
+		if ((arg->type != S_TYPE_fd) && ((int)p->val == AT_FDCWD))
 			json_append_member(new_obj, "value",
 				json_mkstring("AT_FDCWD"));
 		else

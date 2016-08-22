@@ -313,7 +313,7 @@ s_val_print(struct s_arg *arg)
 	case S_TYPE_fd: {
 		struct s_num *p = S_ARG_TO_TYPE(arg, num);
 
-		if ((int)p->val == AT_FDCWD)
+		if ((arg->type != S_TYPE_fd) && ((int)p->val == AT_FDCWD))
 			tprints("AT_FDCWD");
 		else
 			printfd(arg->syscall->tcp, (int)p->val);
