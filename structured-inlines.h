@@ -549,58 +549,66 @@ s_push_str(const char *name, long len)
 }
 
 
-static inline void
+static inline struct s_struct *
 s_insert_struct(const char *name)
 {
 	struct s_struct *s = s_struct_new_and_insert(S_TYPE_struct, name);
 	s_struct_enter(s);
+
+	return s;
 }
 
-static inline void
+static inline struct s_struct *
 s_insert_struct_addr(const char *name, unsigned long addr)
 {
 	struct s_struct *s = s_struct_new_and_insert(S_TYPE_struct, name);
 
 	s_insert_addr_arg(name, addr, &s->arg);
 	s_struct_enter(s);
+
+	return s;
 }
 
 /* Equivalent to s_push_struct_addr */
-static inline void
+static inline struct s_struct *
 s_push_struct(const char *name)
 {
 	unsigned long long addr;
 
 	s_syscall_pop_all(current_tcp->s_syscall);
 	s_syscall_cur_arg_advance(current_tcp->s_syscall, S_TYPE_addr, &addr);
-	s_insert_struct_addr(name, addr);
+	return s_insert_struct_addr(name, addr);
 }
 
-static inline void
+static inline struct s_struct *
 s_insert_array(const char *name)
 {
 	struct s_struct *s = s_struct_new_and_insert(S_TYPE_array, name);
 	s_struct_enter(s);
+
+	return s;
 }
 
-static inline void
+static inline struct s_struct *
 s_insert_array_addr(const char *name, unsigned long addr)
 {
 	struct s_struct *s = s_struct_new_and_insert(S_TYPE_array, name);
 
 	s_insert_addr_arg(name, addr, &s->arg);
 	s_struct_enter(s);
+
+	return s;
 }
 
 /* Equivalent to s_push_array_addr */
-static inline void
+static inline struct s_struct *
 s_push_array(const char *name)
 {
 	unsigned long long addr;
 
 	s_syscall_pop_all(current_tcp->s_syscall);
 	s_syscall_cur_arg_advance(current_tcp->s_syscall, S_TYPE_addr, &addr);
-	s_insert_array_addr(name, addr);
+	return s_insert_array_addr(name, addr);
 }
 
 static inline void
