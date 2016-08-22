@@ -91,6 +91,7 @@ enum s_type_fmt {
 	S_TYPE_FMT_time,
 	S_TYPE_FMT_fd,
 	S_TYPE_FMT_dirfd,
+	S_TYPE_FMT_fan_dirfd,
 	S_TYPE_FMT_signo,
 	S_TYPE_FMT_scno,
 	S_TYPE_FMT_wstatus,
@@ -198,6 +199,7 @@ enum s_type {
 	S_TYPE_addr     = S_TYPE_DEF(l,  unsigned, default, addr),
 	S_TYPE_fd       = S_TYPE_DEF(i,  unsigned, fd,      num),
 	S_TYPE_dirfd    = S_TYPE_DEF(i,  unsigned, dirfd,   num),
+	S_TYPE_fan_dirfd = S_TYPE_DEF(i,  unsigned, fan_dirfd, num),
 
 	S_TYPE_path     = S_TYPE_DEF(l,  unsigned, path,    str),
 

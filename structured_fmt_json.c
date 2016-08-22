@@ -55,7 +55,10 @@ s_print_sigmask_json(int bit, const char *str, bool set, void *data)
 }
 
 #ifndef AT_FDCWD
-# define AT_FDCWD                -100
+# define AT_FDCWD -100
+#endif
+#ifndef FAN_NOFD
+# define FAN_NOFD -1
 #endif
 
 static JsonNode *
@@ -231,13 +234,18 @@ s_val_print(struct s_arg *arg)
 
 		break;
 	}
+	case S_TYPE_fan_dirfd:
 	case S_TYPE_dirfd:
 	case S_TYPE_fd: {
 		struct s_num *p = S_ARG_TO_TYPE(arg, num);
 
 		json_append_member(new_obj, "type", json_mkstring("fd"));
 
-		if ((arg->type != S_TYPE_fd) && ((int)p->val == AT_FDCWD))
+		if ((arg->type == S_TYPE_fan_dirfd) &&
+		    ((int)p->val == FAN_NOFD))
+			json_append_member(new_obj, "string",
+				json_mkstring("FAN_NOFD"));
+		else if ((arg->type != S_TYPE_fd) && ((int)p->val == AT_FDCWD))
 			json_append_member(new_obj, "string",
 				json_mkstring("AT_FDCWD"));
 
