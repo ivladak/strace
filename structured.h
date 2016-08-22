@@ -89,6 +89,7 @@ enum s_type_fmt {
 	S_TYPE_FMT_uid,
 	S_TYPE_FMT_gid,
 	S_TYPE_FMT_time,
+	S_TYPE_FMT_fd,
 	S_TYPE_FMT_dirfd,
 	S_TYPE_FMT_signo,
 	S_TYPE_FMT_scno,
@@ -103,6 +104,9 @@ enum s_type_fmt {
 	S_TYPE_FMT_mode_t,
 	S_TYPE_FMT_dev_t,
 	S_TYPE_FMT_clockid,
+
+	S_TYPE_FMT_path,
+	S_TYPE_FMT_array,
 
 	S_TYPE_FMT_COUNT
 };
@@ -124,12 +128,9 @@ enum s_type_kind {
 	S_TYPE_KIND_num,
 	S_TYPE_KIND_str,
 	S_TYPE_KIND_addr,
-	S_TYPE_KIND_fd,
-	S_TYPE_KIND_path,
 	S_TYPE_KIND_xlat,
 	S_TYPE_KIND_sigmask,
 	S_TYPE_KIND_struct,
-	S_TYPE_KIND_array,
 	S_TYPE_KIND_ellipsis,
 	S_TYPE_KIND_changeable,
 
@@ -195,10 +196,10 @@ enum s_type {
 
 	S_TYPE_str      = S_TYPE_DEF(l,  unsigned, default, str),
 	S_TYPE_addr     = S_TYPE_DEF(l,  unsigned, default, addr),
-	S_TYPE_fd       = S_TYPE_DEF(i,  unsigned, default, fd),
-	S_TYPE_dirfd    = S_TYPE_DEF(i,  unsigned, dirfd,   fd),
+	S_TYPE_fd       = S_TYPE_DEF(i,  unsigned, fd,      num),
+	S_TYPE_dirfd    = S_TYPE_DEF(i,  unsigned, dirfd,   num),
 
-	S_TYPE_path     = S_TYPE_DEF(l,  unsigned, default, path),
+	S_TYPE_path     = S_TYPE_DEF(l,  unsigned, path,    str),
 
 	S_TYPE_ptrace_uaddr = S_TYPE_DEF(l,  unsigned, ptrace_uaddr, addr),
 
@@ -215,7 +216,7 @@ enum s_type {
 	S_TYPE_sigmask  = S_TYPE_DEF(l,  unsigned, default, sigmask),
 
 	S_TYPE_struct   = S_TYPE_DEF(i,  unsigned, default, struct),
-	S_TYPE_array    = S_TYPE_DEF(i,  unsigned, default, array),
+	S_TYPE_array    = S_TYPE_DEF(i,  unsigned, array,   struct),
 
 	S_TYPE_ellipsis = S_TYPE_DEF(i,  unsigned, default, ellipsis),
 

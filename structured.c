@@ -32,19 +32,12 @@ struct s_printer *s_printer_cur;
 	S_TYPE_FUNC_NAME(S_TYPE_FUNC_ARG arg) \
 	{ \
 		switch (S_TYPE_KIND(S_TYPE_SWITCH)) { \
-		case S_TYPE_KIND_fd: \
 		__ARG_TYPE_CASE(num); \
-		\
-		case S_TYPE_KIND_path: \
 		__ARG_TYPE_CASE(str); \
-		\
 		__ARG_TYPE_CASE(addr); \
 		__ARG_TYPE_CASE(xlat); \
 		__ARG_TYPE_CASE(sigmask); \
-		\
-		case S_TYPE_KIND_array: \
 		__ARG_TYPE_CASE(struct); \
-		\
 		__ARG_TYPE_CASE(ellipsis); \
 		__ARG_TYPE_CASE(changeable); \
 		\
@@ -322,28 +315,19 @@ struct s_arg *
 s_arg_new_init(struct tcb *tcp, enum s_type type, const char *name)
 {
 	switch (S_TYPE_KIND(type)) {
-	case S_TYPE_KIND_fd:
 	case S_TYPE_KIND_num:
 		return &s_num_new(type, name, 0)->arg;
-
-	case S_TYPE_KIND_path:
 	case S_TYPE_KIND_str:
 		/* Since s_str_new fails and returns NULL on empty string */
 		return s_arg_new(tcp, type, name);
-
 	case S_TYPE_KIND_addr:
 		return &s_addr_new(name, 0, NULL)->arg;
-
 	case S_TYPE_KIND_xlat:
 		return &s_xlat_new(type, name, NULL, 0, NULL, false, 0)->arg;
-
 	case S_TYPE_KIND_sigmask:
 		return &s_sigmask_new(name, NULL, 0)->arg;
-
-	case S_TYPE_KIND_array:
 	case S_TYPE_KIND_struct:
 		return &s_struct_new(type, name)->arg;
-
 	case S_TYPE_KIND_changeable:
 		return &s_changeable_new(name, NULL, NULL)->arg;
 
@@ -365,14 +349,12 @@ s_arg_equal(struct s_arg *arg1, struct s_arg *arg2)
 		return false;
 
 	switch (S_TYPE_KIND(arg1->type)) {
-	case S_TYPE_KIND_fd:
 	case S_TYPE_KIND_num: {
 		struct s_num *num1 = S_ARG_TO_TYPE(arg1, num);
 		struct s_num *num2 = S_ARG_TO_TYPE(arg2, num);
 
 		return num1->val == num2->val;
 	}
-	case S_TYPE_KIND_path:
 	case S_TYPE_KIND_str: {
 		struct s_str *str1 = S_ARG_TO_TYPE(arg1, str);
 		struct s_str *str2 = S_ARG_TO_TYPE(arg2, str);
@@ -423,7 +405,6 @@ s_arg_equal(struct s_arg *arg1, struct s_arg *arg2)
 
 		return true;
 	}
-	case S_TYPE_KIND_array:
 	case S_TYPE_KIND_struct: {
 		struct s_struct *struct1 = S_ARG_TO_TYPE(arg1, struct);
 		struct s_struct *struct2 = S_ARG_TO_TYPE(arg2, struct);

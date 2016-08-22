@@ -281,7 +281,6 @@ s_val_print(struct s_arg *arg)
 			switch (S_TYPE_KIND(p->val->type)) {
 			case S_TYPE_KIND_num:
 			case S_TYPE_KIND_addr:
-			case S_TYPE_KIND_fd:
 			case S_TYPE_KIND_xlat:
 			case S_TYPE_KIND_changeable:
 				print_brackets = true;
