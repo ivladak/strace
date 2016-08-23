@@ -46,7 +46,7 @@ get_pagesize(void)
 
 SYS_FUNC(brk)
 {
-	printaddr(tcp->u_arg[0]);
+	s_push_addr("addr");
 
 	return RVAL_DECODED | RVAL_HEX;
 }
@@ -176,17 +176,17 @@ SYS_FUNC(mmap_4koff)
 
 SYS_FUNC(munmap)
 {
-	printaddr(tcp->u_arg[0]);
-	tprintf(", %lu", tcp->u_arg[1]);
+	s_push_addr("addr");
+	s_push_lu("length");
 
 	return RVAL_DECODED;
 }
 
 SYS_FUNC(mprotect)
 {
-	printaddr(tcp->u_arg[0]);
-	tprintf(", %lu, ", tcp->u_arg[1]);
-	printflags_long(mmap_prot, tcp->u_arg[2], "PROT_???");
+	s_push_addr("addr");
+	s_push_lu("len");
+	s_push_flags_long("prot", mmap_prot, "PROT_???");
 
 	return RVAL_DECODED;
 }
@@ -195,14 +195,18 @@ SYS_FUNC(mprotect)
 
 SYS_FUNC(mremap)
 {
-	printaddr(tcp->u_arg[0]);
-	tprintf(", %lu, %lu, ", tcp->u_arg[1], tcp->u_arg[2]);
-	printflags_long(mremap_flags, tcp->u_arg[3], "MREMAP_???");
+	unsigned long flags;
+
+	s_push_addr("old_address");
+	s_push_lu("old_size");
+	s_push_lu("new_size");
+
+	flags = s_get_cur_arg(S_TYPE_lu);
+	s_insert_flags_long("flags", mremap_flags, flags, "MREMAP_???");
 #ifdef MREMAP_FIXED
-	if ((tcp->u_arg[3] & (MREMAP_MAYMOVE | MREMAP_FIXED)) ==
+	if ((flags & (MREMAP_MAYMOVE | MREMAP_FIXED)) ==
 	    (MREMAP_MAYMOVE | MREMAP_FIXED)) {
-		tprints(", ");
-		printaddr(tcp->u_arg[4]);
+		s_push_addr("new_address");
 	}
 #endif
 	return RVAL_DECODED | RVAL_HEX;
@@ -212,9 +216,9 @@ SYS_FUNC(mremap)
 
 SYS_FUNC(madvise)
 {
-	printaddr(tcp->u_arg[0]);
-	tprintf(", %lu, ", tcp->u_arg[1]);
-	printxval(madvise_cmds, tcp->u_arg[2], "MADV_???");
+	s_push_addr("addr");
+	s_push_lu("len");
+	s_push_xlat_int("advice", madvise_cmds, "MADV_???");
 
 	return RVAL_DECODED;
 }
@@ -223,7 +227,7 @@ SYS_FUNC(madvise)
 
 SYS_FUNC(mlockall)
 {
-	printflags(mlockall_flags, tcp->u_arg[0], "MCL_???");
+	s_push_flags_int("flags", mlockall_flags, "MCL_???");
 
 	return RVAL_DECODED;
 }
@@ -232,12 +236,9 @@ SYS_FUNC(mlockall)
 
 SYS_FUNC(msync)
 {
-	/* addr */
-	printaddr(tcp->u_arg[0]);
-	/* len */
-	tprintf(", %lu, ", tcp->u_arg[1]);
-	/* flags */
-	printflags(mctl_sync, tcp->u_arg[2], "MS_???");
+	s_push_addr("addr");
+	s_push_lu("length");
+	s_push_flags_int("flags", mctl_sync, "MS_???");
 
 	return RVAL_DECODED;
 }
@@ -246,9 +247,9 @@ SYS_FUNC(msync)
 
 SYS_FUNC(mlock2)
 {
-	printaddr(tcp->u_arg[0]);
-	tprintf(", %lu, ", tcp->u_arg[1]);
-	printflags(mlock_flags, tcp->u_arg[2], "MLOCK_???");
+	s_push_addr("addr");
+	s_push_lu("len");
+	s_push_flags_int("flags", mlock_flags, "MLOCK_???");
 
 	return RVAL_DECODED;
 }
@@ -296,21 +297,16 @@ SYS_FUNC(getpagesize)
 
 SYS_FUNC(remap_file_pages)
 {
-	const unsigned long addr = tcp->u_arg[0];
-	const unsigned long size = tcp->u_arg[1];
-	const unsigned long prot = tcp->u_arg[2];
-	const unsigned long pgoff = tcp->u_arg[3];
-	const unsigned long flags = tcp->u_arg[4];
-
-	printaddr(addr);
-	tprintf(", %lu, ", size);
-	printflags_long(mmap_prot, prot, "PROT_???");
-	tprintf(", %lu, ", pgoff);
+	s_push_addr("addr");
+	s_push_lu("size");
+	s_push_flags_long("prot", mmap_prot, "PROT_???");
+	s_push_lu("pgoff");
 #ifdef MAP_TYPE
-	printxval_long(mmap_flags, flags & MAP_TYPE, "MAP_???");
-	addflags(mmap_flags, flags & ~MAP_TYPE);
+	const unsigned long flags = s_get_cur_arg(S_TYPE_lu);
+	s_insert_xlat_long("flags", mmap_flags, flags & MAP_TYPE, "MAP_???");
+	s_append_flags_long_val("flags", mmap_flags, flags & ~MAP_TYPE, NULL);
 #else
-	printflags_long(mmap_flags, flags, "MAP_???");
+	s_push_flags_long("flags", mmap_flags, "MAP_???");
 #endif
 
 	return RVAL_DECODED;

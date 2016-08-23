@@ -39,16 +39,13 @@
 
 SYS_FUNC(fanotify_init)
 {
-	unsigned int flags = tcp->u_arg[0];
+	unsigned int flags = s_get_cur_arg(S_TYPE_u);
 
-	printxval(fan_classes, flags & FAN_ALL_CLASS_BITS, "FAN_CLASS_???");
-	flags &= ~FAN_ALL_CLASS_BITS;
-	if (flags) {
-		tprints("|");
-		printflags(fan_init_flags, flags, "FAN_???");
-	}
-	tprints(", ");
-	tprint_open_modes((unsigned) tcp->u_arg[1]);
+	s_insert_xlat_int("flags", fan_classes, flags & FAN_ALL_CLASS_BITS,
+		"FAN_CLASS_???");
+	s_append_xlat_int_val("flags", fan_init_flags,
+		flags & ~FAN_ALL_CLASS_BITS, "FAN_???");
+	s_push_open_modes("event_f_flags");
 
 	return RVAL_DECODED | RVAL_FD;
 }
@@ -58,27 +55,22 @@ SYS_FUNC(fanotify_init)
 
 SYS_FUNC(fanotify_mark)
 {
-	printfd(tcp, tcp->u_arg[0]);
-	tprints(", ");
-	printflags(fan_mark_flags, tcp->u_arg[1], "FAN_MARK_???");
-	tprints(", ");
+	s_push_fd("fanotify_fd");
+	s_push_flags_int("flags", fan_mark_flags, "FAN_MARK_???");
+
 	/*
 	 * the mask argument is defined as 64-bit,
 	 * but kernel uses the lower 32 bits only.
 	 */
-	unsigned long long mask = 0;
-	int argn = getllval(tcp, &mask, 2);
+	unsigned long long mask = s_get_cur_arg(S_TYPE_llu);
 #ifdef HPPA
-	/* Parsic is weird.  See arch/parisc/kernel/sys_parisc32.c.  */
+	/* Parisc is weird.  See arch/parisc/kernel/sys_parisc32.c.  */
 	mask = (mask << 32) | (mask >> 32);
 #endif
-	printflags64(fan_event_flags, mask, "FAN_???");
-	tprints(", ");
-	if ((int) tcp->u_arg[argn] == FAN_NOFD)
-		tprints("FAN_NOFD, ");
-	else
-		print_dirfd(tcp, tcp->u_arg[argn]);
-	printpath(tcp, tcp->u_arg[argn + 1]);
+
+	s_insert_flags_64("mask", fan_event_flags, mask, "FAN_???");
+	s_push_fan_dirfd("dirfd");
+	s_push_path("pathname");
 
 	return RVAL_DECODED;
 }

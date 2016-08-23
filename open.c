@@ -135,14 +135,10 @@ s_push_open_modes(const char *name)
 static int
 decode_open(struct tcb *tcp, int offset)
 {
-	printpath(tcp, tcp->u_arg[offset]);
-	tprints(", ");
-	/* flags */
-	tprint_open_modes(tcp->u_arg[offset + 1]);
+	s_push_path("pathname");
+	s_push_open_modes("flags");
 	if (tcp->u_arg[offset + 1] & O_CREAT) {
-		/* mode */
-		tprints(", ");
-		print_numeric_umode_t(tcp->u_arg[offset + 2]);
+		s_push_umode_t("mode");
 	}
 
 	return RVAL_DECODED | RVAL_FD;
@@ -155,15 +151,14 @@ SYS_FUNC(open)
 
 SYS_FUNC(openat)
 {
-	print_dirfd(tcp, tcp->u_arg[0]);
+	s_push_dirfd("dirfd");
 	return decode_open(tcp, 1);
 }
 
 SYS_FUNC(creat)
 {
-	printpath(tcp, tcp->u_arg[0]);
-	tprints(", ");
-	print_numeric_umode_t(tcp->u_arg[1]);
+	s_push_path("pathname");
+	s_push_umode_t("mode");
 
 	return RVAL_DECODED | RVAL_FD;
 }
