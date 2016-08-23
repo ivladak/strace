@@ -63,19 +63,17 @@ print_mmap(struct tcb *tcp, long *u_arg, unsigned long long offset)
 	const unsigned long flags = u_arg[3];
 	const int fd = u_arg[4];
 
-	printaddr(addr);
-	tprintf(", %lu, ", len);
-	printflags_long(mmap_prot, prot, "PROT_???");
-	tprints(", ");
+	s_insert_addr("addr", addr);
+	s_insert_lu("length", len);
+	s_insert_flags_long("prot", mmap_prot, prot, "PROT_???");
 #ifdef MAP_TYPE
-	printxval_long(mmap_flags, flags & MAP_TYPE, "MAP_???");
-	addflags(mmap_flags, flags & ~MAP_TYPE);
+	s_insert_xlat_long("flags", mmap_flags, flags & MAP_TYPE, "MAP_???");
+	s_append_flags_long_val("flags", mmap_flags, flags & ~MAP_TYPE, NULL);
 #else
-	printflags_long(mmap_flags, flags, "MAP_???");
+	s_insert_flags_long("flags", mmap_flags, "MAP_???");
 #endif
-	tprints(", ");
-	printfd(tcp, fd);
-	tprintf(", %#llx", offset);
+	s_insert_fd("fd", fd);
+	s_insert_llx("offset", offset);
 }
 
 /* Syscall name<->function correspondence is messed up on many arches.
