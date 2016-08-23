@@ -74,18 +74,26 @@ s_val_print(struct s_arg *arg)
 		json_mknumber((TYPE) (((struct s_num *)s_arg_to_type(arg))->val))); \
 		break;
 
+	PRINT_INT(signed char, hhd);
+	PRINT_INT(short, hd);
 	PRINT_INT(int, d);
 	PRINT_INT(long, ld);
 	PRINT_INT(long long, lld);
 
+	PRINT_INT(unsigned char, hhu);
+	PRINT_INT(unsigned short, hu);
 	PRINT_INT(unsigned, u);
 	PRINT_INT(unsigned long, lu);
 	PRINT_INT(unsigned long long, llu);
 
+	PRINT_INT(unsigned char, hhx);
+	PRINT_INT(unsigned short, hx);
 	PRINT_INT(unsigned, x);
 	PRINT_INT(unsigned long, lx);
 	PRINT_INT(unsigned long long, llx);
 
+	PRINT_INT(unsigned char, hho);
+	PRINT_INT(unsigned short, ho);
 	PRINT_INT(int, o);
 	PRINT_INT(long, lo);
 	PRINT_INT(long long, llo);
@@ -96,6 +104,15 @@ s_val_print(struct s_arg *arg)
 	PRINT_INT(unsigned long long, rlim64);
 
 #undef PRINT_INT
+
+	case S_TYPE_c: {
+		struct s_num *p = S_ARG_TO_TYPE(arg, num);
+		char buf[2] = { (char)p->val, '\0' };
+
+		json_append_member(new_obj, "type", json_mkstring("char"));
+		json_append_member(new_obj, "value", json_mkstring(buf));
+		break;
+	}
 
 	case S_TYPE_dev_t: {
 		struct s_num *p = S_ARG_TO_TYPE(arg, num);

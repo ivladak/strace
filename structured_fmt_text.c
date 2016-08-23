@@ -106,10 +106,16 @@ s_val_print(struct s_arg *arg)
 	case S_TYPE_ ## ENUM : tprintf("%" PR, \
 		(TYPE)(((struct s_num *)s_arg_to_type(arg))->val)); break
 
+	PRINT_INT(char, c, "c");
+
+	PRINT_INT(signed char, hhd, "hhd");
+	PRINT_INT(short, hd, "hd");
 	PRINT_INT(int, d, "d");
 	PRINT_INT(long, ld, "ld");
 	PRINT_INT(long long, lld, "lld");
 
+	PRINT_INT(unsigned char, hhu, "hhu");
+	PRINT_INT(unsigned short, hu, "hu");
 	PRINT_INT(unsigned, u, "u");
 	PRINT_INT(unsigned long, lu, "lu");
 	PRINT_INT(unsigned long long, llu, "llu");
@@ -120,10 +126,14 @@ s_val_print(struct s_arg *arg)
 	case S_TYPE_ ## ENUM : tprintf("%#" PR, \
 		(TYPE)(((struct s_num *)s_arg_to_type(arg))->val)); break
 
+	PRINT_ALT_INT(unsigned char, hhx, "hhx");
+	PRINT_ALT_INT(unsigned short, hx, "hx");
 	PRINT_ALT_INT(unsigned, x, "x");
 	PRINT_ALT_INT(unsigned long, lx, "lx");
 	PRINT_ALT_INT(unsigned long long, llx, "llx");
 
+	PRINT_ALT_INT(unsigned char, hho, "hho");
+	PRINT_ALT_INT(unsigned short, ho, "ho");
 	PRINT_ALT_INT(int, o, "o");
 	PRINT_ALT_INT(long, lo, "lo");
 	PRINT_ALT_INT(long long, llo, "llo");

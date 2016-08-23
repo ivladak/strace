@@ -393,18 +393,28 @@ s_push_num(enum s_type type, const char *name)
 		s_insert_##ENUM##_addr(name, addr); \
 	}
 
+DEF_PUSH_INT(char, c, s_umove_verbose)
+
+DEF_PUSH_INT(signed char, hhd, s_umove_verbose)
+DEF_PUSH_INT(short, hd, s_umove_verbose)
 DEF_PUSH_INT(int, d, s_umove_verbose)
 DEF_PUSH_INT(long, ld, s_umove_slong)
 DEF_PUSH_INT(long long, lld, s_umove_verbose)
 
+DEF_PUSH_INT(unsigned char, hhu, s_umove_verbose)
+DEF_PUSH_INT(unsigned short, hu, s_umove_verbose)
 DEF_PUSH_INT(unsigned, u, s_umove_verbose)
 DEF_PUSH_INT(unsigned long, lu, s_umove_ulong)
 DEF_PUSH_INT(unsigned long long, llu, s_umove_verbose)
 
+DEF_PUSH_INT(unsigned char, hho, s_umove_verbose)
+DEF_PUSH_INT(unsigned short, ho, s_umove_verbose)
 DEF_PUSH_INT(unsigned, o, s_umove_verbose)
 DEF_PUSH_INT(unsigned long, lo, s_umove_ulong)
 DEF_PUSH_INT(unsigned long long, llo, s_umove_verbose)
 
+DEF_PUSH_INT(unsigned char, hhx, s_umove_verbose)
+DEF_PUSH_INT(unsigned short, hx, s_umove_verbose)
 DEF_PUSH_INT(unsigned, x, s_umove_verbose)
 DEF_PUSH_INT(unsigned long, lx, s_umove_ulong)
 DEF_PUSH_INT(unsigned long long, llx, s_umove_verbose)

@@ -157,19 +157,28 @@ enum s_type_kind {
 		S_TYPE_KIND_FIELD(S_TYPE_KIND_##_kind))
 
 enum s_type {
-	S_TYPE_c        = S_TYPE_DEF(c,  implicit, default, num),
+	S_TYPE_c        = S_TYPE_DEF(c,  implicit, char,    num),
+
+	S_TYPE_hhd      = S_TYPE_DEF(c,  signed,   default, num),
+	S_TYPE_hd       = S_TYPE_DEF(h,  signed,   default, num),
 	S_TYPE_d        = S_TYPE_DEF(i,  signed,   default, num),
 	S_TYPE_ld       = S_TYPE_DEF(l,  signed,   default, num),
 	S_TYPE_lld      = S_TYPE_DEF(ll, signed,   default, num),
 
+	S_TYPE_hhu      = S_TYPE_DEF(c,  unsigned, default, num),
+	S_TYPE_hu       = S_TYPE_DEF(h,  unsigned, default, num),
 	S_TYPE_u        = S_TYPE_DEF(i,  unsigned, default, num),
 	S_TYPE_lu       = S_TYPE_DEF(l,  unsigned, default, num),
 	S_TYPE_llu      = S_TYPE_DEF(ll, unsigned, default, num),
 
+	S_TYPE_hhx      = S_TYPE_DEF(c,  unsigned, hex,     num),
+	S_TYPE_hx       = S_TYPE_DEF(h,  unsigned, hex,     num),
 	S_TYPE_x        = S_TYPE_DEF(i,  unsigned, hex,     num),
 	S_TYPE_lx       = S_TYPE_DEF(l,  unsigned, hex,     num),
 	S_TYPE_llx      = S_TYPE_DEF(ll, unsigned, hex,     num),
 
+	S_TYPE_hho      = S_TYPE_DEF(c,  unsigned, octal,   num),
+	S_TYPE_ho       = S_TYPE_DEF(h,  unsigned, octal,   num),
 	S_TYPE_o        = S_TYPE_DEF(i,  unsigned, octal,   num),
 	S_TYPE_lo       = S_TYPE_DEF(l,  unsigned, octal,   num),
 	S_TYPE_llo      = S_TYPE_DEF(ll, unsigned, octal,   num),
