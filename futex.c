@@ -88,14 +88,19 @@ SYS_FUNC(futex)
 		s_push_u("val");
 		s_push_u("val2");
 		s_push_addr("uaddr2");
-		s_insert_xlat_int("op", futexwakeops, (val3 >> 28) & 0x7,
-			"FUTEX_OP_???");
-		s_append_xlat_int_val("op", NULL, ((val3 >> 28) & 8) << 28,
-			"FUTEX_OP_OPARG_SHIFT");
-		s_insert_u("oparg", (val3 >> 12) & 0xfff);
-		s_insert_xlat_int("cmp", futexwakecmps, (val3 >> 24) & 0xf,
-			"FUTEX_OP_CMP_???");
-		s_insert_u("cmparg", val3 & 0xfff);
+
+		/* In order to avoid generation of leading "0|" */
+		if (val3 & (8 << 28))
+			s_insert_xlat_int_scaled("op", NULL, val3 & (8 << 28),
+				"FUTEX_OP_OPARG_SHIFT", 28);
+		s_append_xlat_int_val_scaled("op", futexwakeops,
+			val3 &   (0x7 << 28), "FUTEX_OP_???", 28);
+		s_append_xlat_int_val_scaled("oparg", NULL,
+			val3 & (0xfff << 12), NULL, 12);
+		s_append_xlat_int_val_scaled("cmp", futexwakecmps,
+			val3 &   (0xf << 24), "FUTEX_OP_CMP_???", 24);
+		s_append_xlat_int_val_scaled("cmparg", NULL,
+			val3 & (0xfff <<  0), NULL, 0);
 		break;
 	case FUTEX_WAIT_REQUEUE_PI:
 		s_push_u("val");
