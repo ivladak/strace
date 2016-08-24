@@ -252,35 +252,32 @@ SYS_FUNC(mlock2)
 	return RVAL_DECODED;
 }
 
+static int
+fill_mincore_vec(struct s_arg *arg, void *buf, size_t len, void *fn_data)
+{
+	struct s_num *num = S_ARG_TO_TYPE(arg, num);
+	uint8_t *val = buf;
+
+	num->val = *val;
+
+	return 0;
+}
+
 SYS_FUNC(mincore)
 {
 	if (entering(tcp)) {
-		printaddr(tcp->u_arg[0]);
-		tprintf(", %lu, ", tcp->u_arg[1]);
+		s_push_addr("addr");
+		s_push_lu("length");
+		s_changeable_void("vec");
 	} else {
 		const unsigned long page_size = get_pagesize();
 		const unsigned long page_mask = page_size - 1;
 		unsigned long len = tcp->u_arg[1];
-		unsigned char *vec = NULL;
 
 		len = len / page_size + (len & page_mask ? 1 : 0);
-		if (syserror(tcp) || !verbose(tcp) ||
-		    !tcp->u_arg[2] || !(vec = malloc(len)) ||
-		    umoven(tcp, tcp->u_arg[2], len, vec) < 0)
-			printaddr(tcp->u_arg[2]);
-		else {
-			unsigned long i;
-			tprints("[");
-			for (i = 0; i < len; i++) {
-				if (abbrev(tcp) && i >= max_strlen) {
-					tprints("...");
-					break;
-				}
-				tprints((vec[i] & 1) ? "1" : "0");
-			}
-			tprints("]");
-		}
-		free(vec);
+
+		s_push_array_type("vec", len, 1, S_TYPE_hhu, fill_mincore_vec,
+			NULL);
 	}
 	return 0;
 }
