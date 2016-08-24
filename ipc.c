@@ -30,15 +30,14 @@
 
 SYS_FUNC(ipc)
 {
-	unsigned int call = tcp->u_arg[0];
+	unsigned int call = s_get_cur_arg(S_TYPE_u);
 	unsigned int version = call & ~0xffff;
 	call &= 0xffff;
 
 	if (version)
 		s_insert_xlat_uint_scaled("call", NULL, version, NULL, 16);
 
-	s_append_xlat_uint_val(NULL, ipccalls, call, NULL);
-	s_push_empty(S_TYPE_u);
+	s_append_xlat_uint_val("call", ipccalls, call, NULL);
 
 	unsigned int i;
 	for (i = 1; i < tcp->s_ent->nargs; ++i) {
