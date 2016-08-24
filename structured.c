@@ -112,15 +112,19 @@ s_arg_insert(struct s_syscall *syscall, struct s_arg *arg, int force_arg)
 
 		STAILQ_INSERT_TAIL(ins_point, arg, entry);
 
-		if (arg->type == S_TYPE_changeable)
+		if (arg->type == S_TYPE_changeable) {
+			assert(!entering(syscall->tcp) ||
+				!S_ARG_TO_TYPE(arg, changeable)->exiting);
 			STAILQ_INSERT_TAIL(&syscall->changeable_args, arg,
 				chg_entry);
+		}
 	} else {
 		struct s_arg *chg = syscall->last_changeable;
 		struct s_changeable *s_ch = S_ARG_TO_TYPE(chg, changeable);
 
 		syscall->last_changeable = STAILQ_NEXT(chg, chg_entry);
 
+		assert(!s_ch->exiting);
 		s_ch->exiting = arg;
 	}
 }
@@ -635,6 +639,9 @@ s_last_is_changeable(struct tcb *tcp)
 {
 	struct s_syscall *syscall = tcp->s_syscall;
 	struct s_arg *last_arg = STAILQ_LAST(&syscall->args.args, s_arg, entry);
+
+	assert(last_arg);
+
 	STAILQ_REMOVE(&syscall->args.args, last_arg, s_arg, entry);
 
 	s_changeable_new_and_insert(last_arg->name, last_arg, NULL);
@@ -652,6 +659,7 @@ s_syscall_free(struct tcb *tcp)
 	}
 
 	free(syscall);
+	tcp->s_syscall = NULL;
 }
 
 int
