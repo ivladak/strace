@@ -374,7 +374,7 @@ s_arg_equal(struct s_arg *arg1, struct s_arg *arg2)
 
 		if (addr1->addr != addr2->addr)
 			return false;
-		if (!addr1->addr && !addr2->addr && !addr1->val && !addr2->val)
+		if (!addr1->val && !addr2->val)
 			return true;
 		if (!addr1->val || !addr2->val)
 			return false;

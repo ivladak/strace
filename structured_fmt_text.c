@@ -340,14 +340,13 @@ s_val_print(struct s_arg *arg)
 		struct s_changeable *s_ch = S_ARG_TO_TYPE(arg, changeable);
 		if (s_ch->entering)
 			s_val_print(s_ch->entering);
-		if (s_ch->exiting) {
-			if (!s_arg_equal(s_ch->entering, s_ch->exiting)) {
-				if (s_ch->entering)
-					tprints(" => ");
+		if (!s_arg_equal(s_ch->entering, s_ch->exiting)) {
+			if (s_ch->entering)
+				tprints(" => ");
+			if (s_ch->exiting)
 				s_val_print(s_ch->exiting);
-			}
 		}
-		if (!s_ch->entering && !s_ch->exiting)
+		if (!s_ch->exiting)
 			tprints("[x]");
 		break;
 	}
