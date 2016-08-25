@@ -39,3 +39,11 @@ SYS_FUNC(get_robust_list)
 	}
 	return 0;
 }
+
+SYS_FUNC(set_robust_list)
+{
+	s_push_addr("head");
+	s_push_lu("len");
+
+	return RVAL_DECODED;
+}
