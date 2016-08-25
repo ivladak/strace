@@ -36,8 +36,9 @@ SYS_FUNC(sendfile64)
 		s_changeable();
 		s_push_lu("count");
 	} else {
-		if (!syserror(tcp) && tcp->u_rval)
-			s_push_llu_addr("offset");
+		temporarily_clear_syserror(tcp);
+		s_push_llu_addr("offset");
+		restore_cleared_syserror(tcp);
 	}
 
 	return 0;
@@ -52,8 +53,9 @@ SYS_FUNC(sendfile)
 		s_changeable();
 		s_push_lu("count");
 	} else {
-		if (!syserror(tcp) && tcp->u_rval)
-			s_push_lu_addr("offset");
+		temporarily_clear_syserror(tcp);
+		s_push_lu_addr("offset");
+		restore_cleared_syserror(tcp);
 	}
 
 	return 0;
