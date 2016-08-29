@@ -204,7 +204,6 @@ sprintclockname(int clockid)
 {
 	static char buf[sizeof("MAKE_PROCESS_CPUCLOCK(1234567890,"
 		"1234567890 /* CPUCLOCK_??? */)")];
-	const char *str;
 	ssize_t pos = 0;
 
 #ifdef CLOCKID_TO_FD
