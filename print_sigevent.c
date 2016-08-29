@@ -75,6 +75,8 @@ fetch_fill_sigevent(struct s_arg *arg, unsigned long addr, void *fn_data)
 			(unsigned long) sev.sigev_un.sigev_thread.attribute);
 		break;
 	}
+
+	return sizeof(sev);
 }
 
 MPERS_PRINTER_DECL(void, s_insert_sigevent, const char *name,
