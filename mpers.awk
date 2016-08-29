@@ -39,7 +39,6 @@ function array_get(array_idx, array_member, array_return)
 	if ("" == array_return) {
 		printf("%s: index [%s] without %s\n",
 		       FILENAME, array_idx, array_member) > "/dev/stderr"
-		exit 1
 	}
 	return array_return
 }
