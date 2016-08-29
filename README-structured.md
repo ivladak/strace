@@ -32,7 +32,7 @@ Each syscall has some associated information (stored in struct tcb) and a list
 of arguments. Syscall parser should process available syscall information
 (args, stored in `tcb->u_arg[]` / `u_ext_arg[]`, and on exiting —
 return value, `tcp->u_rval`) and store it in the `tcb->s_syscall` structure.
-In order to ease and steamline this task an API is provided. In short, current
+In order to ease and streamline this task an API is provided. In short, current
 approach to using the API by syscall parsers is the following:
  * Push all arguments on entering (`entering(tcp) == true`).
  * Update all changeable arguments on exiting (`exiting(tcp) == true`).
@@ -195,8 +195,8 @@ It worth describing what are all these arguments are about:
    worth noting that in this example both xlat and default values are `NULL`,
    which leads to simply printing of the value as is, which make sense since
    this is just swap priority.
- * Seventh argument controls order in which value and flags are shown. Sinceit
-   is called `preceding_xlat`, setting it to true makes value being pinted in
+ * Seventh argument controls order in which value and flags are shown. Since it
+   is called `preceding_xlat`, setting it to true makes value being printed in
    front of flags, and setting it to false leads to the reverse - first flags,
    then the value.
  * Eighth argument controls value scaling factor, more about it a bit later.
@@ -464,7 +464,7 @@ Currently the following types are present (prefixed with `S_TYPE_`):
 
 	`d`, `ld`, `lld` (signed, decimal integer, long, long long),
 
-	`x`, `lx`, `llx` (unsigned hexidecimal),
+	`x`, `lx`, `llx` (unsigned hexadecimal),
 
 	`u`, `lu`, `llu` (unsigned decimal),
 
@@ -499,7 +499,7 @@ Currently the following types are present (prefixed with `S_TYPE_`):
    functions for aiding its formatting (`s_process_xlat` in this case).
   * Xlat types has suffixes which determines its output format: `xlat` (unsigned
     hexadecimal), `xlat_l` (long unsigned hexadecimal), `xlat_ll` (long long
-    unsigned hexadecimal), `xlat_d`/`xlat_ld`/`xlat_lld` (signed decial),
+    unsigned hexadecimal), `xlat_d`/`xlat_ld`/`xlat_lld` (signed decimal),
 	`xlat_u` (unsigned decimal).
  * `sigmask` - signal mask. Due to the fact it is bitmask of quite arbitrary
    size (up to 128 bits in case of MIPS architecture), it can't be stored
@@ -713,7 +713,7 @@ cases it is noted otherwise.
 ### To add a type of a new kind
   * Add it to the `s_type_kind` enum
   * Add all appropriate type definitions to `enum s_type`
-  * Add a related `s_*` struct defintion
+  * Add a related `s_*` struct definition
   * Add it to `S_TYPE_FUNC` definition
   * Add it to `s_arg_new_init`, `s_arg_equal` and `s_arg_free`
   * Add related `s_insert_*`/`s_push_*` to structured-inlines.h
