@@ -124,7 +124,7 @@ get_sa_handler_str(unsigned long handler)
 	return xlookup(sa_handler_values, handler);
 }
 
-static void
+void
 print_sa_handler(unsigned long handler)
 {
 	const char *sa_handler_str = get_sa_handler_str(handler);
