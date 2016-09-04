@@ -77,9 +77,15 @@ print_struct_statfs(struct tcb *tcp, const long addr)
 	print_statfs_number(", f_ffree=", b.f_ffree);
 # if defined HAVE_STRUCT_STATFS_F_FSID_VAL \
   || defined HAVE_STRUCT_STATFS_F_FSID___VAL
-	print_statfs_number(", f_fsid={", b.f_fsid[0]);
+	tprints(", f_fsid={");
+#  ifdef HAVE_STRUCT_STATFS_F_FSID___VAL
+	tprints("__val=");
+#  else
+	tprints("val=");
+#  endif
+	print_statfs_number("[", b.f_fsid[0]);
 	print_statfs_number(", ", b.f_fsid[1]);
-	tprints("}");
+	tprints("]}");
 # endif
 	print_statfs_number(", f_namelen=", b.f_namelen);
 # ifdef HAVE_STRUCT_STATFS_F_FRSIZE
@@ -112,9 +118,15 @@ print_struct_statfs64(struct tcb *tcp, const long addr, const unsigned long size
 	print_statfs_number(", f_ffree=", b.f_ffree);
 # if defined HAVE_STRUCT_STATFS64_F_FSID_VAL \
   || defined HAVE_STRUCT_STATFS64_F_FSID___VAL
-	print_statfs_number(", f_fsid={", b.f_fsid[0]);
+	tprints(", f_fsid={");
+#  ifdef HAVE_STRUCT_STATFS64_F_FSID___VAL
+	tprints("__val=");
+#  else
+	tprints("val=");
+#  endif
+	print_statfs_number("[", b.f_fsid[0]);
 	print_statfs_number(", ", b.f_fsid[1]);
-	tprints("}");
+	tprints("]}");
 # endif
 	print_statfs_number(", f_namelen=", b.f_namelen);
 # ifdef HAVE_STRUCT_STATFS64_F_FRSIZE
