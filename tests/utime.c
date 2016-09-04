@@ -53,11 +53,11 @@ main(void)
 	const struct utimbuf u = { .actime = t, .modtime = t };
 	const struct utimbuf const *tail_u = tail_memdup(&u, sizeof(u));
 
-	printf("utime(\"utime\\nfilename\", [");
+	printf("utime(\"utime\\nfilename\", {actime=");
 	print_tm(p);
-	printf(", ");
+	printf(", modtime=");
 	print_tm(p);
-	printf("]) = -1 ENOENT ");
+	printf("}) = -1 ENOENT ");
 	assert(utime("utime\nfilename", tail_u) == -1);
 	if (ENOENT != errno)
 		perror_msg_and_skip("utime");
