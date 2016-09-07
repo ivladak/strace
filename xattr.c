@@ -100,23 +100,22 @@ SYS_FUNC(fgetxattr)
 }
 
 static void
-print_xattr_list(struct tcb *tcp, unsigned long addr, unsigned long size)
+print_xattr_list(void)
 {
-	if (!size || syserror(tcp)) {
-		printaddr(addr);
+	if (!(current_tcp->u_arg[2]) || syserror(current_tcp)) {
+		s_push_addr("list");
 	} else {
-		printstr(tcp, addr, tcp->u_rval);
+		s_push_str("list", current_tcp->u_rval);
 	}
-	tprintf(", %lu", size);
+	s_push_lu("size");
 }
 
 SYS_FUNC(listxattr)
 {
 	if (entering(tcp)) {
-		printpath(tcp, tcp->u_arg[0]);
-		tprints(", ");
+		s_push_path("path");
 	} else {
-		print_xattr_list(tcp, tcp->u_arg[1], tcp->u_arg[2]);
+		print_xattr_list();
 	}
 	return 0;
 }
@@ -124,26 +123,23 @@ SYS_FUNC(listxattr)
 SYS_FUNC(flistxattr)
 {
 	if (entering(tcp)) {
-		printfd(tcp, tcp->u_arg[0]);
-		tprints(", ");
+		s_push_fd("fd");
 	} else {
-		print_xattr_list(tcp, tcp->u_arg[1], tcp->u_arg[2]);
+		print_xattr_list();
 	}
 	return 0;
 }
 
 SYS_FUNC(removexattr)
 {
-	printpath(tcp, tcp->u_arg[0]);
-	tprints(", ");
-	printstr(tcp, tcp->u_arg[1], -1);
+	s_push_path("path");
+	s_push_str("name", -1);
 	return RVAL_DECODED;
 }
 
 SYS_FUNC(fremovexattr)
 {
-	printfd(tcp, tcp->u_arg[0]);
-	tprints(", ");
-	printstr(tcp, tcp->u_arg[1], -1);
+	s_push_fd("fd");
+	s_push_str("name", -1);
 	return RVAL_DECODED;
 }
