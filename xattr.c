@@ -47,48 +47,41 @@ print_xattr_val(struct tcb *tcp,
 {
 	static char buf[XATTR_SIZE_MAX];
 
-	tprints(", ");
-
-	if (!addr || size > sizeof(buf))
-		printaddr(addr);
-	else if (!size || !umoven_or_printaddr(tcp, addr, size, buf)) {
+	if (!addr || size > sizeof(buf)) {
+		s_insert_addr("value", addr);
+	} else if (!size || !s_umoven_verbose(tcp, addr, size, buf)) {
 		/* Don't print terminating NUL if there is one. */
 		if (size && buf[size - 1] == '\0')
 			--size;
 
-		print_quoted_string(buf, size, 0);
+		s_insert_str_val("value", buf, size, false);
 	}
-	tprintf(", %lu", insize);
+	s_insert_lu("size", insize);
 }
 
 SYS_FUNC(setxattr)
 {
-	printpath(tcp, tcp->u_arg[0]);
-	tprints(", ");
-	printstr(tcp, tcp->u_arg[1], -1);
+	s_push_path("path");
+	s_push_str("name", -1);
 	print_xattr_val(tcp, tcp->u_arg[2], tcp->u_arg[3], tcp->u_arg[3]);
-	tprints(", ");
-	printflags(xattrflags, tcp->u_arg[4], "XATTR_???");
+	s_insert_flags_int("flags", xattrflags, tcp->u_arg[4], "XATTR_???");
 	return RVAL_DECODED;
 }
 
 SYS_FUNC(fsetxattr)
 {
-	printfd(tcp, tcp->u_arg[0]);
-	tprints(", ");
-	printstr(tcp, tcp->u_arg[1], -1);
+	s_push_fd("fd");
+	s_push_str("name", -1);
 	print_xattr_val(tcp, tcp->u_arg[2], tcp->u_arg[3], tcp->u_arg[3]);
-	tprints(", ");
-	printflags(xattrflags, tcp->u_arg[4], "XATTR_???");
+	s_insert_flags_int("flags", xattrflags, tcp->u_arg[4], "XATTR_???");
 	return RVAL_DECODED;
 }
 
 SYS_FUNC(getxattr)
 {
 	if (entering(tcp)) {
-		printpath(tcp, tcp->u_arg[0]);
-		tprints(", ");
-		printstr(tcp, tcp->u_arg[1], -1);
+		s_push_path("path");
+		s_push_str("name", -1);
 	} else {
 		print_xattr_val(tcp, tcp->u_arg[2], tcp->u_arg[3], tcp->u_rval);
 	}
@@ -98,9 +91,8 @@ SYS_FUNC(getxattr)
 SYS_FUNC(fgetxattr)
 {
 	if (entering(tcp)) {
-		printfd(tcp, tcp->u_arg[0]);
-		tprints(", ");
-		printstr(tcp, tcp->u_arg[1], -1);
+		s_push_fd("fd");
+		s_push_str("name", -1);
 	} else {
 		print_xattr_val(tcp, tcp->u_arg[2], tcp->u_arg[3], tcp->u_rval);
 	}

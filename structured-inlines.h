@@ -543,9 +543,9 @@ s_insert_str(const char *name, unsigned long addr, long len)
 }
 
 static inline void
-s_insert_str_val(const char *name, const char *str, long len)
+s_insert_str_val(const char *name, const char *str, long len, bool has_nul)
 {
-	struct s_str *s = s_str_val_new(S_TYPE_str, name, str, len, true);
+	struct s_str *s = s_str_val_new(S_TYPE_str, name, str, len, has_nul);
 
 	s_arg_insert(current_tcp->s_syscall, &s->arg, -1);
 }

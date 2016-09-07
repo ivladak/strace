@@ -42,7 +42,7 @@ fetch_fill_uname(struct s_arg *arg, unsigned long addr, void *fn_data)
 		return -1;
 
 #define PRINT_UTS_MEMBER(member) \
-	s_insert_str_val(#member, uname.member, sizeof(uname.member));
+	s_insert_str_val(#member, uname.member, sizeof(uname.member), true);
 
 	PRINT_UTS_MEMBER(sysname);
 	PRINT_UTS_MEMBER(nodename);
