@@ -83,7 +83,7 @@ main(void)
 	for (i = 0, cpu = 0, sep = ""; i < cpuset_size * 8; ++i) {
 		if (CPU_ISSET_S(i, cpuset_size, cpuset)) {
 			printf("%s%u", sep, i);
-			sep = " ";
+			sep = ", ";
 			cpu = i;
 		}
 	}
