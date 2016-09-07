@@ -48,31 +48,32 @@ SYS_FUNC(syslog)
 	int type = tcp->u_arg[0];
 
 	if (entering(tcp)) {
-		/* type */
-		printxval(syslog_action_type, type, "SYSLOG_ACTION_???");
-		tprints(", ");
+		s_push_xlat_int("type", syslog_action_type, "SYSLOG_ACTION_???");
 	}
 
 	switch (type) {
 		case SYSLOG_ACTION_READ:
 		case SYSLOG_ACTION_READ_ALL:
 		case SYSLOG_ACTION_READ_CLEAR:
-			if (entering(tcp))
-				return 0;
-			break;
+			if (entering(tcp)) {
+				s_changeable_void("bufp");
+				s_changeable_void("len");
+			} else {
+				/* bufp */
+				if (syserror(tcp))
+					s_push_addr("bufp");
+				else
+					s_push_str("bufp", tcp->u_rval);
+				/* len */
+				s_push_d("len");
+			}
+
+			return 0;
+
 		default:
-			printaddr(tcp->u_arg[1]);
-			tprintf(", %lu", tcp->u_arg[2]);
+			s_push_addr("bufp");
+			s_push_lu("len");
+
 			return RVAL_DECODED;
 	}
-
-	/* bufp */
-	if (syserror(tcp))
-		printaddr(tcp->u_arg[1]);
-	else
-		printstr(tcp, tcp->u_arg[1], tcp->u_rval);
-	/* len */
-	tprintf(", %d", (int) tcp->u_arg[2]);
-
-	return 0;
 }
