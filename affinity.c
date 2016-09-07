@@ -50,7 +50,7 @@ get_cpuset_size(void)
 }
 
 static void
-print_affinitylist(struct tcb *tcp, const unsigned long addr, const unsigned int len)
+print_affinitylist(const unsigned long addr, const unsigned int len)
 {
 	const unsigned int max_size = get_cpuset_size();
 	const unsigned int umove_size = len < max_size ? len : max_size;
@@ -59,27 +59,25 @@ print_affinitylist(struct tcb *tcp, const unsigned long addr, const unsigned int
 	const unsigned int ncpu = size * 8;
 	void *cpu;
 
-	if (!verbose(tcp) || (exiting(tcp) && syserror(tcp)) ||
+	if (!verbose(current_tcp) || (exiting(current_tcp) && syserror(current_tcp)) ||
 	    !addr || !len || !(cpu = calloc(size, 1))) {
-		printaddr(addr);
+		s_insert_addr("mask", addr);
 		return;
 	}
 
-	if (!umoven_or_printaddr(tcp, addr, umove_size, cpu)) {
+	if (!s_umoven_verbose(current_tcp, addr, umove_size, cpu)) {
 		int i = 0;
-		const char *sep = "";
 
-		tprints("[");
+		s_insert_array("mask");
 		for (;; i++) {
 			i = next_set_bit(cpu, i, ncpu);
 			if (i < 0)
 				break;
-			tprintf("%s%d", sep, i);
-			sep = " ";
+			s_insert_d("set_bit", i);
 		}
 		if (size < len)
-			tprintf("%s...", sep);
-		tprints("]");
+			s_insert_ellipsis();
+		s_array_finish();
 	}
 
 	free(cpu);
@@ -87,24 +85,20 @@ print_affinitylist(struct tcb *tcp, const unsigned long addr, const unsigned int
 
 SYS_FUNC(sched_setaffinity)
 {
-	const int pid = tcp->u_arg[0];
-	const unsigned int len = tcp->u_arg[1];
-
-	tprintf("%d, %u, ", pid, len);
-	print_affinitylist(tcp, tcp->u_arg[2], len);
+	s_push_d("pid");
+	s_push_u("cpusetsize");
+	print_affinitylist(tcp->u_arg[2], tcp->u_arg[1]);
 
 	return RVAL_DECODED;
 }
 
 SYS_FUNC(sched_getaffinity)
 {
-	const int pid = tcp->u_arg[0];
-	const unsigned int len = tcp->u_arg[1];
-
 	if (entering(tcp)) {
-		tprintf("%d, %u, ", pid, len);
+		s_push_d("pid");
+		s_push_u("cpusetsize");
 	} else {
-		print_affinitylist(tcp, tcp->u_arg[2], tcp->u_rval);
+		print_affinitylist(tcp->u_arg[2], tcp->u_rval);
 	}
 	return 0;
 }
