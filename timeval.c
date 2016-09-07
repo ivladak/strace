@@ -46,50 +46,20 @@ fill_timeval_t(struct s_arg *arg, void *buf, unsigned long len, void *fn_data)
 	return 0;
 }
 
-static ssize_t
-fetch_timeval_t(struct s_arg *arg, unsigned long addr, void *fn_data)
+static int
+s_fill_timeval(struct s_arg *arg, void *buf, unsigned long len, void *fn_data)
 {
-	timeval_t t;
-
-	if (s_umove_verbose(current_tcp, addr, &t))
-		return -1;
-
-	return fill_timeval_t(arg, &t,sizeof(t), fn_data);
-}
-
-MPERS_PRINTER_DECL(ssize_t, s_fetch_fill_timeval,
-	struct s_arg *arg, unsigned long addr, void *fn_data)
-{
-	return fetch_timeval_t(arg, addr, fn_data);
-}
-
-MPERS_PRINTER_DECL(void, push_timeval,
-		   struct tcb *tcp, const long addr)
-{
-	s_push_addr_type("timeval", S_TYPE_struct, fetch_timeval_t, NULL);
-}
-
-MPERS_PRINTER_DECL(void, push_timeval_pair, const char *name)
-{
-	s_push_array_type(name, 2, sizeof(timeval_t), S_TYPE_struct,
-		fill_timeval_t, NULL);
+	return fill_timeval_t(arg, buf, len, fn_data);
 }
 
 static ssize_t
 fetch_fill_itimerval_t(struct s_arg *arg, unsigned long addr, void *fn_data)
 {
-	ssize_t ret = s_insert_addr_type("it_interval", addr, S_TYPE_struct,
-		fetch_timeval_t, NULL);
+	ssize_t ret = s_insert_addr_type_sized("it_interval", addr, sizeof(timeval_t),
+		S_TYPE_struct, fill_timeval_t, NULL);
 	if (ret < 0) return ret;
-	return ret + s_insert_addr_type("it_value", addr + sizeof(timeval_t),
-		S_TYPE_struct, fetch_timeval_t, NULL);
-}
-
-
-MPERS_PRINTER_DECL(ssize_t, s_fetch_fill_itimerval,
-	struct s_arg *arg, unsigned long addr, void *fn_data)
-{
-	return fetch_fill_itimerval_t(arg, addr, fn_data);
+	return ret + s_insert_addr_type_sized("it_value", addr + sizeof(timeval_t),
+		sizeof(timeval_t), S_TYPE_struct, fill_timeval_t, NULL);
 }
 
 MPERS_PRINTER_DECL(const char *, sprint_timeval,
@@ -111,92 +81,26 @@ MPERS_PRINTER_DECL(const char *, sprint_timeval,
 	return buf;
 }
 
-#ifdef ALPHA
-
-typedef struct {
-	int tv_sec, tv_usec;
-} timeval32_t;
-
-static int
-fill_timeval32_t(struct s_arg *arg, void *buf, long len, void *fn_data)
+MPERS_PRINTER_DECL(void, s_insert_timeval_addr, const char *name, long addr)
 {
-	timeval32_t *t = buf;
-
-	s_insert_d("tv_sec", t->tv_sec);
-	s_insert_d("tv_usec", t->tv_usec);
-
-	return 0;
+	s_insert_addr_type_sized(name, addr, sizeof(timeval_t), S_TYPE_struct,
+		s_fill_timeval, NULL);
 }
 
-static int
-fetch_timeval32_t(struct s_arg *arg, long addr, void *fn_data)
+MPERS_PRINTER_DECL(void, s_push_timeval, const char *name)
 {
-	timeval32_t t;
-
-	if (s_umove_verbose(current_tcp, addr, &t))
-		return -1;
-
-	return fill_timeval32_t(arg, &t,sizeof(t), fn_data);
+	s_push_addr_type_sized(name, sizeof(timeval_t), S_TYPE_struct,
+		s_fill_timeval, NULL);
 }
 
-ssize_t
-s_fetch_fill_timeval32(struct s_arg *arg, unsigned long addr, void *fn_data)
+MPERS_PRINTER_DECL(void, s_push_itimerval, const char *name)
 {
-	return fetch_timeval32_t(arg, addr, fn_data);
+	s_push_addr_type(name, S_TYPE_struct, fetch_fill_itimerval_t, NULL);
 }
 
-void
-s_insert_timeval32_addr(const char *name, long addr)
-{
-	s_insert_addr_type(name, addr, S_TYPE_struct, s_fetch_fill_timeval32, NULL);
-}
-
-void
-s_push_timeval32(const char *name)
-{
-	s_push_addr_type(name, S_TYPE_struct, s_fetch_fill_timeval32, NULL);
-}
-
-void
-push_timeval32_pair(struct tcb *tcp, const char *name)
+MPERS_PRINTER_DECL(void, push_timeval_pair, const char *name)
 {
 	s_push_array_type(name, 2, sizeof(timeval_t), S_TYPE_struct,
-		fill_timeval32_t, NULL);
+		fill_timeval_t, NULL);
 }
 
-static ssize_t
-fetch_fill_itimerval32_t(struct s_arg *arg, long addr, void *fn_data)
-{
-	ssize_t ret = s_insert_addr_type("it_interval", addr, S_TYPE_struct,
-		fetch_timeval32_t, NULL);
-	if (ret < 0) return ret;
-	return ret + s_insert_addr_type("it_value", addr + sizeof(timeval_t),
-		S_TYPE_struct, fetch_timeval32_t, NULL);
-}
-
-ssize_t
-s_fetch_fill_itimerval32(struct s_arg *arg, unsigned long addr, void *fn_data)
-{
-	return fetch_fill_itimerval32_t(arg, addr, fn_data);
-}
-
-const char *
-sprint_timeval32(struct tcb *tcp, const long addr)
-{
-	timeval32_t t;
-	static char buf[sizeof(time_fmt) + 3 * sizeof(t)];
-
-	if (!addr) {
-		strcpy(buf, "NULL");
-	} else if (!verbose(tcp) || (exiting(tcp) && syserror(tcp)) ||
-		   umove(tcp, addr, &t)) {
-		snprintf(buf, sizeof(buf), "%#lx", addr);
-	} else {
-		snprintf(buf, sizeof(buf), time_fmt,
-			 (intmax_t) t.tv_sec, (intmax_t) t.tv_usec);
-	}
-
-	return buf;
-}
-
-#endif /* ALPHA */

@@ -42,7 +42,7 @@ typedef struct timespec timespec_t;
 
 static const char time_fmt[] = "{%jd, %jd}";
 
-static ssize_t
+static int
 fill_timespec_t(struct s_arg *arg, void *buf, long len, void *fn_data)
 {
 	timespec_t *t = buf;
@@ -51,17 +51,6 @@ fill_timespec_t(struct s_arg *arg, void *buf, long len, void *fn_data)
 	s_insert_lld("tv_nsec", t->tv_nsec);
 
 	return 0;
-}
-
-static ssize_t
-fetch_timespec_t(struct s_arg *arg, unsigned long addr, void *fn_data)
-{
-	timespec_t t;
-
-	if (s_umove_verbose(current_tcp, addr, &t))
-		return -1;
-
-	return fill_timespec_t(arg, &t,sizeof(t), fn_data);
 }
 
 static int
@@ -82,22 +71,11 @@ fill_timespec_t_utime(struct s_arg *arg, void *buf, unsigned long len, void *fn_
 
 	return 0;
 }
-/*
-static ssize_t
-fetch_timespec_t_utime(struct s_arg *arg, unsigned long addr, void *fn_data)
-{
-	timespec_t t;
 
-	if (s_umove_verbose(current_tcp, addr, &t))
-		return -1;
-
-	return fill_timespec_t_utime(arg, &t, sizeof(t), fn_data);
-}
-*/
-MPERS_PRINTER_DECL(ssize_t, s_fetch_fill_timespec,
-	struct s_arg *arg, unsigned long addr, void *fn_data)
+static int
+s_fill_timespec(struct s_arg *arg, void *buf, unsigned long len, void *fn_data)
 {
-	return fetch_timespec_t(arg, addr, fn_data);
+	return fill_timespec_t(arg, buf, len, fn_data);
 }
 
 MPERS_PRINTER_DECL(void, push_timespec_utime_pair, const char *name)
@@ -156,3 +134,16 @@ MPERS_PRINTER_DECL(const char *, sprint_timespec,
 
 	return buf;
 }
+
+MPERS_PRINTER_DECL(void, s_insert_timespec_addr, const char *name, long addr)
+{
+	s_insert_addr_type_sized(name, addr, sizeof(timespec_t), S_TYPE_struct,
+		s_fill_timespec, NULL);
+}
+
+MPERS_PRINTER_DECL(void, s_push_timespec, const char *name)
+{
+	s_push_addr_type_sized(name, sizeof(timespec_t), S_TYPE_struct,
+		s_fill_timespec, NULL);
+}
+
