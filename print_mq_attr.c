@@ -41,8 +41,8 @@ typedef struct mq_attr mq_attr_t;
 
 #include MPERS_DEFS
 
-MPERS_PRINTER_DECL(int, fillmqattr, struct s_arg *arg, void *buf,
-	unsigned long len, void *fn_data)
+static int
+fillmqattr(struct s_arg *arg, void *buf, unsigned long len, void *fn_data)
 {
 	mq_attr_t *attr = buf;
 
@@ -62,7 +62,7 @@ fetchmqattr(struct s_arg *arg, unsigned long addr, void *fn_data)
 	if (s_umove_verbose(current_tcp, addr, &attr))
 		return -1;
 
-	return MPERS_FUNC_NAME(fillmqattr)(arg, &attr, sizeof(attr), fn_data);
+	return fillmqattr(arg, &attr, sizeof(attr), fn_data);
 #else
 	return -1;
 #endif
