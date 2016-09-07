@@ -33,22 +33,19 @@
 
 #include <sys/utsname.h>
 
-ssize_t
-fetch_fill_uname(struct s_arg *arg, unsigned long addr, void *fn_data)
+static int
+fill_uname(struct s_arg *arg, void *buf, unsigned long len, void *fn_data)
 {
-	struct utsname uname;
-
-	if (umove_or_printaddr(current_tcp, addr, &uname))
-		return -1;
+	struct utsname *uname = buf;
 
 #define PRINT_UTS_MEMBER(member) \
-	s_insert_str_val(#member, uname.member, sizeof(uname.member), true);
+	s_insert_str_val(#member, uname->member, sizeof(uname->member), true);
 
 	PRINT_UTS_MEMBER(sysname);
 	PRINT_UTS_MEMBER(nodename);
 	if (abbrev(current_tcp)) {
 		s_insert_ellipsis();
-		return sizeof(uname);
+		return 0;
 	}
 	PRINT_UTS_MEMBER(release);
 	PRINT_UTS_MEMBER(version);
@@ -57,7 +54,7 @@ fetch_fill_uname(struct s_arg *arg, unsigned long addr, void *fn_data)
 	PRINT_UTS_MEMBER(domainname);
 #endif
 
-	return sizeof(uname);
+	return 0;
 }
 
 SYS_FUNC(uname)
@@ -65,7 +62,8 @@ SYS_FUNC(uname)
 	if (entering(tcp))
 		s_changeable_void("buf");
 	else
-		s_push_addr_type("buf", S_TYPE_struct, fetch_fill_uname, NULL);
+		s_push_addr_type_sized("buf", sizeof(struct utsname), S_TYPE_struct,
+			fill_uname, NULL);
 
 	return 0;
 }
