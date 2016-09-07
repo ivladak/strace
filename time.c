@@ -33,16 +33,13 @@
 #include <sys/timex.h>
 #include "print_time_structured.h"
 
-static ssize_t
-fetch_timezone(struct s_arg *arg, unsigned long addr, void *fn_data)
+static int
+fetch_timezone(struct s_arg *arg, void *buf, unsigned long len, void *fn_data)
 {
-	struct timezone tz;
+	struct timezone *tz = buf;
 
-	if (s_umove_verbose(current_tcp, addr, &tz))
-		return -1;
-
-	s_insert_d("tz_minuteswest", tz.tz_minuteswest);
-	s_insert_d("tz_dsttime", tz.tz_dsttime);
+	s_insert_d("tz_minuteswest", tz->tz_minuteswest);
+	s_insert_d("tz_dsttime", tz->tz_dsttime);
 
 	return 0;
 }
@@ -50,7 +47,8 @@ fetch_timezone(struct s_arg *arg, unsigned long addr, void *fn_data)
 static void
 s_push_timezone(const char *name)
 {
-	s_push_addr_type(name, S_TYPE_struct, fetch_timezone, NULL);
+	s_push_addr_type_sized(name, sizeof(struct timezone), S_TYPE_struct,
+		fetch_timezone, NULL);
 }
 
 SYS_FUNC(gettimeofday)
