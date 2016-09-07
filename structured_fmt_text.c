@@ -4,8 +4,9 @@
 #include "defs.h"
 #include "printresource.h"
 #include "process.h"
-#include "printwait.h"
 #include "structured_sigmask.h"
+#include "xlat/ptrace_events.h"
+#include "ptrace.h"
 
 #include "structured_fmt_text.h"
 
@@ -97,6 +98,80 @@ s_print_sigmask_text(int bit, const char *str, bool set, void *data)
 #ifndef FAN_NOFD
 # define FAN_NOFD -1
 #endif
+
+#if !defined WCOREFLAG && defined WCOREFLG
+# define WCOREFLAG WCOREFLG
+#endif
+#ifndef WCOREFLAG
+# define WCOREFLAG 0x80
+#endif
+#ifndef WCOREDUMP
+# define WCOREDUMP(status)  ((status) & 0200)
+#endif
+#ifndef W_STOPCODE
+# define W_STOPCODE(sig)  ((sig) << 8 | 0x7f)
+#endif
+#ifndef W_EXITCODE
+# define W_EXITCODE(ret, sig)  ((ret) << 8 | (sig))
+#endif
+#ifndef W_CONTINUED
+# define W_CONTINUED 0xffff
+#endif
+
+int
+printstatus(int status)
+{
+	int exited = 0;
+
+	/*
+	 * Here is a tricky presentation problem.  This solution
+	 * is still not entirely satisfactory but since there
+	 * are no wait status constructors it will have to do.
+	 */
+	if (WIFSTOPPED(status)) {
+		int sig = WSTOPSIG(status);
+		tprintf("{WIFSTOPPED(s) && WSTOPSIG(s) == %s%s}",
+			signame(sig & 0x7f),
+			sig & 0x80 ? " | 0x80" : "");
+		status &= ~W_STOPCODE(sig);
+	}
+	else if (WIFSIGNALED(status)) {
+		tprintf("{WIFSIGNALED(s) && WTERMSIG(s) == %s%s}",
+			signame(WTERMSIG(status)),
+			WCOREDUMP(status) ? " && WCOREDUMP(s)" : "");
+		status &= ~(W_EXITCODE(0, WTERMSIG(status)) | WCOREFLAG);
+	}
+	else if (WIFEXITED(status)) {
+		tprintf("{WIFEXITED(s) && WEXITSTATUS(s) == %d}",
+			WEXITSTATUS(status));
+		exited = 1;
+		status &= ~W_EXITCODE(WEXITSTATUS(status), 0);
+	}
+#ifdef WIFCONTINUED
+	else if (WIFCONTINUED(status)) {
+		tprints("{WIFCONTINUED(s)}");
+		status &= ~W_CONTINUED;
+	}
+#endif
+	else {
+		tprintf("%#x", status);
+		return 0;
+	}
+
+	if (status) {
+		unsigned int event = (unsigned int) status >> 16;
+		if (event) {
+			tprints(" | ");
+			printxval(ptrace_events, event, "PTRACE_EVENT_???");
+			tprints(" << 16");
+			status &= 0xffff;
+		}
+		if (status)
+			tprintf(" | %#x", status);
+	}
+
+	return exited;
+}
 
 static void
 s_val_print(struct s_arg *arg)
