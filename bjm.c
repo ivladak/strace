@@ -35,26 +35,25 @@
 
 SYS_FUNC(create_module)
 {
-	printpath(tcp, tcp->u_arg[0]);
-	tprintf(", %lu", tcp->u_arg[1]);
+	s_push_path("name");
+	s_push_lu("size");
 
 	return RVAL_DECODED | RVAL_HEX;
 }
 
 SYS_FUNC(delete_module)
 {
-	printstr(tcp, tcp->u_arg[0], -1);
-	tprints(", ");
-	printflags(delete_module_flags, tcp->u_arg[1], "O_???");
+	s_push_str("name", -1);
+	s_push_flags("flags", delete_module_flags, "O_???");
 
 	return RVAL_DECODED;
 }
 
 SYS_FUNC(init_module)
 {
-	printaddr(tcp->u_arg[0]);
-	tprintf(", %lu, ", tcp->u_arg[1]);
-	printstr(tcp, tcp->u_arg[2], -1);
+	s_push_addr("module_image");
+	s_push_lu("len");
+	s_push_str("param_values", -1);
 
 	return RVAL_DECODED;
 }
@@ -66,14 +65,9 @@ SYS_FUNC(init_module)
 
 SYS_FUNC(finit_module)
 {
-	/* file descriptor */
-	printfd(tcp, tcp->u_arg[0]);
-	tprints(", ");
-	/* param_values */
-	printstr(tcp, tcp->u_arg[1], -1);
-	tprints(", ");
-	/* flags */
-	printflags(module_init_flags, tcp->u_arg[2], "MODULE_INIT_???");
+	s_push_fd("fd");
+	s_push_str("param_values");
+	s_push_flags("flags", module_init_flags, "MODULE_INIT_???");
 
 	return RVAL_DECODED;
 }
