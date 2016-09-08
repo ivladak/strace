@@ -44,7 +44,7 @@ SYS_FUNC(create_module)
 SYS_FUNC(delete_module)
 {
 	s_push_str("name", -1);
-	s_push_flags("flags", delete_module_flags, "O_???");
+	s_push_flags_int("flags", delete_module_flags, "O_???");
 
 	return RVAL_DECODED;
 }
@@ -66,8 +66,8 @@ SYS_FUNC(init_module)
 SYS_FUNC(finit_module)
 {
 	s_push_fd("fd");
-	s_push_str("param_values");
-	s_push_flags("flags", module_init_flags, "MODULE_INIT_???");
+	s_push_str("param_values", -1);
+	s_push_flags_int("flags", module_init_flags, "MODULE_INIT_???");
 
 	return RVAL_DECODED;
 }
