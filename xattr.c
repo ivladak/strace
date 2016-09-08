@@ -40,25 +40,22 @@
 #endif
 
 static void
-print_xattr_val(struct tcb *tcp,
-		unsigned long addr,
-		unsigned long insize,
-		unsigned long size)
+s_push_xattr_val(unsigned long size)
 {
 	if (size > XATTR_SIZE_MAX)
-		s_insert_addr("value", addr);
+		s_push_addr("value");
 	else
-		s_insert_str_ex("value", addr, size, QUOTE_OMIT_TRAILING_0);
+		s_push_str_ex("value", size, QUOTE_OMIT_TRAILING_0);
 
-	s_insert_lu("size", insize);
+	s_push_lu("size");
 }
 
 SYS_FUNC(setxattr)
 {
 	s_push_path("path");
 	s_push_str("name", -1);
-	print_xattr_val(tcp, tcp->u_arg[2], tcp->u_arg[3], tcp->u_arg[3]);
-	s_insert_flags_int("flags", xattrflags, tcp->u_arg[4], "XATTR_???");
+	s_push_xattr_val(tcp->u_arg[3]);
+	s_push_flags_int("flags", xattrflags, "XATTR_???");
 	return RVAL_DECODED;
 }
 
@@ -66,8 +63,8 @@ SYS_FUNC(fsetxattr)
 {
 	s_push_fd("fd");
 	s_push_str("name", -1);
-	print_xattr_val(tcp, tcp->u_arg[2], tcp->u_arg[3], tcp->u_arg[3]);
-	s_insert_flags_int("flags", xattrflags, tcp->u_arg[4], "XATTR_???");
+	s_push_xattr_val(tcp->u_arg[3]);
+	s_push_flags_int("flags", xattrflags, "XATTR_???");
 	return RVAL_DECODED;
 }
 
@@ -76,8 +73,10 @@ SYS_FUNC(getxattr)
 	if (entering(tcp)) {
 		s_push_path("path");
 		s_push_str("name", -1);
+		s_changeable_void("value");
+		s_changeable_void("size");
 	} else {
-		print_xattr_val(tcp, tcp->u_arg[2], tcp->u_arg[3], tcp->u_rval);
+		s_push_xattr_val(tcp->u_rval);
 	}
 	return 0;
 }
@@ -87,8 +86,10 @@ SYS_FUNC(fgetxattr)
 	if (entering(tcp)) {
 		s_push_fd("fd");
 		s_push_str("name", -1);
+		s_changeable_void("value");
+		s_changeable_void("size");
 	} else {
-		print_xattr_val(tcp, tcp->u_arg[2], tcp->u_arg[3], tcp->u_rval);
+		s_push_xattr_val(tcp->u_rval);
 	}
 	return 0;
 }
@@ -96,11 +97,11 @@ SYS_FUNC(fgetxattr)
 static void
 print_xattr_list(void)
 {
-	if (!(current_tcp->u_arg[2]) || syserror(current_tcp)) {
+	if (!(current_tcp->u_arg[2]) || syserror(current_tcp))
 		s_push_addr("list");
-	} else {
+	else
 		s_push_str("list", current_tcp->u_rval);
-	}
+
 	s_push_lu("size");
 }
 
@@ -108,6 +109,8 @@ SYS_FUNC(listxattr)
 {
 	if (entering(tcp)) {
 		s_push_path("path");
+		s_changeable_void("list");
+		s_changeable_void("size");
 	} else {
 		print_xattr_list();
 	}
@@ -118,6 +121,8 @@ SYS_FUNC(flistxattr)
 {
 	if (entering(tcp)) {
 		s_push_fd("fd");
+		s_changeable_void("list");
+		s_changeable_void("size");
 	} else {
 		print_xattr_list();
 	}
