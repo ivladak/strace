@@ -527,6 +527,7 @@ unsigned int popcount32(const uint32_t *a, unsigned int size);
 #define QUOTE_0_TERMINATED			0x01
 #define QUOTE_OMIT_LEADING_TRAILING_QUOTES	0x02
 #define QUOTE_ELLIPSIS	0x04
+#define QUOTE_OMIT_TRAILING_0	0x08
 
 extern int string_quote(const char *, char *, unsigned int, unsigned int);
 extern int alloc_quoted_string(const char *str, char **outstr,
