@@ -575,6 +575,16 @@ s_push_str(const char *name, long len)
 	s_insert_str(name, addr, len);
 }
 
+static inline void
+s_push_str_ex(const char *name, long len, unsigned flags)
+{
+	unsigned long long addr;
+
+	s_syscall_pop_all(current_tcp->s_syscall);
+	s_syscall_cur_arg_advance(current_tcp->s_syscall, S_TYPE_addr, &addr);
+	s_insert_str_ex(name, addr, len, flags);
+}
+
 
 static inline struct s_struct *
 s_insert_struct(const char *name)
