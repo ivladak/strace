@@ -45,17 +45,11 @@ print_xattr_val(struct tcb *tcp,
 		unsigned long insize,
 		unsigned long size)
 {
-	static char buf[XATTR_SIZE_MAX];
-
-	if (!addr || size > sizeof(buf)) {
+	if (size > XATTR_SIZE_MAX)
 		s_insert_addr("value", addr);
-	} else if (!size || !s_umoven_verbose(tcp, addr, size, buf)) {
-		/* Don't print terminating NUL if there is one. */
-		if (size && buf[size - 1] == '\0')
-			--size;
+	else
+		s_insert_str_ex("value", addr, size, QUOTE_OMIT_TRAILING_0);
 
-		s_insert_str_val("value", buf, size, false);
-	}
 	s_insert_lu("size", insize);
 }
 
