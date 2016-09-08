@@ -319,7 +319,7 @@ struct s_str {
 
 	char *str;
 	long len;
-	bool has_nul;
+	unsigned flags;
 };
 
 struct s_addr {
@@ -392,9 +392,9 @@ extern void s_arg_insert(struct s_syscall *syscall, struct s_arg *arg,
 extern struct s_num *s_num_new(enum s_type type, const char *name,
 	uint64_t value);
 extern struct s_str *s_str_new(enum s_type type, const char *name,
-	long addr, long len, bool has_nul);
+	long addr, long len, unsigned flags);
 extern struct s_str *s_str_val_new(enum s_type type, const char *name,
-	const char *str, long len, bool has_nul);
+	const char *str, long len, unsigned flags);
 extern struct s_addr *s_addr_new(const char *name, long addr,
 	struct s_arg *arg);
 extern struct s_xlat *s_xlat_new(enum s_type type, const char *name,

@@ -193,35 +193,43 @@ s_num_new(enum s_type type, const char *name, uint64_t value)
 
 /* XXX Accommodates parts of logic from fetchstr and printpathn  */
 struct s_str *
-s_str_new(enum s_type type, const char *name, long addr, long len, bool has_nul)
+s_str_new(enum s_type type, const char *name, long addr, long len,
+	unsigned flags)
 {
 	struct s_str *res = S_ARG_TO_TYPE(s_arg_new(current_tcp, type, name),
 		str);
 	char *buf = NULL;
-	size_t size = max_strlen;
+	size_t size;
+	unsigned add_flags = 0;
 	int ret;
 
-	if (len == -1)
-		size = max_strlen;
-	if (len >= 0)
+	if (len >= 0) {
 		size = len;
+	} else {
+		size = max_strlen;
+		add_flags = QUOTE_ELLIPSIS;
+	}
 
 	if (!addr)
 		goto s_str_new_fail;
 
 	buf = xmalloc(size + 1);
 
-	if (has_nul)
+	if (flags & QUOTE_0_TERMINATED) {
 		ret = umovestr(current_tcp, addr, size + 1, buf);
-	else
+
+		if (ret == 0)
+			add_flags |= QUOTE_ELLIPSIS;
+	} else {
 		ret = umoven(current_tcp, addr, size, buf);
+	}
 
 	if (ret < 0)
 		goto s_str_new_fail;
 
 	res->str = buf;
 	res->len = size;
-	res->has_nul = has_nul;
+	res->flags = flags | add_flags;
 
 	return res;
 
@@ -234,19 +242,19 @@ s_str_new_fail:
 
 struct s_str *
 s_str_val_new(enum s_type type, const char *name, const char *str, long len,
-	bool has_nul)
+	unsigned flags)
 {
 	struct s_str *res = S_ARG_TO_TYPE(s_arg_new(current_tcp, type, name),
 		str);
 
 	if (len >= 0) {
-		res->str = strndup(str, len);
+		res->str = strndup(str, len + !!(flags & QUOTE_0_TERMINATED));
 		res->len = len;
-		res->has_nul = has_nul;
+		res->flags = flags;
 	} else {
 		res->str = strdup(str);
 		res->len = strlen(res->str);
-		res->has_nul = true;
+		res->flags = flags | QUOTE_0_TERMINATED;
 	}
 
 	return res;

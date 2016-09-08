@@ -226,16 +226,19 @@ s_val_print(struct s_arg *arg)
 	case S_TYPE_path: {
 		struct s_str *s_p = S_ARG_TO_TYPE(arg, str);
 		char *outstr;
-		unsigned int style = QUOTE_ELLIPSIS | (s_p->has_nul ?
-			QUOTE_0_TERMINATED : 0) |
-			QUOTE_OMIT_LEADING_TRAILING_QUOTES;
+		unsigned int style = s_p->flags |
+			QUOTE_OMIT_LEADING_TRAILING_QUOTES & ~QUOTE_ELLIPSIS;
+		bool truncated;
 
-		alloc_quoted_string(s_p->str, &outstr, s_p->len + 3, style);
-		string_quote(s_p->str, outstr, (s_p->len ? s_p->len - 1 : 0),
-			style);
+		alloc_quoted_string(s_p->str, &outstr, s_p->len, style);
+		truncated = string_quote(s_p->str, outstr,
+			(s_p->len ? s_p->len : 0), style);
 
 		json_append_member(new_obj, "type", json_mkstring("str"));
 		json_append_member(new_obj, "value", json_mkstring(outstr));
+		json_append_member(new_obj, "size", json_mknumber(s_p->len));
+		json_append_member(new_obj, "truncated",
+			json_mkbool(truncated));
 
 		break;
 	}

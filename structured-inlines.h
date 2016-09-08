@@ -492,9 +492,9 @@ s_push_ptrace_uaddr(const char *name)
 
 static inline void
 s_insert_string(enum s_type type, const char *name, unsigned long addr,
-	long len, bool has_nul)
+	long len, unsigned flags)
 {
-	struct s_str *str = s_str_new(type, name, addr, len, has_nul);
+	struct s_str *str = s_str_new(type, name, addr, len, flags);
 
 	s_insert_addr_arg(name, addr, str ? S_TYPE_TO_ARG(str) : NULL);
 }
@@ -503,7 +503,7 @@ s_insert_string(enum s_type type, const char *name, unsigned long addr,
 static inline void
 s_insert_path(const char *name, unsigned long addr)
 {
-	s_insert_string(S_TYPE_path, name, addr, PATH_MAX, true);
+	s_insert_string(S_TYPE_path, name, addr, PATH_MAX, QUOTE_0_TERMINATED);
 }
 
 /* Equivalent to s_push_path_addr */
@@ -521,7 +521,7 @@ s_push_path(const char *name)
 static inline void
 s_insert_pathn(const char *name, unsigned long addr, size_t size)
 {
-	s_insert_string(S_TYPE_path, name, addr, size, true);
+	s_insert_string(S_TYPE_path, name, addr, size - 1, QUOTE_0_TERMINATED);
 }
 
 /* Equivalent to s_push_path_addr */
@@ -535,17 +535,31 @@ s_push_pathn(const char *name, size_t size)
 	s_insert_pathn(name, addr, size);
 }
 
+static inline void
+s_insert_str_ex(const char *name, unsigned long addr, long len, unsigned flags)
+{
+	unsigned overflow_flag = 0;
+
+	if (len > max_strlen) {
+		overflow_flag = QUOTE_ELLIPSIS;
+		len = max_strlen;
+	}
+
+	s_insert_string(S_TYPE_str, name, addr, len,
+		(len == -1 ? QUOTE_0_TERMINATED : 0) | overflow_flag | flags);
+}
+
 /* Equivalent to s_insert_str_addr */
 static inline void
 s_insert_str(const char *name, unsigned long addr, long len)
 {
-	s_insert_string(S_TYPE_str, name, addr, len, len == -1);
+	s_insert_str_ex(name, addr, len, 0);
 }
 
 static inline void
-s_insert_str_val(const char *name, const char *str, long len, bool has_nul)
+s_insert_str_val(const char *name, const char *str, long len, unsigned flags)
 {
-	struct s_str *s = s_str_val_new(S_TYPE_str, name, str, len, has_nul);
+	struct s_str *s = s_str_val_new(S_TYPE_str, name, str, len, flags);
 
 	s_arg_insert(current_tcp->s_syscall, &s->arg, -1);
 }

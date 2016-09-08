@@ -353,10 +353,11 @@ s_val_print(struct s_arg *arg)
 	case S_TYPE_str:
 	case S_TYPE_path: {
 		struct s_str *s_p = S_ARG_TO_TYPE(arg, str);
+		unsigned flags = s_p->flags |
+			(s_p->flags & QUOTE_0_TERMINATED ? QUOTE_ELLIPSIS : 0);
 
-		if ((print_quoted_string(s_p->str, s_p->len,
-		    s_p->has_nul ? QUOTE_0_TERMINATED : 0) > 0) && s_p->has_nul)
-			tprints("...");
+		print_quoted_string(s_p->str,
+			s_p->len + !!(s_p->flags & QUOTE_0_TERMINATED), flags);
 
 		break;
 	}
