@@ -50,59 +50,55 @@ typedef struct msqid64_ds msqid_ds_t;
 
 #include "xlat/msgctl_flags.h"
 
-static void
-print_msqid_ds(struct tcb *tcp, const long addr, int cmd)
+static int
+fill_msqid_ds(struct s_arg *arg, void *buf, unsigned long len, void *fn_data)
 {
-	/* TODO: We don't properly decode old compat ipc calls. */
-	if (cmd & IPC_64)
-		cmd &= ~IPC_64;
-	msqid_ds_t msqid_ds;
-	switch (cmd) {
-	case IPC_SET:
-	case IPC_STAT:
-		if (umove_or_printaddr(tcp, addr, &msqid_ds))
-			return;
+	msqid_ds_t *msqid_ds = buf;
+	int cmd = (int) (long) fn_data;
 
-		tprints("{msg_perm={");
-		printuid("uid=", msqid_ds.msg_perm.uid);
-		printuid(", gid=", msqid_ds.msg_perm.gid);
-		tprints(", mode=");
-		print_numeric_umode_t(msqid_ds.msg_perm.mode);
+	s_insert_struct("msg_perm");
+	s_insert_uid("uid", msqid_ds->msg_perm.uid);
+	s_insert_gid("gid", msqid_ds->msg_perm.gid);
+	s_insert_umode_t("mode", msqid_ds->msg_perm.mode);
 
-		if (cmd != IPC_STAT) {
-			tprints("}, ...}");
-			break;
-		}
-
-		tprintf(", key=%u", (unsigned) msqid_ds.msg_perm.__key);
-		printuid(", cuid=", msqid_ds.msg_perm.cuid);
-		printuid(", cgid=", msqid_ds.msg_perm.cgid);
-		tprints("}");
-		tprintf(", msg_stime=%u", (unsigned) msqid_ds.msg_stime);
-		tprintf(", msg_rtime=%u", (unsigned) msqid_ds.msg_rtime);
-		tprintf(", msg_ctime=%u", (unsigned) msqid_ds.msg_ctime);
-		tprintf(", msg_qnum=%u", (unsigned) msqid_ds.msg_qnum);
-		tprintf(", msg_qbytes=%u", (unsigned) msqid_ds.msg_qbytes);
-		tprintf(", msg_lspid=%u", (unsigned) msqid_ds.msg_lspid);
-		tprintf(", msg_lrpid=%u", (unsigned) msqid_ds.msg_lrpid);
-		tprints("}");
-		break;
-
-	default:
-		printaddr(addr);
-		break;
+	if (cmd != IPC_STAT) {
+		s_struct_finish();
+		s_insert_ellipsis();
+		return 0;
 	}
+
+	s_insert_u("key", msqid_ds->msg_perm.__key);
+	s_insert_uid("cuid", msqid_ds->msg_perm.cuid);
+	s_insert_gid("cgid", msqid_ds->msg_perm.cgid);
+	s_struct_finish();
+
+	s_insert_u("msg_stime", msqid_ds->msg_stime);
+	s_insert_u("msg_rtime", msqid_ds->msg_rtime);
+	s_insert_u("msg_ctime", msqid_ds->msg_ctime);
+	s_insert_u("msg_qnum", msqid_ds->msg_qnum);
+	s_insert_u("msg_qbytes", msqid_ds->msg_qbytes);
+	s_insert_u("msg_lspid", msqid_ds->msg_lspid);
+	s_insert_u("msg_lrpid", msqid_ds->msg_lrpid);
+
+	return 0;
 }
 
 SYS_FUNC(msgctl)
 {
 	if (entering(tcp)) {
-		tprintf("%d, ", (int) tcp->u_arg[0]);
-		PRINTCTL(msgctl_flags, tcp->u_arg[1], "MSG_???");
-		tprints(", ");
+		s_push_d("msqid");
+		s_insert_xlat_int("cmd", msgctl_flags, tcp->u_arg[1], "MSG_???");
 	} else {
 		const long addr = tcp->u_arg[indirect_ipccall(tcp) ? 3 : 2];
-		print_msqid_ds(tcp, addr, tcp->u_arg[1]);
+		int cmd = tcp->u_arg[1];
+		if (cmd & IPC_64)
+			cmd &= ~IPC_64;
+		if (cmd == IPC_SET || cmd == IPC_STAT) {
+			s_insert_addr_type_sized("buf", addr, sizeof(msqid_ds_t),
+				S_TYPE_struct, fill_msqid_ds, (void *) (long) cmd);
+		} else {
+			s_insert_addr("buf", addr);
+		}
 	}
 	return 0;
 }
