@@ -45,35 +45,27 @@ SYS_FUNC(sysinfo)
 	if (entering(tcp))
 		return 0;
 
-	if (!umove_or_printaddr(tcp, tcp->u_arg[0], &si)) {
-		tprintf("{uptime=%llu"
-			", loads=[%llu, %llu, %llu]"
-			", totalram=%llu"
-			", freeram=%llu"
-			", sharedram=%llu"
-			", bufferram=%llu"
-			", totalswap=%llu"
-			", freeswap=%llu"
-			", procs=%u"
-			", totalhigh=%llu"
-			", freehigh=%llu"
-			", mem_unit=%u"
-			"}",
-			zero_extend_signed_to_ull(si.uptime)
-			, zero_extend_signed_to_ull(si.loads[0])
-			, zero_extend_signed_to_ull(si.loads[1])
-			, zero_extend_signed_to_ull(si.loads[2])
-			, zero_extend_signed_to_ull(si.totalram)
-			, zero_extend_signed_to_ull(si.freeram)
-			, zero_extend_signed_to_ull(si.sharedram)
-			, zero_extend_signed_to_ull(si.bufferram)
-			, zero_extend_signed_to_ull(si.totalswap)
-			, zero_extend_signed_to_ull(si.freeswap)
-			, (unsigned) si.procs
-			, zero_extend_signed_to_ull(si.totalhigh)
-			, zero_extend_signed_to_ull(si.freehigh)
-			, si.mem_unit
-			);
+	if (!s_umove_verbose(tcp, tcp->u_arg[0], &si)) {
+		s_insert_struct("sysinfo");
+		s_insert_llu("uptime", si.uptime);
+		s_insert_array("loads");
+		s_insert_llu("1 minute", zero_extend_signed_to_ull(si.loads[0]));
+		s_insert_llu("5 minutes", zero_extend_signed_to_ull(si.loads[1]));
+		s_insert_llu("15 minutes", zero_extend_signed_to_ull(si.loads[2]));
+		s_array_finish();
+		s_insert_llu("totalram", zero_extend_signed_to_ull(si.totalram));
+		s_insert_llu("freeram", zero_extend_signed_to_ull(si.freeram));
+		s_insert_llu("sharedram", zero_extend_signed_to_ull(si.sharedram));
+		s_insert_llu("bufferram", zero_extend_signed_to_ull(si.bufferram));
+		s_insert_llu("totalswap", zero_extend_signed_to_ull(si.totalswap));
+		s_insert_llu("freeswap", zero_extend_signed_to_ull(si.freeswap));
+		s_insert_u("procs", (unsigned) si.procs);
+		s_insert_llu("totalhigh", zero_extend_signed_to_ull(si.totalhigh));
+		s_insert_llu("freehigh", zero_extend_signed_to_ull(si.freehigh));
+		s_insert_u("mem_unit", si.mem_unit);
+		s_struct_finish();
+	} else {
+		s_push_addr("sysinfo");
 	}
 
 	return 0;
