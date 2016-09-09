@@ -423,7 +423,8 @@ void json_delete(JsonNode *node)
 
 		switch (node->tag) {
 			case JSON_STRING:
-				free(node->string_);
+				if (node->own)
+					free(node->string_);
 				break;
 			case JSON_ARRAY:
 			case JSON_OBJECT:
@@ -521,16 +522,27 @@ JsonNode *json_mkbool(bool b)
 	return ret;
 }
 
-static JsonNode *mkstring(char *s)
+static JsonNode *mkstring(const char *s, bool own)
 {
 	JsonNode *ret = mknode(JSON_STRING);
-	ret->string_ = s;
+	ret->const_string_ = s;
+	ret->own = own;
 	return ret;
 }
 
 JsonNode *json_mkstring(const char *s)
 {
-	return mkstring(json_strdup(s));
+	return mkstring(json_strdup(s), true);
+}
+
+JsonNode *json_mkstring_own(char *s)
+{
+	return mkstring(s, true);
+}
+
+JsonNode *json_mkstring_static(const char *s)
+{
+	return mkstring(s, false);
 }
 
 JsonNode *json_mknumber(double n)
@@ -677,7 +689,7 @@ static bool parse_value(const char **sp, const char *end, JsonNode **out)
 			char *str;
 			if (parse_string(&s, end, out ? &str : NULL)) {
 				if (out)
-					*out = mkstring(str);
+					*out = mkstring(str, true);
 				*sp = s;
 				return true;
 			}

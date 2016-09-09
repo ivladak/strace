@@ -54,6 +54,7 @@ struct JsonNode
 
 		/* JSON_STRING */
 		char *string_; /* Must be valid UTF-8. */
+		const char *const_string_;
 
 		/* JSON_NUMBER */
 		double number_;
@@ -64,6 +65,10 @@ struct JsonNode
 			JsonNode *head, *tail;
 		} children;
 	};
+
+	/* Whether pointers to values should be free'd upon removal. Used only
+	 * for string value for now. */
+	bool own;
 };
 
 /*** Encoding, decoding, and validation ***/
@@ -99,6 +104,8 @@ JsonNode   *json_first_child    (const JsonNode *node);
 JsonNode *json_mknull(void);
 JsonNode *json_mkbool(bool b);
 JsonNode *json_mkstring(const char *s);
+JsonNode *json_mkstring_own(char *s);
+JsonNode *json_mkstring_static(const char *s);
 JsonNode *json_mknumber(double n);
 JsonNode *json_mkarray(void);
 JsonNode *json_mkobject(void);
