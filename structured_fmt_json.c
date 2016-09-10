@@ -32,7 +32,7 @@ s_print_xlat_json(struct s_xlat *x, uint64_t value, uint64_t mask,
 	json_append_member(obj, "value", json_mknumber(value));
 
 	if (str && value)
-		json_append_member(obj, "str", json_mkstring(str));
+		json_append_member(obj, "str", json_mkstring_static(str));
 
 	json_append_element(parent, obj);
 }
@@ -65,7 +65,8 @@ static JsonNode *
 s_val_print(struct s_arg *arg)
 {
 	JsonNode *new_obj = json_mkobject();
-	json_append_member(new_obj, "name", arg->name ? json_mkstring(arg->name) : json_mknull());
+	json_append_member(new_obj, "name",
+		arg->name ? json_mkstring_static(arg->name) : json_mknull());
 
 	switch (arg->type) {
 #define PRINT_INT(TYPE, ENUM) \
@@ -109,7 +110,8 @@ s_val_print(struct s_arg *arg)
 		struct s_num *p = S_ARG_TO_TYPE(arg, num);
 		char buf[2] = { (char)p->val, '\0' };
 
-		json_append_member(new_obj, "type", json_mkstring("char"));
+		json_append_member(new_obj, "type",
+			json_mkstring_static("char"));
 		json_append_member(new_obj, "value", json_mkstring(buf));
 		break;
 	}
@@ -117,7 +119,8 @@ s_val_print(struct s_arg *arg)
 	case S_TYPE_dev_t: {
 		struct s_num *p = S_ARG_TO_TYPE(arg, num);
 		JsonNode *dev_obj = json_mkobject();
-		json_append_member(new_obj, "type", json_mkstring("dev_t"));
+		json_append_member(new_obj, "type",
+			json_mkstring_static("dev_t"));
 		json_append_member(dev_obj, "major",
 			json_mknumber(major((dev_t)p->val)));
 		json_append_member(dev_obj, "minor",
@@ -131,7 +134,7 @@ s_val_print(struct s_arg *arg)
 		struct s_num *p = S_ARG_TO_TYPE(arg, num);
 
 		json_append_member(new_obj, "type",
-			json_mkstring((arg->type == S_TYPE_uid) ?
+			json_mkstring_static((arg->type == S_TYPE_uid) ?
 				"uid" : "gid"));
 
 		if ((uid_t) -1U == (uid_t)p->val)
@@ -148,7 +151,7 @@ s_val_print(struct s_arg *arg)
 		struct s_num *p = S_ARG_TO_TYPE(arg, num);
 
 		json_append_member(new_obj, "type",
-			json_mkstring((arg->type == S_TYPE_uid) ?
+			json_mkstring_static((arg->type == S_TYPE_uid) ?
 				"uid16" : "gid16"));
 
 		if ((uint16_t)-1U == (uint16_t)p->val)
@@ -163,7 +166,8 @@ s_val_print(struct s_arg *arg)
 	case S_TYPE_time: {
 		struct s_num *p = S_ARG_TO_TYPE(arg, num);
 
-		json_append_member(new_obj, "type", json_mkstring("time"));
+		json_append_member(new_obj, "type",
+			json_mkstring_static("time"));
 		json_append_member(new_obj, "value",
 			json_mkstring(sprinttime(p->val)));
 
@@ -173,9 +177,12 @@ s_val_print(struct s_arg *arg)
 	case S_TYPE_signo: {
 		struct s_num *p = S_ARG_TO_TYPE(arg, num);
 
-		json_append_member(new_obj, "type", json_mkstring("signo"));
-		json_append_member(new_obj, "value", json_mknumber(p->val));
-		json_append_member(new_obj, "signame", json_mkstring(signame(p->val)));
+		json_append_member(new_obj, "type",
+			json_mkstring_static("signo"));
+		json_append_member(new_obj, "value",
+			json_mknumber(p->val));
+		json_append_member(new_obj, "signame",
+			json_mkstring(signame(p->val)));
 
 		break;
 	}
@@ -183,7 +190,8 @@ s_val_print(struct s_arg *arg)
 	case S_TYPE_clockid: {
 		struct s_num *p = S_ARG_TO_TYPE(arg, num);
 
-		json_append_member(new_obj, "type", json_mkstring("clockid"));
+		json_append_member(new_obj, "type",
+			json_mkstring_static("clockid"));
 		json_append_member(new_obj, "value",
 			json_mknumber((int)p->val));
 		json_append_member(new_obj, "clockname",
@@ -196,7 +204,7 @@ s_val_print(struct s_arg *arg)
 		struct s_changeable *s_ch = S_ARG_TO_TYPE(arg, changeable);
 
 		json_append_member(new_obj, "type",
-			json_mkstring("changeable"));
+			json_mkstring_static("changeable"));
 
 		if (!s_ch->entering && !s_ch->exiting) {
 			json_append_member(new_obj, "value", json_mknull());
@@ -234,7 +242,8 @@ s_val_print(struct s_arg *arg)
 		truncated = string_quote(s_p->str, outstr,
 			(s_p->len ? s_p->len : 0), style);
 
-		json_append_member(new_obj, "type", json_mkstring("str"));
+		json_append_member(new_obj, "type",
+			json_mkstring_static("str"));
 		json_append_member(new_obj, "value", json_mkstring(outstr));
 		json_append_member(new_obj, "size", json_mknumber(s_p->len));
 		json_append_member(new_obj, "truncated",
@@ -246,7 +255,8 @@ s_val_print(struct s_arg *arg)
 	case S_TYPE_addr: {
 		struct s_addr *p = S_ARG_TO_TYPE(arg, addr);
 
-		json_append_member(new_obj, "type", json_mkstring("address"));
+		json_append_member(new_obj, "type",
+			json_mkstring_static("address"));
 		json_append_member(new_obj, "addr", json_mknumber(p->addr));
 
 		if (p->val)
@@ -259,15 +269,15 @@ s_val_print(struct s_arg *arg)
 	case S_TYPE_fd: {
 		struct s_num *p = S_ARG_TO_TYPE(arg, num);
 
-		json_append_member(new_obj, "type", json_mkstring("fd"));
+		json_append_member(new_obj, "type", json_mkstring_static("fd"));
 
 		if ((arg->type == S_TYPE_fan_dirfd) &&
 		    ((int)p->val == FAN_NOFD))
 			json_append_member(new_obj, "string",
-				json_mkstring("FAN_NOFD"));
+				json_mkstring_static("FAN_NOFD"));
 		else if ((arg->type != S_TYPE_fd) && ((int)p->val == AT_FDCWD))
 			json_append_member(new_obj, "string",
-				json_mkstring("AT_FDCWD"));
+				json_mkstring_static("AT_FDCWD"));
 
 		json_append_member(new_obj, "value",
 			json_mknumber((int)p->val));
@@ -285,7 +295,8 @@ s_val_print(struct s_arg *arg)
 
 		s_process_xlat(f_p, s_print_xlat_json, arr);
 
-		json_append_member(new_obj, "type", json_mkstring("xlat"));
+		json_append_member(new_obj, "type",
+			json_mkstring_static("xlat"));
 		json_append_member(new_obj, "value", arr);
 
 		break;
@@ -301,7 +312,8 @@ s_val_print(struct s_arg *arg)
 		char *ptr = buf;
 		unsigned i;
 
-		json_append_member(new_obj, "type", json_mkstring("sigmask"));
+		json_append_member(new_obj, "type",
+			json_mkstring_static("sigmask"));
 
 		for (i = 0; i < p->bytes; i++) {
 			unsigned cur_byte = i ^ pos_xor_mask;
@@ -330,7 +342,7 @@ s_val_print(struct s_arg *arg)
 			(unsigned long)p->val);
 
 		json_append_member(new_obj, "type",
-			json_mkstring("sa_handler"));
+			json_mkstring_static("sa_handler"));
 		json_append_member(new_obj, "value", json_mknumber(p->val));
 
 		if (str)
@@ -368,15 +380,14 @@ s_val_print(struct s_arg *arg)
 	}
 	case S_TYPE_ellipsis:
 		json_delete(new_obj);
-		return json_mkstring("...");
+		return json_mkstring_static("...");
 
 	default:
 		json_delete(new_obj);
-		return json_mkstring(">:[");
+		return json_mkstring_static(">:[");
 	}
 
 	return new_obj;
-
 }
 
 static void
@@ -390,7 +401,8 @@ static void
 s_syscall_json_print_entering(struct tcb *tcp)
 {
 	json_append_member(root_node, "type",
-		json_mkstring(s_syscall_type_names[tcp->s_syscall->type]));
+		json_mkstring_static(
+			s_syscall_type_names[tcp->s_syscall->type]));
 }
 
 static void
@@ -437,19 +449,28 @@ s_syscall_json_print_after(struct tcb *tcp)
 			 * The system call will be restarted with the same arguments
 			 * if SA_RESTART is set; otherwise, it will fail with EINTR.
 			 */
-			json_append_member(root_node, "return", json_mkstring("?"));
-			json_append_member(root_node, "errno", json_mknumber(ERESTARTSYS));
-			json_append_member(root_node, "errnostr", json_mkstring("ERESTARTSYS"));
-			json_append_member(root_node, "retstring", json_mkstring("To be restarted if SA_RESTART is set"));
+			json_append_member(root_node, "return",
+				json_mkstring_static("?"));
+			json_append_member(root_node, "errno",
+				json_mknumber(ERESTARTSYS));
+			json_append_member(root_node, "errnostr",
+				json_mkstring_static("ERESTARTSYS"));
+			json_append_member(root_node, "retstring",
+				json_mkstring_static("To be restarted if "
+					"SA_RESTART is set"));
 			break;
 		case ERESTARTNOINTR:
 			/* Rare. For example, fork() returns this if interrupted.
 			 * SA_RESTART is ignored (assumed set): the restart is unconditional.
 			 */
-			json_append_member(root_node, "return", json_mkstring("?"));
-			json_append_member(root_node, "errno", json_mknumber(ERESTARTNOINTR));
-			json_append_member(root_node, "errnostr", json_mkstring("ERESTARTNOINTR"));
-			json_append_member(root_node, "retstring", json_mkstring("To be restarted"));
+			json_append_member(root_node, "return",
+				json_mkstring_static("?"));
+			json_append_member(root_node, "errno",
+				json_mknumber(ERESTARTNOINTR));
+			json_append_member(root_node, "errnostr",
+				json_mkstring_static("ERESTARTNOINTR"));
+			json_append_member(root_node, "retstring",
+				json_mkstring_static("To be restarted"));
 			break;
 		case ERESTARTNOHAND:
 			/* pause(), rt_sigsuspend() etc use this code.
@@ -459,10 +480,15 @@ s_syscall_json_print_after(struct tcb *tcp)
 			 * after SIG_IGN or SIG_DFL signal it will restart
 			 * (thus the name "restart only if has no handler").
 			 */
-			json_append_member(root_node, "return", json_mkstring("?"));
-			json_append_member(root_node, "errno", json_mknumber(ERESTARTNOHAND));
-			json_append_member(root_node, "errnostr", json_mkstring("ERESTARTNOHAND"));
-			json_append_member(root_node, "retstring", json_mkstring("To be restarted if no handler"));
+			json_append_member(root_node, "return",
+				json_mkstring_static("?"));
+			json_append_member(root_node, "errno",
+				json_mknumber(ERESTARTNOHAND));
+			json_append_member(root_node, "errnostr",
+				json_mkstring_static("ERESTARTNOHAND"));
+			json_append_member(root_node, "retstring",
+				json_mkstring_static("To be restarted if no "
+					"handler"));
 			break;
 		case ERESTART_RESTARTBLOCK:
 			/* Syscalls like nanosleep(), poll() which can't be
@@ -476,29 +502,34 @@ s_syscall_json_print_after(struct tcb *tcp)
 			 * which in turn saves another such restart block,
 			 * old data is lost and restart becomes impossible)
 			 */
-			json_append_member(root_node, "return", json_mkstring("?"));
-			json_append_member(root_node, "errno", json_mknumber(ERESTART_RESTARTBLOCK));
-			json_append_member(root_node, "errnostr", json_mkstring("ERESTART_RESTARTBLOCK"));
-			json_append_member(root_node, "retstring", json_mkstring("Interrupted by signal"));
+			json_append_member(root_node, "return",
+				json_mkstring_static("?"));
+			json_append_member(root_node, "errno",
+				json_mknumber(ERESTART_RESTARTBLOCK));
+			json_append_member(root_node, "errnostr",
+				json_mkstring_static("ERESTART_RESTARTBLOCK"));
+			json_append_member(root_node, "retstring",
+				json_mkstring_static("Interrupted by signal"));
 			break;
 		default:
 			json_append_member(root_node, "return", json_mknumber(-1));
 			json_append_member(root_node, "errno", json_mknumber(u_error));
 			if ((unsigned long) u_error < nerrnos && errnoent[u_error]) {
-				json_append_member(root_node, "errnostr", json_mkstring(errnoent[u_error]));
-			} else {
-				char buf[sizeof("ERRNO_%lu") + sizeof(long)*3];
-				sprintf(buf, "ERRNO_%lu", u_error);
-				json_append_member(root_node, "errnostr", json_mkstring(buf));
+				json_append_member(root_node, "errnostr",
+					json_mkstring_static(
+						errnoent[u_error]));
 			}
-			json_append_member(root_node, "retstring", json_mkstring(strerror(u_error)));
+			json_append_member(root_node, "retstring",
+				json_mkstring(strerror(u_error)));
 			break;
 		}
 		if ((sys_res & RVAL_STR) && tcp->auxstr)
-			json_append_member(root_node, "auxstr", json_mkstring(tcp->auxstr));
+			json_append_member(root_node, "auxstr",
+				json_mkstring(tcp->auxstr));
 	} else {
 		if (sys_res & RVAL_NONE) {
-			json_append_member(root_node, "return", json_mkstring("?"));
+			json_append_member(root_node, "return",
+				json_mkstring_static("?"));
 		} else {
 			switch (sys_res & RVAL_MASK) {
 			case RVAL_HEX:
@@ -519,8 +550,10 @@ s_syscall_json_print_after(struct tcb *tcp)
 				break;
 #endif /* HAVE_STRUCT_TCB_EXT_ARG */
 			default:
-				json_append_member(root_node, "return", json_mkstring("?"));
-				json_append_member(root_node, "retstring", json_mkstring("Invalid rval format"));
+				json_append_member(root_node, "return",
+					json_mkstring_static("?"));
+				json_append_member(root_node, "retstring",
+					json_mkstring_static("Invalid rval format"));
 				break;
 			}
 		}
@@ -552,7 +585,8 @@ s_syscall_json_print_unavailable_entering(struct tcb *tcp, int scno_good)
 {
 	root_node = json_mkobject();
 	json_append_member(root_node, "type",
-		json_mkstring(s_syscall_type_names[tcp->s_syscall->type]));
+		json_mkstring_static(
+			s_syscall_type_names[tcp->s_syscall->type]));
 	json_append_member(root_node, "name",
 		json_mkstring(scno_good == 1 ? tcp->s_ent->sys_name : "????"));
 }
@@ -560,8 +594,9 @@ s_syscall_json_print_unavailable_entering(struct tcb *tcp, int scno_good)
 static void
 s_syscall_json_print_unavailable_exiting(struct tcb *tcp)
 {
-	json_append_member(root_node, "return", json_mkstring("?"));
-	json_append_member(root_node, "retstring", json_mkstring("<unavailable>"));
+	json_append_member(root_node, "return", json_mkstring_static("?"));
+	json_append_member(root_node, "retstring",
+		json_mkstring_static("<unavailable>"));
 }
 
 static void
@@ -573,7 +608,8 @@ s_syscall_json_print_signal(struct tcb *tcp)
 
 	root_node = json_mkobject();
 	json_append_member(root_node, "type",
-		json_mkstring(s_syscall_type_names[tcp->s_syscall->type]));
+		json_mkstring_static(
+			s_syscall_type_names[tcp->s_syscall->type]));
 
 	STAILQ_FOREACH_SAFE(arg, &syscall->args.args, entry, tmp) {
 		json_append_member(root_node, arg->name, s_val_print(arg));
@@ -597,14 +633,14 @@ s_json_print_message(struct tcb *tcp, enum s_msg_type type, const char *msg,
 
 	root_node = json_mkobject();
 
-	json_append_member(root_node, "type", json_mkstring("message"));
+	json_append_member(root_node, "type", json_mkstring_static("message"));
 
 	if ((type < ARRAY_SIZE(msg_type_names)) && msg_type_names[type])
 		json_append_member(root_node, "msg_type",
-			json_mkstring(msg_type_names[type]));
+			json_mkstring_static(msg_type_names[type]));
 	else
 		json_append_member(root_node, "msg_type",
-			json_mkstring("unknown"));
+			json_mkstring_static("unknown"));
 
 	va_copy(args_copy, args);
 	size = vsnprintf(buf, 0, msg, args_copy);
@@ -612,19 +648,17 @@ s_json_print_message(struct tcb *tcp, enum s_msg_type type, const char *msg,
 
 	if (size < 0) {
 		json_append_member(root_node, "error",
-			json_mkstring("printf"));
+			json_mkstring_static("printf"));
 		json_append_member(root_node, "msg_format",
-			json_mkstring(msg));
+			json_mkstring_static(msg));
 	} else {
 		buf = xmalloc(size + 1);
 		vsnprintf(buf, size + 1, msg, args);
 
-		json_append_member(root_node, "msg", json_mkstring(buf));
+		json_append_member(root_node, "msg", json_mkstring_own(buf));
 	}
 
 	tprints(json_stringify(root_node, "\t"));
-
-	free(buf);
 }
 
 struct s_printer s_printer_json = {
