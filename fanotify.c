@@ -43,7 +43,7 @@ SYS_FUNC(fanotify_init)
 
 	s_insert_xlat_int("flags", fan_classes, flags & FAN_ALL_CLASS_BITS,
 		"FAN_CLASS_???");
-	s_append_xlat_int_val("flags", fan_init_flags,
+	s_append_xlat_int("flags", fan_init_flags,
 		flags & ~FAN_ALL_CLASS_BITS, "FAN_???");
 	s_push_open_modes("event_f_flags");
 

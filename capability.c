@@ -72,7 +72,7 @@ push_cap_bits(const char *name, const uint32_t lo, const uint32_t hi)
 		s_insert_flags_int(name, cap_mask1, hi, "CAP_???");
 	} else {
 		s_insert_flags_int(name, cap_mask0, lo, "CAP_???");
-		s_append_flags_int_val(name, cap_mask1, hi, "CAP_???");
+		s_append_flags_int(name, cap_mask1, hi, "CAP_???");
 	}
 }
 

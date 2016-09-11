@@ -68,7 +68,7 @@ print_mmap(struct tcb *tcp, long *u_arg, unsigned long long offset)
 	s_insert_flags_long("prot", mmap_prot, prot, "PROT_???");
 #ifdef MAP_TYPE
 	s_insert_xlat_long("flags", mmap_flags, flags & MAP_TYPE, "MAP_???");
-	s_append_flags_long_val("flags", mmap_flags, flags & ~MAP_TYPE, NULL);
+	s_append_flags_long("flags", mmap_flags, flags & ~MAP_TYPE, NULL);
 #else
 	s_insert_flags_long("flags", mmap_flags, "MAP_???");
 #endif
@@ -299,7 +299,7 @@ SYS_FUNC(remap_file_pages)
 #ifdef MAP_TYPE
 	const unsigned long flags = s_get_cur_arg(S_TYPE_lu);
 	s_insert_xlat_long("flags", mmap_flags, flags & MAP_TYPE, "MAP_???");
-	s_append_flags_long_val("flags", mmap_flags, flags & ~MAP_TYPE, NULL);
+	s_append_flags_long("flags", mmap_flags, flags & ~MAP_TYPE, NULL);
 #else
 	s_push_flags_long("flags", mmap_flags, "MAP_???");
 #endif

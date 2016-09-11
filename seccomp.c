@@ -224,37 +224,37 @@ s_insert_bpf_code(const char *name, uint16_t code)
 	switch (BPF_CLASS(code)) {
 		case BPF_LD:
 		case BPF_LDX:
-			s_append_xlat_int_val(NULL, bpf_size, BPF_SIZE(code), "BPF_???");
-			s_append_xlat_int_val(NULL, bpf_mode, BPF_MODE(code), "BPF_???");
+			s_append_xlat_int(NULL, bpf_size, BPF_SIZE(code), "BPF_???");
+			s_append_xlat_int(NULL, bpf_mode, BPF_MODE(code), "BPF_???");
 			break;
 		case BPF_ST:
 		case BPF_STX:
 			if (i)
-				s_append_xlat_int_val(NULL, empty_xlat, i, "BPF_???");
+				s_append_xlat_int(NULL, empty_xlat, i, "BPF_???");
 			break;
 		case BPF_ALU:
-			s_append_xlat_int_val(NULL, bpf_src, BPF_SRC(code), "BPF_???");
-			s_append_xlat_int_val(NULL, bpf_op_alu, BPF_OP(code), "BPF_???");
+			s_append_xlat_int(NULL, bpf_src, BPF_SRC(code), "BPF_???");
+			s_append_xlat_int(NULL, bpf_op_alu, BPF_OP(code), "BPF_???");
 			break;
 		case BPF_JMP:
-			s_append_xlat_int_val(NULL, bpf_src, BPF_SRC(code), "BPF_???");
-			s_append_xlat_int_val(NULL, bpf_op_jmp, BPF_OP(code), "BPF_???");
+			s_append_xlat_int(NULL, bpf_src, BPF_SRC(code), "BPF_???");
+			s_append_xlat_int(NULL, bpf_op_jmp, BPF_OP(code), "BPF_???");
 			break;
 		case BPF_RET:
-			s_append_xlat_int_val(NULL, bpf_rval, BPF_RVAL(code), "BPF_???");
+			s_append_xlat_int(NULL, bpf_rval, BPF_RVAL(code), "BPF_???");
 			i &= ~BPF_RVAL(code);
 			if (i)
-				s_append_xlat_int_val(NULL, empty_xlat, i, "BPF_???");
+				s_append_xlat_int(NULL, empty_xlat, i, "BPF_???");
 			break;
 		case BPF_MISC:
-			s_append_xlat_int_val(NULL, bpf_miscop, BPF_MISCOP(code),
+			s_append_xlat_int(NULL, bpf_miscop, BPF_MISCOP(code),
 				"BPF_???");
 			i &= ~BPF_MISCOP(code);
 			if (i)
-				s_append_xlat_int_val(NULL, empty_xlat, i, "BPF_???");
+				s_append_xlat_int(NULL, empty_xlat, i, "BPF_???");
 			break;
 		default:
-			s_append_xlat_int_val(NULL, empty_xlat, code, "BPF_???");
+			s_append_xlat_int(NULL, empty_xlat, code, "BPF_???");
 	}
 }
 

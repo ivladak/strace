@@ -93,13 +93,13 @@ SYS_FUNC(futex)
 		if (val3 & (8 << 28))
 			s_insert_xlat_int_scaled("op", NULL, val3 & (8 << 28),
 				"FUTEX_OP_OPARG_SHIFT", 28);
-		s_append_xlat_int_val_scaled("op", futexwakeops,
+		s_append_xlat_int_scaled("op", futexwakeops,
 			val3 &   (0x7 << 28), "FUTEX_OP_???", 28);
-		s_append_xlat_int_val_scaled("oparg", NULL,
+		s_append_xlat_int_scaled("oparg", NULL,
 			val3 & (0xfff << 12), NULL, 12);
-		s_append_xlat_int_val_scaled("cmp", futexwakecmps,
+		s_append_xlat_int_scaled("cmp", futexwakecmps,
 			val3 &   (0xf << 24), "FUTEX_OP_CMP_???", 24);
-		s_append_xlat_int_val_scaled("cmparg", NULL,
+		s_append_xlat_int_scaled("cmparg", NULL,
 			val3 & (0xfff <<  0), NULL, 0);
 		break;
 	case FUTEX_WAIT_REQUEUE_PI:

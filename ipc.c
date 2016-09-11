@@ -37,7 +37,7 @@ SYS_FUNC(ipc)
 	if (version)
 		s_insert_xlat_uint_scaled("call", NULL, version, NULL, 16);
 
-	s_append_xlat_uint_val("call", ipccalls, call, NULL);
+	s_append_xlat_uint("call", ipccalls, call, NULL);
 
 	unsigned int i;
 	for (i = 1; i < tcp->s_ent->nargs; ++i) {

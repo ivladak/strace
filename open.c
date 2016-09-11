@@ -119,7 +119,7 @@ void
 s_insert_open_modes(const char *name, unsigned int flags)
 {
 	s_insert_xlat_int(name, open_access_modes, flags & 3, NULL);
-	s_append_flags_int_val(name, open_mode_flags, flags & ~3, NULL);
+	s_append_flags_int(name, open_mode_flags, flags & ~3, NULL);
 }
 
 void
