@@ -111,7 +111,7 @@ s_fetch_wrapper(struct s_arg *arg, unsigned long addr, void *fn_data)
 		}
 	}
 
-	if (!umoven(current_tcp, addr, args->data_size, outbuf)) {
+	if (!s_umoven_verbose(current_tcp, addr, args->data_size, outbuf)) {
 		args->fill_fn(arg, outbuf, args->data_size, args->fill_fn_data);
 		ret = args->data_size;
 	} else {
