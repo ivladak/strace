@@ -593,6 +593,20 @@ s_struct_set_own_aux_str(struct s_struct *s, char *aux_str)
 	return s;
 }
 
+const char *
+s_arg_append_comment(struct s_syscall *s, const char *comment)
+{
+	struct s_arg *arg = s_syscall_get_last_arg(s);
+	const char *old_comment;
+
+	assert(arg);
+
+	old_comment = arg->comment;
+	arg->comment = comment;
+
+	return old_comment;
+}
+
 struct s_args_list *
 s_struct_enter(struct s_struct *s)
 {
@@ -638,6 +652,8 @@ s_syscall_new(struct tcb *tcp, enum s_syscall_type sc_type)
 	syscall->tcp = tcp;
 	syscall->type = sc_type;
 	syscall->last_arg = syscall->cur_arg = 0;
+	syscall->name_level = S_SAN_DEFAULT;
+	syscall->comment_level = S_SAN_DEFAULT;
 
 	list_init(&syscall->args.args);
 	list_init(&syscall->changeable_args);
@@ -792,6 +808,18 @@ s_syscall_cur_arg_advance(struct s_syscall *syscall, enum s_type type,
 	}
 
 	return syscall->cur_arg;
+}
+
+void
+s_syscall_set_name_level(struct s_syscall *s, enum s_syscall_show_arg level)
+{
+	s->name_level = level;
+}
+
+void
+s_syscall_set_comment_level(struct s_syscall *s, enum s_syscall_show_arg level)
+{
+	s->comment_level = level;
 }
 
 /* Similar to printxvals() */

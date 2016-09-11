@@ -890,4 +890,22 @@ s_get_cur_arg(enum s_type type)
 	return res;
 }
 
+static inline void
+s_set_comment_level(enum s_syscall_show_arg level)
+{
+	s_syscall_set_comment_level(current_tcp->s_syscall, level);
+}
+
+static inline void
+s_set_name_level(enum s_syscall_show_arg level)
+{
+	s_syscall_set_name_level(current_tcp->s_syscall, level);
+}
+
+static inline void
+s_append_comment(const char *comment)
+{
+	s_arg_append_comment(current_tcp->s_syscall, comment);
+}
+
 #endif /* #ifndef STRACE_STRUCTURED_INLINES_H */

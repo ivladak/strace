@@ -238,6 +238,18 @@ enum s_type {
 #define S_ARG_TO_TYPE(_arg, _type) __containerof(_arg, struct s_##_type, arg)
 #define S_TYPE_TO_ARG(_p) (&((_p)->arg))
 
+/**
+ * Regulates whether argument names should be shown for the specific syscall.
+ *
+ * Text formatter has setting of the same type which defines, what the minimal
+ * value should be set in syscall in order argument names being printed.
+ */
+enum s_syscall_show_arg {
+	S_SAN_NONE,
+	S_SAN_DEFAULT,
+	S_SAN_PREFERRED,
+};
+
 /* syscall */
 
 struct s_syscall;
@@ -245,6 +257,7 @@ struct s_syscall;
 struct s_arg {
 	struct s_syscall *syscall;
 	const char *name;
+	const char *comment;
 	enum s_type type;
 	int arg_num;
 
@@ -268,6 +281,8 @@ struct s_syscall {
 	struct list_item changeable_args;
 	enum s_type ret_type;
 	enum s_syscall_type type;
+	enum s_syscall_show_arg name_level;
+	enum s_syscall_show_arg comment_level;
 
 	/* List of struct s_args_list */
 	struct list_item insertion_stack;
@@ -429,6 +444,9 @@ extern struct s_struct *s_struct_set_aux_str(struct s_struct *s,
 extern struct s_struct *s_struct_set_own_aux_str(struct s_struct *s,
 	char *aux_str);
 
+extern const char *s_arg_append_comment(struct s_syscall *s,
+	const char *comment);
+
 extern struct s_args_list *s_struct_enter(struct s_struct *s);
 extern struct s_args_list *s_syscall_insertion_point(struct s_syscall *s);
 extern struct s_args_list *s_syscall_pop(struct s_syscall *s);
@@ -446,6 +464,10 @@ extern struct s_arg *s_syscall_replace_last_arg(struct s_syscall *syscall,
 
 extern int s_syscall_cur_arg_advance(struct s_syscall *syscall,
 	enum s_type type, unsigned long long *val);
+extern void s_syscall_set_name_level(struct s_syscall *s,
+	enum s_syscall_show_arg level);
+extern void s_syscall_set_comment_level(struct s_syscall *s,
+	enum s_syscall_show_arg level);
 
 extern void s_process_xlat(struct s_xlat *arg, s_print_xlat_fn cb,
 	void *cb_data);
