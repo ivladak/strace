@@ -262,6 +262,7 @@ struct s_syscall {
 	struct tcb *tcp;
 	int cur_arg;
 	int last_arg;
+	struct s_arg *last_arg_inserted;
 	struct s_arg *last_changeable;
 	struct s_args_list args;
 	struct list_item changeable_args;
@@ -437,6 +438,11 @@ extern struct s_syscall *s_syscall_new(struct tcb *tcp,
 	enum s_syscall_type sc_type);
 extern void s_last_is_changeable(struct tcb *tcp);
 extern void s_syscall_free(struct tcb *tcp);
+
+extern struct s_arg *s_syscall_get_last_arg(struct s_syscall *syscall);
+extern struct s_arg *s_syscall_pop_last_arg(struct s_syscall *syscall);
+extern struct s_arg *s_syscall_replace_last_arg(struct s_syscall *syscall,
+	struct s_arg *arg);
 
 extern int s_syscall_cur_arg_advance(struct s_syscall *syscall,
 	enum s_type type, unsigned long long *val);

@@ -126,6 +126,8 @@ s_arg_insert(struct s_syscall *syscall, struct s_arg *arg, int force_arg)
 		assert(!s_ch->exiting);
 		s_ch->exiting = arg;
 	}
+
+	syscall->last_arg_inserted = arg;
 }
 
 void
@@ -648,13 +650,18 @@ void
 s_last_is_changeable(struct tcb *tcp)
 {
 	struct s_syscall *syscall = tcp->s_syscall;
-	struct s_arg *last_arg = list_tail(&syscall->args.arg, s_arg, entry);
+	struct s_arg *last_arg = s_syscall_get_last_arg(syscall);
+	struct s_changeable *s_chg;
 
 	assert(last_arg);
 
-	list_remove(&last_arg->entry);
+	s_chg = s_changeable_new(last_arg->name, last_arg, NULL);
+	s_chg->arg.arg_num = last_arg->arg_num;
 
-	s_changeable_new_and_insert(last_arg->name, last_arg, NULL);
+	list_replace(&last_arg->entry, &s_chg->arg.entry);
+
+	if (entering(syscall->tcp))
+		list_append(&syscall->changeable_args, &s_chg->arg.chg_entry);
 }
 
 void
@@ -670,6 +677,72 @@ s_syscall_free(struct tcb *tcp)
 
 	free(syscall);
 	tcp->s_syscall = NULL;
+}
+
+struct s_arg *
+s_syscall_get_last_arg(struct s_syscall *syscall)
+{
+	return syscall->last_arg_inserted;
+}
+
+static void
+s_syscall_pop_fixups(struct s_arg *arg)
+{
+	/* For addr arg, the following fix ups should be done on addr's val */
+	while (S_TYPE_KIND(arg->type) == S_TYPE_KIND_addr) {
+		struct s_addr *addr = S_ARG_TO_TYPE(arg, addr);
+
+		if (addr->val)
+			arg = addr->val;
+	}
+
+	/* Fix up changeable */
+	if ((S_TYPE_KIND(arg->type) == S_TYPE_KIND_changeable) &&
+	    arg->chg_entry.next)
+		list_remove(&arg->chg_entry);
+
+	/* Fix up insertion stack */
+	if (S_TYPE_KIND(arg->type) == S_TYPE_KIND_struct) {
+		struct s_struct *s = S_ARG_TO_TYPE(arg, struct);
+		struct s_arg *field;
+
+		list_foreach(field, &s->args.args, entry) {
+			s_syscall_pop_fixups(field);
+		}
+
+		if (s->args.entry.next)
+			list_remove(&s->args.entry);
+	}
+}
+
+static void
+s_syscall_pop_arg(struct s_arg *arg)
+{
+	list_remove(&arg->entry);
+
+	s_syscall_pop_fixups(arg);
+}
+
+struct s_arg *
+s_syscall_pop_last_arg(struct s_syscall *syscall)
+{
+	struct s_arg *last = syscall->last_arg_inserted;
+
+	if (!last)
+		return NULL;
+
+	s_syscall_pop_arg(last);
+
+	return last;
+}
+
+struct s_arg *
+s_syscall_replace_last_arg(struct s_syscall *syscall, struct s_arg *arg)
+{
+	struct s_arg *last = s_syscall_pop_last_arg(syscall);
+	s_arg_insert(syscall, arg, last->arg_num);
+
+	return last;
 }
 
 int
