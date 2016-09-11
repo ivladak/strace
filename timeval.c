@@ -55,11 +55,11 @@ s_fill_timeval(struct s_arg *arg, void *buf, unsigned long len, void *fn_data)
 static ssize_t
 fetch_fill_itimerval_t(struct s_arg *arg, unsigned long addr, void *fn_data)
 {
-	ssize_t ret = s_insert_addr_type_sized("it_interval", addr, sizeof(timeval_t),
-		S_TYPE_struct, fill_timeval_t, NULL);
+	ssize_t ret = s_insert_fill_struct("it_interval", addr, sizeof(timeval_t),
+		fill_timeval_t, NULL);
 	if (ret < 0) return ret;
-	return ret + s_insert_addr_type_sized("it_value", addr + sizeof(timeval_t),
-		sizeof(timeval_t), S_TYPE_struct, fill_timeval_t, NULL);
+	return ret + s_insert_fill_struct("it_value", addr + sizeof(timeval_t),
+		sizeof(timeval_t), fill_timeval_t, NULL);
 }
 
 MPERS_PRINTER_DECL(const char *, sprint_timeval,
@@ -83,19 +83,17 @@ MPERS_PRINTER_DECL(const char *, sprint_timeval,
 
 MPERS_PRINTER_DECL(void, s_insert_timeval_addr, const char *name, long addr)
 {
-	s_insert_addr_type_sized(name, addr, sizeof(timeval_t), S_TYPE_struct,
-		s_fill_timeval, NULL);
+	s_insert_fill_struct(name, addr, sizeof(timeval_t), s_fill_timeval, NULL);
 }
 
 MPERS_PRINTER_DECL(void, s_push_timeval, const char *name)
 {
-	s_push_addr_type_sized(name, sizeof(timeval_t), S_TYPE_struct,
-		s_fill_timeval, NULL);
+	s_push_fill_struct(name, sizeof(timeval_t), s_fill_timeval, NULL);
 }
 
 MPERS_PRINTER_DECL(void, s_push_itimerval, const char *name)
 {
-	s_push_addr_type(name, S_TYPE_struct, fetch_fill_itimerval_t, NULL);
+	s_push_fetch_fill_struct(name, fetch_fill_itimerval_t, NULL);
 }
 
 MPERS_PRINTER_DECL(void, push_timeval_pair, const char *name)

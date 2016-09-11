@@ -47,8 +47,7 @@ fetch_timezone(struct s_arg *arg, void *buf, unsigned long len, void *fn_data)
 static void
 s_push_timezone(const char *name)
 {
-	s_push_addr_type_sized(name, sizeof(struct timezone), S_TYPE_struct,
-		fetch_timezone, NULL);
+	s_push_fill_struct(name, sizeof(struct timezone), fetch_timezone, NULL);
 }
 
 SYS_FUNC(gettimeofday)

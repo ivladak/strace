@@ -79,12 +79,12 @@ fetch_fill_rusage(struct s_arg *arg, unsigned long addr, void *fn_data)
 
 MPERS_PRINTER_DECL(void, s_insert_rusage, const char *name, unsigned long addr)
 {
-	s_insert_addr_type(name, addr, S_TYPE_struct, fetch_fill_rusage, NULL);
+	s_insert_fetch_fill_struct(name, addr, fetch_fill_rusage, NULL);
 }
 
 MPERS_PRINTER_DECL(void, s_push_rusage, const char *name)
 {
-	s_push_addr_type(name, S_TYPE_struct, fetch_fill_rusage, NULL);
+	s_push_fetch_fill_struct(name, fetch_fill_rusage, NULL);
 }
 
 #ifdef ALPHA
@@ -150,13 +150,13 @@ fetch_fill_rusage32(struct s_arg *arg, long addr, void *fn_data)
 void
 s_insert_rusage32(const char *name, unsigned long addr)
 {
-	s_insert_addr_type(name, addr, S_TYPE_struct, fetch_fill_rusage32, NULL);
+	s_insert_fetch_fill_struct(name, addr, fetch_fill_rusage32, NULL);
 }
 
 void
 s_push_rusage32(const char *name)
 {
-	s_push_addr_type(name, S_TYPE_struct, fetch_fill_rusage32, NULL);
+	s_push_fetch_fill_struct(name, fetch_fill_rusage32, NULL);
 }
 
 #endif

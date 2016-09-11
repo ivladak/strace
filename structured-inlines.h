@@ -212,6 +212,18 @@ s_push_addr_type_sized(const char *name, unsigned long size, enum s_type type,
 	return s_insert_addr_type_sized(name, addr, size, type, fill_cb, fn_data);
 }
 
+#define s_insert_fill_struct(name, value, size, fill_cb, fill_data) \
+s_insert_addr_type_sized(name, value, size, S_TYPE_struct, fill_cb, fill_data)
+
+#define s_push_fill_struct(name, size, fill_cb, fill_data) \
+s_push_addr_type_sized(name, size, S_TYPE_struct, fill_cb, fill_data)
+
+#define s_insert_fetch_fill_struct(name, value, fill_cb, fill_data) \
+s_insert_addr_type(name, value, S_TYPE_struct, fill_cb, fill_data)
+
+#define s_push_fetch_fill_struct(name, fill_cb, fill_data) \
+s_push_addr_type(name, S_TYPE_struct, fill_cb, fill_data)
+
 struct s_array_fetch_wrapper_args {
 	s_fill_arg_fn fill_fn;
 	void *fill_fn_data;

@@ -106,14 +106,12 @@ fetch_fill_itimerspec(struct s_arg *arg, unsigned long addr, void *fn_data)
 MPERS_PRINTER_DECL(void, s_insert_itimerspec, const char *name,
 	unsigned long addr)
 {
-	s_insert_addr_type(name, addr, S_TYPE_struct, fetch_fill_itimerspec,
-		NULL);
+	s_insert_fetch_fill_struct(name, addr, fetch_fill_itimerspec, NULL);
 }
 
 MPERS_PRINTER_DECL(void, s_push_itimerspec, const char *name)
 {
-	s_push_addr_type(name, S_TYPE_struct, fetch_fill_itimerspec,
-		NULL);
+	s_push_fetch_fill_struct(name, fetch_fill_itimerspec, NULL);
 }
 
 MPERS_PRINTER_DECL(const char *, sprint_timespec,
@@ -137,13 +135,11 @@ MPERS_PRINTER_DECL(const char *, sprint_timespec,
 
 MPERS_PRINTER_DECL(void, s_insert_timespec_addr, const char *name, long addr)
 {
-	s_insert_addr_type_sized(name, addr, sizeof(timespec_t), S_TYPE_struct,
-		s_fill_timespec, NULL);
+	s_insert_fill_struct(name, addr, sizeof(timespec_t), s_fill_timespec, NULL);
 }
 
 MPERS_PRINTER_DECL(void, s_push_timespec, const char *name)
 {
-	s_push_addr_type_sized(name, sizeof(timespec_t), S_TYPE_struct,
-		s_fill_timespec, NULL);
+	s_push_fill_struct(name, sizeof(timespec_t), s_fill_timespec, NULL);
 }
 

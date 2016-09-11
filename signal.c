@@ -378,12 +378,10 @@ SYS_FUNC(sigaction)
 {
 	if (entering(tcp)) {
 		s_push_signo("signum");
-		s_push_addr_type("act", S_TYPE_struct, decode_old_sigaction,
-			NULL);
+		s_push_fetch_fill_struct("act", decode_old_sigaction, NULL);
 		s_changeable_void("oldact");
 	} else {
-		s_push_addr_type("oldact", S_TYPE_struct, decode_old_sigaction,
-			NULL);
+		s_push_fetch_fill_struct("oldact", decode_old_sigaction, NULL);
 	}
 
 	return 0;
@@ -587,8 +585,7 @@ SYS_FUNC(rt_sigaction)
 {
 	if (entering(tcp)) {
 		s_push_signo("signum");
-		s_push_addr_type("act", S_TYPE_struct, decode_new_sigaction,
-			NULL);
+		s_push_fetch_fill_struct("act", decode_new_sigaction, NULL);
 		s_changeable_void("oldact");
 #if defined(SPARC) || defined(SPARC64)
 		s_push_addr("restorer");
@@ -600,8 +597,7 @@ SYS_FUNC(rt_sigaction)
 		s_push_lu("sigsetsize");
 #endif
 	} else {
-		s_push_addr_type("oldact", S_TYPE_struct, decode_new_sigaction,
-			NULL);
+		s_push_fetch_fill_struct("oldact", decode_new_sigaction, NULL);
 	}
 	return 0;
 }

@@ -59,11 +59,10 @@ fetch_fill_stack_t(struct s_arg *arg, unsigned long addr, void *fn_data)
 SYS_FUNC(sigaltstack)
 {
 	if (entering(tcp)) {
-		s_push_addr_type("ss", S_TYPE_struct, fetch_fill_stack_t, NULL);
+		s_push_fetch_fill_struct("ss", fetch_fill_stack_t, NULL);
 		s_changeable_void("oss");
 	} else {
-		s_push_addr_type("oss", S_TYPE_struct, fetch_fill_stack_t,
-			NULL);
+		s_push_fetch_fill_struct("oss", fetch_fill_stack_t, NULL);
 	}
 
 	return 0;

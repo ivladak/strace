@@ -23,8 +23,8 @@ s_fill_timeval32(struct s_arg *arg, void *buf, long len, void *fn_data)
 void
 s_insert_timeval32_addr(const char *name, long addr)
 {
-	s_insert_addr_type_sized(name, sizeof(timeval32_t), addr, S_TYPE_struct,
-		fill_timeval32_t, NULL);
+	s_insert_fill_struct(name, sizeof(timeval32_t), addr, fill_timeval32_t,
+		NULL);
 }
 
 void
@@ -37,11 +37,11 @@ push_timeval32_pair(struct tcb *tcp, const char *name)
 static ssize_t
 s_fetch_fill_itimerval32(struct s_arg *arg, long addr, void *fn_data)
 {
-	ssize_t ret = s_insert_addr_type_sized("it_interval", sizeof(timeval32_t),
-		addr, S_TYPE_struct, fill_timeval32_t, NULL);
+	ssize_t ret = s_insert_fill_struct("it_interval", sizeof(timeval32_t),
+		addr, fill_timeval32_t, NULL);
 	if (ret < 0) return ret;
-	return ret + s_insert_addr_type_sized("it_value", sizeof(timeval32_t),
-		addr + sizeof(timeval_t), S_TYPE_struct, fill_timeval32_t, NULL);
+	return ret + s_insert_fill_struct("it_value", sizeof(timeval32_t),
+		addr + sizeof(timeval_t), fill_timeval32_t, NULL);
 }
 
 const char *
@@ -66,14 +66,13 @@ sprint_timeval32(struct tcb *tcp, const long addr)
 void
 s_push_timeval32(const char *name)
 {
-	s_push_addr_type_sized(name, sizeof(timeval32_t), S_TYPE_struct,
-		s_fill_timeval32, NULL);
+	s_push_fill_struct(name, sizeof(timeval32_t), s_fill_timeval32, NULL);
 }
 
 void
 s_push_itimerval32(const char *name)
 {
-	s_push_addr_type(name, S_TYPE_struct, s_fetch_fill_itimerval32, NULL);
+	s_push_fetch_fill_struct(name, s_fetch_fill_itimerval32, NULL);
 }
 
 #endif /* ALPHA */

@@ -82,11 +82,10 @@ fetch_fill_sigevent(struct s_arg *arg, unsigned long addr, void *fn_data)
 MPERS_PRINTER_DECL(void, s_insert_sigevent, const char *name,
 	unsigned long addr)
 {
-	s_insert_addr_type(name, addr, S_TYPE_struct, fetch_fill_sigevent,
-		NULL);
+	s_insert_fetch_fill_struct(name, addr, fetch_fill_sigevent, NULL);
 }
 
 MPERS_PRINTER_DECL(void, s_push_sigevent, const char *name)
 {
-	s_push_addr_type(name, S_TYPE_struct, fetch_fill_sigevent, NULL);
+	s_push_fetch_fill_struct(name, fetch_fill_sigevent, NULL);
 }

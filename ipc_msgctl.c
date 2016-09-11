@@ -94,8 +94,8 @@ SYS_FUNC(msgctl)
 		if (cmd & IPC_64)
 			cmd &= ~IPC_64;
 		if (cmd == IPC_SET || cmd == IPC_STAT) {
-			s_insert_addr_type_sized("buf", addr, sizeof(msqid_ds_t),
-				S_TYPE_struct, fill_msqid_ds, (void *) (long) cmd);
+			s_insert_fill_struct("buf", addr, sizeof(msqid_ds_t),
+				fill_msqid_ds, (void *) (long) cmd);
 		} else {
 			s_insert_addr("buf", addr);
 		}

@@ -123,12 +123,12 @@ SYS_FUNC(capget)
 	unsigned *version = 0;
 
 	if (entering(tcp)) {
-		s_push_addr_type_sized("hdrp", sizeof(cap_user_header_t), S_TYPE_struct,
+		s_push_fill_struct("hdrp", sizeof(cap_user_header_t),
 			fill_cap_user_header, &version);
 		current_tcp->_priv_data = version;
 		s_changeable_void("datap");
 	} else {
-		s_push_addr_type("datap", S_TYPE_struct, fetch_fill_cap_user_data,
+		s_push_fetch_fill_struct("datap", fetch_fill_cap_user_data,
 			(void *) current_tcp->_priv_data);
 	}
 	return 0;
@@ -137,9 +137,9 @@ SYS_FUNC(capget)
 SYS_FUNC(capset)
 {
 	unsigned *version = 0;
-	s_push_addr_type_sized("hdrp", sizeof(cap_user_header_t),
-		S_TYPE_struct, fill_cap_user_header, &version);
-	s_push_addr_type("datap", S_TYPE_struct, fetch_fill_cap_user_data,
+	s_push_fill_struct("hdrp", sizeof(cap_user_header_t),
+		fill_cap_user_header, &version);
+	s_push_fetch_fill_struct("datap", fetch_fill_cap_user_data,
 		(void *) version);
 
 	return RVAL_DECODED;

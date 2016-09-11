@@ -22,8 +22,7 @@ fill_utimbuf(struct s_arg *arg, void *buf, unsigned long len, void *fn_data)
 SYS_FUNC(utime)
 {
 	s_push_path("filename");
-	s_push_addr_type_sized("times", sizeof(utimbuf_t), S_TYPE_struct,
-		fill_utimbuf, tcp);
+	s_push_fill_struct("times", sizeof(utimbuf_t), fill_utimbuf, tcp);
 
 	return RVAL_DECODED;
 }

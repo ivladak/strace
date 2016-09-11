@@ -328,7 +328,7 @@ fetch_fill_seccomp_filter(struct s_arg *arg, unsigned long addr, void *fn_data)
 void
 s_push_seccomp_filter(const char *name)
 {
-	s_push_addr_type(name, S_TYPE_struct, fetch_fill_seccomp_filter, NULL);
+	s_push_fetch_fill_struct(name, fetch_fill_seccomp_filter, NULL);
 }
 
 SYS_FUNC(seccomp)

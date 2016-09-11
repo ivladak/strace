@@ -144,7 +144,7 @@ SYS_FUNC(ptrace)
 			s_push_lu("addr");
 			break;
 		case PTRACE_PEEKSIGINFO: {
-			s_push_addr_type("addr", S_TYPE_struct, fetch_fill_peeksiginfo, NULL);
+			s_push_fetch_fill_struct("addr", fetch_fill_peeksiginfo, NULL);
 			break;
 		}
 		default:

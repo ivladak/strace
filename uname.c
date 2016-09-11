@@ -62,8 +62,7 @@ SYS_FUNC(uname)
 	if (entering(tcp))
 		s_changeable_void("buf");
 	else
-		s_push_addr_type_sized("buf", sizeof(struct utsname), S_TYPE_struct,
-			fill_uname, NULL);
+		s_push_fill_struct("buf", sizeof(struct utsname), fill_uname, NULL);
 
 	return 0;
 }

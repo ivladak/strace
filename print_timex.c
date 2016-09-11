@@ -83,11 +83,10 @@ fetch_fill_timex(struct s_arg *arg, unsigned long addr, void *fn_data)
 
 MPERS_PRINTER_DECL(int, s_insert_timex, unsigned long addr)
 {
-	return s_insert_addr_type("timex", addr, S_TYPE_struct,
-		fetch_fill_timex, NULL);
+	return s_insert_fetch_fill_struct("timex", addr, fetch_fill_timex, NULL);
 }
 
 MPERS_PRINTER_DECL(int, s_push_timex, void)
 {
-	return s_push_addr_type("timex", S_TYPE_struct, fetch_fill_timex, NULL);
+	return s_push_fetch_fill_struct("timex", fetch_fill_timex, NULL);
 }

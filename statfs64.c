@@ -9,8 +9,7 @@ SYS_FUNC(statfs64)
 		s_push_lu("size");
 		s_changeable_void("buf");
 	} else {
-		s_push_addr_type("buf", S_TYPE_struct, fill_struct_statfs64,
-			(void *)size);
+		s_push_fetch_fill_struct("buf", fill_struct_statfs64, (void *)size);
 	}
 	return 0;
 }

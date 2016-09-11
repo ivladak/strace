@@ -58,8 +58,7 @@ SYS_FUNC(times)
 		return 0;
 	}
 
-	s_push_addr_type_sized("buf", sizeof(tms_t), S_TYPE_struct, fill_tms_t,
-		NULL);
+	s_push_fill_struct("buf", sizeof(tms_t), fill_tms_t, NULL);
 
 	return syserror(tcp) ? RVAL_DECIMAL :
 #if defined(RVAL_LUDECIMAL) && !defined(IN_MPERS)

@@ -130,13 +130,13 @@ fetch_fill_rlimit(struct s_arg *arg, unsigned long addr, void *fn_data)
 static void
 s_push_rlimit_addr(const char *name)
 {
-	s_push_addr_type(name, S_TYPE_struct, fetch_fill_rlimit, NULL);
+	s_push_fetch_fill_struct(name, fetch_fill_rlimit, NULL);
 }
 
 static void
 s_push_rlimit64_addr(const char *name)
 {
-	s_push_addr_type(name, S_TYPE_struct, print_rlimit64, NULL);
+	s_push_fetch_fill_struct(name, print_rlimit64, NULL);
 }
 
 SYS_FUNC(getrlimit)
