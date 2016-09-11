@@ -400,6 +400,8 @@ extern bool count_wallclock;
 extern unsigned int qflag;
 extern bool not_failing_only;
 extern unsigned int show_fd_path;
+extern enum s_syscall_show_arg show_arg_names;
+extern enum s_syscall_show_arg show_arg_comments;
 extern bool hide_log_until_execve;
 /* are we filtering traces based on paths? */
 extern const char **paths_selected;

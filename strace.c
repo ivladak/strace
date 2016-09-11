@@ -132,6 +132,9 @@ bool not_failing_only = 0;
 /* Show path associated with fd arguments */
 unsigned int show_fd_path = 0;
 
+enum s_syscall_show_arg show_arg_names = S_SAN_PREFERRED;
+enum s_syscall_show_arg show_arg_comments = S_SAN_PREFERRED;
+
 static bool detach_on_execve = 0;
 /* Are we "strace PROG" and need to skip detach on first execve? */
 static bool skip_one_b_execve = 0;
@@ -216,6 +219,10 @@ Output format:\n\
 Traditional formatter's options:\n\
   -a column      alignment COLUMN for printing syscall results (default %d)\n\
   -i             print instruction pointer at time of syscall\n\
+  -M             print argument comments for some syscalls (in cases arguments have variating semantics)\n\
+  -MM            print argument comments for all syscalls\n\
+  -N             print argument names for some syscalls\n\
+  -NN            print argument names for all syscalls\n\
   -r             print relative timestamp\n\
   -t             print absolute timestamp\n\
   -tt            print absolute timestamp with usecs\n\
@@ -1614,7 +1621,7 @@ init(int argc, char *argv[])
 #endif
 	qualify("signal=all");
 	while ((c = getopt(argc, argv,
-		"+b:cCdfFhiqrtTvVwxyz"
+		"+b:cCdfFhiqNMrtTvVwxyz"
 #ifdef USE_LIBUNWIND
 		"k"
 #endif
@@ -1659,6 +1666,12 @@ init(int argc, char *argv[])
 			break;
 		case 'j':
 			set_printer_or_die(optarg);
+			break;
+		case 'N':
+			show_arg_names--;
+			break;
+		case 'M':
+			show_arg_comments--;
 			break;
 		case 'q':
 			qflag++;
