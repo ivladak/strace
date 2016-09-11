@@ -37,42 +37,36 @@
 
 # include <asm/ldt.h>
 
-void
-print_user_desc(struct tcb *tcp, const long addr)
+static int
+fill_user_desc(struct s_arg *arg, void *buf, size_t len, void *fn_data)
 {
-	struct user_desc desc;
+	struct user_desc *desc = buf;
+	bool set = (bool) fn_data;
 
-	if (umove_or_printaddr(tcp, addr, &desc))
-		return;
+	s_insert_u("entry_number", desc->entry_number);
+	if (set)
+		s_changeable();
+	s_insert_addr("base_addr", desc->base_addr);
+	s_insert_u("limit", desc->limit);
+	s_insert_u("seg_32bit", desc->seg_32bit);
+	s_insert_u("contents", desc->contents);
+	s_insert_u("read_exec_only", desc->read_exec_only);
+	s_insert_u("limit_in_pages", desc->limit_in_pages);
+	s_insert_u("seg_not_present", desc->seg_not_present);
+	s_insert_u("useable", desc->useable);
 
-	tprintf("{entry_number:%d, "
-		"base_addr:%#08x, "
-		"limit:%d, "
-		"seg_32bit:%d, "
-		"contents:%d, "
-		"read_exec_only:%d, "
-		"limit_in_pages:%d, "
-		"seg_not_present:%d, "
-		"useable:%d}",
-		desc.entry_number,
-		desc.base_addr,
-		desc.limit,
-		desc.seg_32bit,
-		desc.contents,
-		desc.read_exec_only,
-		desc.limit_in_pages,
-		desc.seg_not_present,
-		desc.useable);
+	return 0;
 }
 
 SYS_FUNC(modify_ldt)
 {
-	tprintf("%ld, ", tcp->u_arg[0]);
+	s_push_d("func");
 	if (tcp->u_arg[2] != sizeof(struct user_desc))
-		printaddr(tcp->u_arg[1]);
+		s_push_addr("ptr");
 	else
-		print_user_desc(tcp, tcp->u_arg[1]);
-	tprintf(", %lu", tcp->u_arg[2]);
+		s_push_fill_struct("user_desc", sizeof(struct user_desc),
+			fill_user_desc, NULL);
+	s_push_lu("bytecount");
 
 	return RVAL_DECODED;
 }
@@ -80,7 +74,8 @@ SYS_FUNC(modify_ldt)
 SYS_FUNC(set_thread_area)
 {
 	if (entering(tcp)) {
-		print_user_desc(tcp, tcp->u_arg[0]);
+		s_push_fill_struct("user_desc", sizeof(struct user_desc),
+			fill_user_desc, (void *) true);
 	} else {
 		struct user_desc desc;
 
@@ -88,11 +83,7 @@ SYS_FUNC(set_thread_area)
 		    umove(tcp, tcp->u_arg[0], &desc) < 0) {
 			/* returned entry_number is not available */
 		} else {
-			static char outstr[32];
-
-			sprintf(outstr, "entry_number:%d", desc.entry_number);
-			tcp->auxstr = outstr;
-			return RVAL_STR;
+			s_insert_u("entry_number", desc.entry_number);
 		}
 	}
 	return 0;
@@ -100,8 +91,13 @@ SYS_FUNC(set_thread_area)
 
 SYS_FUNC(get_thread_area)
 {
-	if (exiting(tcp))
-		print_user_desc(tcp, tcp->u_arg[0]);
+	if (entering(tcp)) {
+		s_push_addr("u_info");
+		s_changeable();
+	} else
+		s_push_fill_struct("user_desc", sizeof(struct user_desc),
+			fill_user_desc, (void *) false);
+
 	return 0;
 }
 

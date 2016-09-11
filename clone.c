@@ -109,7 +109,8 @@ SYS_FUNC(clone)
 # endif
 			{
 				tprints(", tls=");
-				print_user_desc(tcp, tcp->u_arg[ARG_TLS]);
+				//print_user_desc(tcp, tcp->u_arg[ARG_TLS]);
+				printaddr(tcp->u_arg[ARG_TLS]);
 			}
 # ifndef I386
 			else
