@@ -353,10 +353,9 @@ s_val_print(struct s_arg *arg)
 	case S_TYPE_array: {
 		struct s_struct *p = S_ARG_TO_TYPE(arg, struct);
 		struct s_arg *field;
-		struct s_arg *tmp;
 		JsonNode *arr = json_mkarray();
 
-		STAILQ_FOREACH_SAFE(field, &p->args.args, entry, tmp) {
+		list_foreach(field, &p->args.args, entry) {
 			json_append_element(arr, s_val_print(field));
 		}
 
@@ -367,10 +366,9 @@ s_val_print(struct s_arg *arg)
 	case S_TYPE_struct: {
 		struct s_struct *p = S_ARG_TO_TYPE(arg, struct);
 		struct s_arg *field;
-		struct s_arg *tmp;
 		JsonNode *arr = json_mkobject();
 
-		STAILQ_FOREACH_SAFE(field, &p->args.args, entry, tmp) {
+		list_foreach(field, &p->args.args, entry) {
 			json_append_member(arr, field->name, s_val_print(field));
 		}
 
@@ -410,10 +408,9 @@ s_syscall_json_print_exiting(struct tcb *tcp)
 {
 	struct s_syscall *syscall = tcp->s_syscall;
 	struct s_arg *arg;
-	struct s_arg *tmp;
 	JsonNode *args_node = json_mkarray();
 
-	STAILQ_FOREACH_SAFE(arg, &syscall->args.args, entry, tmp) {
+	list_foreach(arg, &syscall->args.args, entry) {
 		json_append_element(args_node, s_val_print(arg));
 	}
 
@@ -604,14 +601,13 @@ s_syscall_json_print_signal(struct tcb *tcp)
 {
 	struct s_syscall *syscall = tcp->s_syscall;
 	struct s_arg *arg;
-	struct s_arg *tmp;
 
 	root_node = json_mkobject();
 	json_append_member(root_node, "type",
 		json_mkstring_static(
 			s_syscall_type_names[tcp->s_syscall->type]));
 
-	STAILQ_FOREACH_SAFE(arg, &syscall->args.args, entry, tmp) {
+	list_foreach(arg, &syscall->args.args, entry) {
 		json_append_member(root_node, arg->name, s_val_print(arg));
 	}
 

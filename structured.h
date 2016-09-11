@@ -4,7 +4,7 @@
 #include <stdbool.h>
 #include <stdint.h>
 
-#include "queue.h"
+#include "list.h"
 
 /* Some trivial utility macros for field manipulation. */
 
@@ -248,30 +248,28 @@ struct s_arg {
 	enum s_type type;
 	int arg_num;
 
-	STAILQ_ENTRY(s_arg) entry;
-	STAILQ_ENTRY(s_arg) chg_entry;
+	struct list_item entry;
+	struct list_item chg_entry;
 };
 
-STAILQ_HEAD(args_queue, s_arg);
-
-struct s_args {
-	struct args_queue args;
-	SLIST_ENTRY(s_args) entry;
+struct s_args_list {
+	/* List of s_arg */
+	struct list_item args;
+	struct list_item entry;
 };
-
-SLIST_HEAD(s_args_list, s_args);
 
 struct s_syscall {
 	struct tcb *tcp;
 	int cur_arg;
 	int last_arg;
 	struct s_arg *last_changeable;
-	struct s_args args;
-	struct args_queue changeable_args;
+	struct s_args_list args;
+	struct list_item changeable_args;
 	enum s_type ret_type;
 	enum s_syscall_type type;
 
-	struct s_args_list insertion_stack;
+	/* List of struct s_args_list */
+	struct list_item insertion_stack;
 };
 
 /* struct */
@@ -279,7 +277,7 @@ struct s_syscall {
 struct s_struct {
 	struct s_arg arg;
 
-	struct s_args args;
+	struct s_args_list args;
 	/** Auxiliary non-standard string representation */
 	union {
 		const char *aux_str;
@@ -430,10 +428,10 @@ extern struct s_struct *s_struct_set_aux_str(struct s_struct *s,
 extern struct s_struct *s_struct_set_own_aux_str(struct s_struct *s,
 	char *aux_str);
 
-extern struct args_queue *s_struct_enter(struct s_struct *s);
-extern struct args_queue *s_syscall_insertion_point(struct s_syscall *s);
-extern struct args_queue *s_syscall_pop(struct s_syscall *s);
-extern struct args_queue *s_syscall_pop_all(struct s_syscall *s);
+extern struct s_args_list *s_struct_enter(struct s_struct *s);
+extern struct s_args_list *s_syscall_insertion_point(struct s_syscall *s);
+extern struct s_args_list *s_syscall_pop(struct s_syscall *s);
+extern struct s_args_list *s_syscall_pop_all(struct s_syscall *s);
 
 extern struct s_syscall *s_syscall_new(struct tcb *tcp,
 	enum s_syscall_type sc_type);

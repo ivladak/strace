@@ -457,13 +457,13 @@ s_val_print(struct s_arg *arg)
 
 		tprints(arg->type == S_TYPE_array ? "[" : "{");
 
-		STAILQ_FOREACH_SAFE(field, &p->args.args, entry, tmp) {
+		list_foreach_safe(field, &p->args.args, entry, tmp) {
 			if ((arg->type == S_TYPE_struct) && field->name)
 				tprintf("%s=", field->name);
 
 			s_val_print(field);
 
-			if (tmp)
+			if (&tmp->entry != &p->args.args)
 				tprints(", ");
 		}
 
@@ -500,10 +500,10 @@ s_syscall_text_print_exiting(struct tcb *tcp)
 	struct s_arg *arg;
 	struct s_arg *tmp;
 
-	STAILQ_FOREACH_SAFE(arg, &syscall->args.args, entry, tmp) {
+	list_foreach_safe(arg, &syscall->args.args, entry, tmp) {
 		s_val_print(arg);
 
-		if (tmp)
+		if (&tmp->entry != &syscall->args.args)
 			tprints(", ");
 	}
 }
@@ -692,16 +692,16 @@ s_syscall_text_print_signal(struct tcb *tcp)
 	struct s_arg *arg;
 	struct s_arg *tmp;
 
-	if (STAILQ_FIRST(&syscall->args.args) &&
-	    STAILQ_NEXT(STAILQ_FIRST(&syscall->args.args), entry))
+	if (list_head(&syscall->args.args, struct s_arg, entry) !=
+	    list_tail(&syscall->args.args, struct s_arg, entry))
 		tprints("--- ");
 	else
 		tprints("--- stopped by ");
 
-	STAILQ_FOREACH_SAFE(arg, &syscall->args.args, entry, tmp) {
+	list_foreach_safe(arg, &syscall->args.args, entry, tmp) {
 		s_val_print(arg);
 
-		if (tmp)
+		if (&tmp->entry != &syscall->args.args)
 			tprints(" ");
 	}
 
