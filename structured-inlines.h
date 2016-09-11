@@ -552,7 +552,7 @@ s_insert_str_ex(const char *name, unsigned long addr, long len, unsigned flags)
 {
 	unsigned overflow_flag = 0;
 
-	if (len > max_strlen) {
+	if ((len >= 0) && ((unsigned long) len > max_strlen)) {
 		overflow_flag = QUOTE_ELLIPSIS;
 		len = max_strlen;
 	}
