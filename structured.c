@@ -714,7 +714,7 @@ s_syscall_cur_arg_advance(struct s_syscall *syscall, enum s_type type,
 			break;
 		}
 
-		*local_val = current_tcp->u_arg[syscall->cur_arg] & mask;
+		*local_val = syscall->tcp->u_arg[syscall->cur_arg] & mask;
 		syscall->cur_arg++;
 	}
 
