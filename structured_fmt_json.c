@@ -534,7 +534,8 @@ s_syscall_json_print_after(struct tcb *tcp)
 			case RVAL_UDECIMAL:
 			case RVAL_DECIMAL:
 			case RVAL_FD:
-				json_append_member(root_node, "return", json_mknumber(tcp->u_rval));
+				json_append_member(root_node, "return",
+					json_mknumber(tcp->u_rval));
 				break;
 #if HAVE_STRUCT_TCB_EXT_ARG
 			/*
@@ -543,7 +544,8 @@ s_syscall_json_print_after(struct tcb *tcp)
 			case RVAL_LDECIMAL:
 			*/
 			case RVAL_LUDECIMAL:
-				json_append_member(root_node, "return", json_mknumber(tcp->u_lrval));
+				json_append_member(root_node, "return",
+					json_mknumber(tcp->u_lrval));
 				break;
 #endif /* HAVE_STRUCT_TCB_EXT_ARG */
 			default:
@@ -555,7 +557,8 @@ s_syscall_json_print_after(struct tcb *tcp)
 			}
 		}
 		if ((sys_res & RVAL_STR) && tcp->auxstr)
-			json_append_member(root_node, "auxstr", json_mkstring(tcp->auxstr));
+			json_append_member(root_node, "auxstr",
+				json_mkstring(tcp->auxstr));
 	}
 
 	tprints(json_stringify(root_node, "\t"));
