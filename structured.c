@@ -288,6 +288,8 @@ s_xlat_new(enum s_type type, const char *name, const struct xlat *x,
 	res->flags = flags;
 	res->scale = scale;
 
+	list_init(&res->entry);
+
 	return res;
 }
 
@@ -393,16 +395,22 @@ s_arg_equal(struct s_arg *arg1, struct s_arg *arg2)
 	case S_TYPE_KIND_xlat: {
 		struct s_xlat *xlat1 = S_ARG_TO_TYPE(arg1, xlat);
 		struct s_xlat *xlat2 = S_ARG_TO_TYPE(arg2, xlat);
+		struct s_xlat *xlat1_cur = xlat1;
+		struct s_xlat *xlat2_cur = xlat2;
 
-		if ((xlat1->x != xlat2->x) || (xlat1->val != xlat2->val))
+		do {
+			if ((xlat1_cur->x != xlat2_cur->x) ||
+			    (xlat1_cur->val != xlat2_cur->val))
+				return false;
+
+			xlat1_cur = list_next(xlat1_cur, entry);
+			xlat2_cur = list_next(xlat2_cur, entry);
+		} while ((xlat1 != xlat1_cur) && (xlat2 != xlat2_cur));
+
+		if ((xlat1 != xlat1_cur) || (xlat2 != xlat2_cur))
 			return false;
-		if (xlat1->next && xlat2->next)
-			return s_arg_equal(S_TYPE_TO_ARG(xlat1->next),
-				S_TYPE_TO_ARG(xlat2->next));
-		if (!xlat1->next && !xlat2->next)
-			return true;
 
-		return false;
+		return true;
 	}
 	case S_TYPE_KIND_sigmask: {
 		struct s_sigmask *sigmask1 = S_ARG_TO_TYPE(arg1, sigmask);
@@ -559,12 +567,7 @@ s_xlat_append(enum s_type type, const char *name, const struct xlat *x,
 
 	last_xlat = S_ARG_TO_TYPE(last_arg, xlat);
 
-	if (last_xlat->last)
-		last_xlat->last->next = res;
-	else
-		last_xlat->next = res;
-
-	last_xlat->last = res;
+	list_append(&last_xlat->entry, &res->entry);
 
 	return res;
 }
@@ -894,13 +897,14 @@ s_process_xlat_flags(struct s_xlat *arg, s_print_xlat_fn cb, void *cb_data,
 void
 s_process_xlat(struct s_xlat *arg, s_print_xlat_fn cb, void *cb_data)
 {
+	struct s_xlat *cur = arg;
 	bool first = true;
 
-	while (arg) {
-		first = !(arg->flags ? s_process_xlat_flags :
-			s_process_xlat_val)(arg, cb, cb_data, first) && first;
-		arg = arg->next;
-	}
+	do {
+		first = !(cur->flags ? s_process_xlat_flags :
+			s_process_xlat_val)(cur, cb, cb_data, first) && first;
+		cur = list_next(cur, entry);;
+	} while (cur != arg);
 }
 
 void

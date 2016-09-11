@@ -323,9 +323,7 @@ struct s_xlat {
 	 */
 	int8_t scale;
 
-	/* poor man's chaining in order to avoid creating separate list head. */
-	struct s_xlat *next;
-	struct s_xlat *last;
+	struct list_item entry;
 };
 
 struct s_str {
