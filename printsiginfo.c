@@ -226,19 +226,6 @@ fill_siginfo_t(struct s_arg *arg, void *buf, size_t len, void *fn_data)
         return 0;
 }
 
-static ssize_t
-fetch_fill_siginfo_t(struct s_arg *arg, unsigned long addr, void *fn_data)
-{
-	siginfo_t si;
-
-	if (s_umove_verbose(current_tcp, addr, &si))
-		return -1;
-
-	fill_siginfo_t(arg, &si, sizeof(si), fn_data);
-
-	return sizeof(si);
-}
-
 MPERS_PRINTER_DECL(void, s_insert_siginfo, const char *name,
 	const void *si_void)
 {
@@ -250,12 +237,12 @@ MPERS_PRINTER_DECL(void, s_insert_siginfo, const char *name,
 
 MPERS_PRINTER_DECL(void, s_insert_siginfo_addr, const char *name, unsigned long addr)
 {
-	s_insert_fetch_fill_struct(name, addr, fetch_fill_siginfo_t, NULL);
+	s_insert_fill_struct(name, addr, sizeof(siginfo_t), fill_siginfo_t, NULL);
 }
 
 MPERS_PRINTER_DECL(void, s_push_siginfo, const char *name)
 {
-	s_push_fetch_fill_struct(name, fetch_fill_siginfo_t, NULL);
+	s_push_fill_struct(name, sizeof(siginfo_t), fill_siginfo_t, NULL);
 }
 
 MPERS_PRINTER_DECL(void, s_push_siginfo_array, const char *name,
