@@ -377,12 +377,18 @@ extern struct s_printer *s_printers[];
 
 enum syscall_print_xlat_bits {
 	SPXF_FIRST_BIT,
+	SPXF_LAST_BIT,
+	SPXF_XLAT_TAIL_BIT,
+	SPXF_FIRST_XLAT_BIT,
 	SPXF_DEFAULT_BIT,
 };
 
 enum syscall_print_xlat_flags {
-	SPXF_FIRST    = POW2(SPXF_FIRST_BIT),
-	SPXF_DEFAULT  = POW2(SPXF_DEFAULT_BIT),
+	SPXF_FIRST      = POW2(SPXF_FIRST_BIT),
+	SPXF_LAST       = POW2(SPXF_LAST_BIT),
+	SPXF_XLAT_TAIL  = POW2(SPXF_XLAT_TAIL_BIT),
+	SPXF_FIRST_XLAT = POW2(SPXF_FIRST_XLAT_BIT),
+	SPXF_DEFAULT    = POW2(SPXF_DEFAULT_BIT),
 };
 
 typedef void (*s_print_xlat_fn)(struct s_xlat *x, uint64_t value, uint64_t mask,

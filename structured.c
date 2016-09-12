@@ -828,14 +828,14 @@ s_syscall_set_comment_level(struct s_syscall *s, enum s_syscall_show_arg level)
 /* Similar to printxvals() */
 static int
 s_process_xlat_val(struct s_xlat *arg, s_print_xlat_fn cb, void *cb_data,
-	bool first)
+	uint32_t flags)
 {
 	uint64_t lookup_val = (arg->scale > 0) ? (arg->val >> arg->scale) :
 		arg->val;
 	const char *str = arg->x ? xlookup(arg->x, lookup_val) : NULL;
 
-	cb(arg, arg->val, ~0, str ? str : arg->dflt,
-		(first ? SPXF_FIRST : 0) | ((str || !arg->x) ? 0 : SPXF_DEFAULT),
+	cb(arg, arg->val, ~0, str ? str : arg->dflt, flags | SPXF_XLAT_TAIL |
+		((str || !arg->x) ? 0 : SPXF_DEFAULT),
 		cb_data);
 
 	return 1;
@@ -844,7 +844,7 @@ s_process_xlat_val(struct s_xlat *arg, s_print_xlat_fn cb, void *cb_data,
 /* Similar to printflags64() */
 static int
 s_process_xlat_flags(struct s_xlat *arg, s_print_xlat_fn cb, void *cb_data,
-	bool first)
+	uint32_t flags)
 {
 	int n;
 	const struct xlat *xlat;
@@ -852,14 +852,14 @@ s_process_xlat_flags(struct s_xlat *arg, s_print_xlat_fn cb, void *cb_data,
 	uint64_t lookup_val;
 
 	if (arg->val == 0 && arg->x && arg->x->val == 0 && arg->x->str) {
-		cb(arg, arg->val, 0, arg->x->str,
-			first ? SPXF_FIRST : 0, cb_data);
+		cb(arg, arg->val, 0, arg->x->str, flags | SPXF_XLAT_TAIL,
+			cb_data);
 		return 1;
 	}
 
 	if (!arg->x) {
 		cb(arg, arg->val, ~0, arg->dflt,
-			(first ? SPXF_FIRST : 0) | SPXF_DEFAULT, cb_data);
+			flags | SPXF_DEFAULT | SPXF_XLAT_TAIL, cb_data);
 		return 1;
 	}
 
@@ -872,9 +872,11 @@ s_process_xlat_flags(struct s_xlat *arg, s_print_xlat_fn cb, void *cb_data,
 			uint64_t cb_val = (arg->scale > 0) ?
 				(xlat->val << arg->scale) : xlat->val;
 
-			cb(arg, cb_val, cb_val, xlat->str,
-				first ? SPXF_FIRST : 0, cb_data);
-			first = false;
+			cb(arg, cb_val, cb_val, xlat->str, (flags |
+				(!(val & ~cb_val) ? SPXF_XLAT_TAIL : 0)) &
+				~((val & ~cb_val) ? SPXF_LAST : 0),
+				cb_data);
+			flags &= ~SPXF_FIRST;
 			val &= ~cb_val;
 			lookup_val &= ~xlat->val;
 			n++;
@@ -883,12 +885,12 @@ s_process_xlat_flags(struct s_xlat *arg, s_print_xlat_fn cb, void *cb_data,
 
 	if (n) {
 		if (val) {
-			cb(arg, val, ~0, NULL, 0, cb_data);
+			cb(arg, val, ~0, NULL, flags | SPXF_XLAT_TAIL, cb_data);
 			n++;
 		}
 	} else {
 		cb(arg, val, ~0, arg->dflt,
-			(first ? SPXF_FIRST : 0) | SPXF_DEFAULT, cb_data);
+			flags | SPXF_DEFAULT | SPXF_XLAT_TAIL, cb_data);
 	}
 
 	return n;
@@ -903,8 +905,12 @@ s_process_xlat(struct s_xlat *arg, s_print_xlat_fn cb, void *cb_data)
 	do {
 		if (!cur->empty)
 			first = !(cur->flags ? s_process_xlat_flags :
-				s_process_xlat_val)(cur, cb, cb_data, first) &&
-				first;
+				s_process_xlat_val)(cur, cb, cb_data,
+				/* We provide FIRST, LAST and FIRST_XLAT only */
+				(first ? SPXF_FIRST : 0) |
+				((cur == arg) ? SPXF_FIRST_XLAT : 0) |
+				((list_next(cur, entry) == arg) ?
+				SPXF_LAST : 0)) && first;
 		cur = list_next(cur, entry);;
 	} while (cur != arg);
 }
