@@ -316,7 +316,9 @@ struct s_xlat {
 	const struct xlat *x;
 	uint64_t val;
 	const char *dflt;
-	bool flags;
+	bool flags :1;
+	/** Special toggle because I don't want to convert xlat to s_struct */
+	bool empty :1;
 	/**
 	 * Positive value - lookup for de-scaled value; negative value - lookup
 	 * for original value
@@ -411,7 +413,7 @@ extern struct s_addr *s_addr_new(const char *name, long addr,
 	struct s_arg *arg);
 extern struct s_xlat *s_xlat_new(enum s_type type, const char *name,
 	const struct xlat *x, uint64_t xlat, const char *dflt, bool flags,
-	int8_t scale);
+	int8_t scale, bool empty);
 extern struct s_struct *s_struct_new(enum s_type type, const char *name);
 extern struct s_ellipsis *s_ellipsis_new(void);
 extern struct s_changeable *s_changeable_new(const char *name,
@@ -427,7 +429,7 @@ extern struct s_addr *s_addr_new_and_insert(const char *name, long addr,
 	struct s_arg *arg);
 extern struct s_xlat *s_xlat_new_and_insert(enum s_type type,
 	const char *name, const struct xlat *x, uint64_t val, const char *dflt,
-	bool flags, int8_t scale);
+	bool flags, int8_t scale, bool empty);
 extern struct s_struct *s_struct_new_and_insert(enum s_type type,
 	const char *name);
 extern struct s_ellipsis *s_ellipsis_new_and_insert(void);

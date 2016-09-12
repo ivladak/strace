@@ -675,9 +675,9 @@ s_array_finish(void)
 
 static inline void
 s_insert_xlat(enum s_type type, const char *name, const struct xlat *x,
-	uint64_t val, const char *dflt, bool flags, int8_t scale)
+	uint64_t val, const char *dflt, bool flags, int8_t scale, bool empty)
 {
-	s_xlat_new_and_insert(type, name, x, val, dflt, flags, scale);
+	s_xlat_new_and_insert(type, name, x, val, dflt, flags, scale, empty);
 }
 
 static inline void
@@ -688,7 +688,7 @@ s_push_xlat(const char *name, const struct xlat *x, const char *dflt,
 
 	s_syscall_pop_all(current_tcp->s_syscall);
 	s_syscall_cur_arg_advance(current_tcp->s_syscall, type, &val);
-	s_insert_xlat(type, name, x, val, dflt, flags, scale);
+	s_insert_xlat(type, name, x, val, dflt, flags, scale, false);
 }
 
 static inline void
@@ -704,7 +704,7 @@ s_append_xlat(enum s_type type, const char *name, const struct xlat *x,
 		TYPE val, const char *dflt) \
 	{ \
 		s_insert_xlat(S_TYPE_##FLAGS_TYPE, name, x, val, dflt, FLAGS, \
-			0); \
+			0, false); \
 	} \
 	\
 	static inline void \
@@ -712,7 +712,7 @@ s_append_xlat(enum s_type type, const char *name, const struct xlat *x,
 		const struct xlat *x, TYPE val, const char *dflt, int8_t scale)\
 	{ \
 		s_insert_xlat(S_TYPE_##FLAGS_TYPE, name, x, val, dflt, FLAGS, \
-			scale); \
+			scale, false); \
 	} \
 	\
 	static inline void \
@@ -724,7 +724,7 @@ s_append_xlat(enum s_type type, const char *name, const struct xlat *x,
 		\
 		if (!UMOVE_FUNC(current_tcp, addr, &val)) \
 			arg = S_TYPE_TO_ARG(s_xlat_new(S_TYPE_##FLAGS_TYPE, \
-				name, x, val, dflt, FLAGS, 0)); \
+				name, x, val, dflt, FLAGS, 0, false)); \
 		\
 		s_insert_addr_arg(name, addr, arg); \
 	} \
@@ -765,9 +765,18 @@ s_append_xlat(enum s_type type, const char *name, const struct xlat *x,
 			FLAGS, scale); \
 	} \
 
+#define DEF_XLAT_COMMON_FUNCS(TYPE, ENUM, FLAGS_TYPE, UMOVE_FUNC) \
+	static inline void \
+	s_insert_xlat_##ENUM##_empty(const char *name) \
+	{ \
+		s_insert_xlat(S_TYPE_##FLAGS_TYPE, name, NULL, 0, NULL, false, \
+			0, true); \
+	}
+
 #define DEF_XLAT(TYPE, ENUM, FLAGS_TYPE, UMOVE_FUNC) \
 	DEF_XLAT_FUNCS(flags, TYPE, ENUM, FLAGS_TYPE, true, UMOVE_FUNC) \
-	DEF_XLAT_FUNCS(xlat, TYPE, ENUM, FLAGS_TYPE, false, UMOVE_FUNC)
+	DEF_XLAT_FUNCS(xlat, TYPE, ENUM, FLAGS_TYPE, false, UMOVE_FUNC) \
+	DEF_XLAT_COMMON_FUNCS(TYPE, ENUM, FLAGS_TYPE, UMOVE_FUNC)
 
 DEF_XLAT(unsigned, int, xlat, s_umove_verbose)
 DEF_XLAT(unsigned, uint, xlat_u, s_umove_verbose)
@@ -789,16 +798,16 @@ s_insert_xlat_flags(enum s_type ftype, enum s_type vtype, const char *name,
 
 	if (!flags && !preceding_xlat) {
 		s_insert_xlat(vtype, name, vx, val, val_dflt, false,
-			xlat_scale);
+			xlat_scale, false);
 	} else {
 		if (preceding_xlat) {
 			s_insert_xlat(vtype, name, vx, val, val_dflt, false,
-				xlat_scale);
+				xlat_scale, false);
 			s_append_xlat(ftype, name, fx, flags, flags_dflt,
 				true, 0);
 		} else {
 			s_insert_xlat(ftype, name, fx, flags, flags_dflt,
-				true, 0);
+				true, 0, false);
 			s_append_xlat(vtype, name, vx, val, val_dflt, false,
 				xlat_scale);
 		}
@@ -853,7 +862,7 @@ s_insert_xlat_64_sorted(const char *name, const struct xlat *x, size_t n_memb,
 	uint64_t val)
 {
 	s_insert_xlat(S_TYPE_xlat_ll, name, NULL, val,
-		xlat_search(x, n_memb, val), false, 0);
+		xlat_search(x, n_memb, val), false, 0, false);
 }
 
 static inline void

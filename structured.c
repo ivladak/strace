@@ -275,7 +275,7 @@ s_addr_new(const char *name, long addr, struct s_arg *arg)
 
 struct s_xlat *
 s_xlat_new(enum s_type type, const char *name, const struct xlat *x,
-	uint64_t val, const char *dflt, bool flags, int8_t scale)
+	uint64_t val, const char *dflt, bool flags, int8_t scale, bool empty)
 {
 	struct s_xlat *res = S_ARG_TO_TYPE(s_arg_new(current_tcp, type, name),
 		xlat);
@@ -286,6 +286,7 @@ s_xlat_new(enum s_type type, const char *name, const struct xlat *x,
 	res->val = val;
 	res->dflt = dflt;
 	res->flags = flags;
+	res->empty = empty;
 	res->scale = scale;
 
 	list_init(&res->entry);
@@ -338,7 +339,8 @@ s_arg_new_init(struct tcb *tcp, enum s_type type, const char *name)
 	case S_TYPE_KIND_addr:
 		return &s_addr_new(name, 0, NULL)->arg;
 	case S_TYPE_KIND_xlat:
-		return &s_xlat_new(type, name, NULL, 0, NULL, false, 0)->arg;
+		return &s_xlat_new(type, name, NULL, 0, NULL, false, 0,
+			false)->arg;
 	case S_TYPE_KIND_sigmask:
 		return &s_sigmask_new(name, NULL, 0)->arg;
 	case S_TYPE_KIND_struct:
@@ -501,13 +503,13 @@ s_addr_new_and_insert(const char *name, long addr, struct s_arg *arg)
 
 struct s_xlat *
 s_xlat_new_and_insert(enum s_type type, const char *name, const struct xlat *x,
-	uint64_t val, const char *dflt, bool flags, int8_t scale)
+	uint64_t val, const char *dflt, bool flags, int8_t scale, bool empty)
 {
 	struct s_xlat *res;
 
 	s_arg_insert(current_tcp->s_syscall,
 		&(res = s_xlat_new(type, name, x, val, dflt, flags,
-			scale))->arg, -1);
+			scale, empty))->arg, -1);
 
 	return res;
 }
@@ -561,9 +563,9 @@ s_xlat_append(enum s_type type, const char *name, const struct xlat *x,
 
 	if (!last_arg || (S_TYPE_KIND(last_arg->type) != S_TYPE_KIND_xlat))
 		return s_xlat_new_and_insert(type, name, x, val, dflt,
-			flags, scale);
+			flags, scale, false);
 
-	res = s_xlat_new(type, name, x, val, dflt, flags, scale);
+	res = s_xlat_new(type, name, x, val, dflt, flags, scale, false);
 
 	last_xlat = S_ARG_TO_TYPE(last_arg, xlat);
 
@@ -901,8 +903,10 @@ s_process_xlat(struct s_xlat *arg, s_print_xlat_fn cb, void *cb_data)
 	bool first = true;
 
 	do {
-		first = !(cur->flags ? s_process_xlat_flags :
-			s_process_xlat_val)(cur, cb, cb_data, first) && first;
+		if (!cur->empty)
+			first = !(cur->flags ? s_process_xlat_flags :
+				s_process_xlat_val)(cur, cb, cb_data, first) &&
+				first;
 		cur = list_next(cur, entry);;
 	} while (cur != arg);
 }
