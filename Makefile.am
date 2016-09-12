@@ -148,6 +148,7 @@ strace_SOURCES =	\
 	keyctl.c	\
 	ldt.c		\
 	link.c		\
+	list.h		\
 	linux/asm_stat.h \
 	linux/x32/asm_stat.h \
 	linux/x86_64/asm_stat.h \
@@ -167,7 +168,8 @@ strace_SOURCES =	\
 	mtd.c		\
 	native_defs.h	\
 	net.c		\
-	netlink.c       \
+	netlink.c	\
+	netlink_structured.h	\
 	numa.c		\
 	oldstat.c	\
 	open.c		\
@@ -183,13 +185,17 @@ strace_SOURCES =	\
 	print_statfs.c	\
 	print_struct_stat.c \
 	print_time.c	\
+	print_time_structured.h	\
 	print_time_structured.c \
 	print_timex.c	\
 	printmode.c	\
+	printresource.h	\
 	printrusage.c	\
+	printrusage.h	\
 	printsiginfo.c	\
 	printsiginfo.h	\
 	process.c	\
+	process.h	\
 	process_vm.c	\
 	ptp.c		\
 	ptrace.h	\
@@ -204,11 +210,13 @@ strace_SOURCES =	\
 	sched.c		\
 	scsi.c		\
 	seccomp.c	\
+	seccomp_structured.h	\
 	seccomp_fprog.h \
 	sendfile.c	\
 	sigaltstack.c	\
 	sigevent.h	\
 	signal.c	\
+	signal_structured.h	\
 	signalfd.c	\
 	sigreturn.c	\
 	sock.c		\
@@ -222,6 +230,8 @@ strace_SOURCES =	\
 	statfs.h	\
 	strace.c	\
 	structured.c	\
+	structured.h	\
+	structured-inlines.h	\
 	structured_fmt_text.c	\
 	structured_fmt_text.h	\
 	structured_fmt_json.c	\
