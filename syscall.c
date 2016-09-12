@@ -914,10 +914,7 @@ trace_syscall_exiting(struct tcb *tcp)
 	if (res != 1) {
 		/* There was error in one of prior ptrace ops */
 		s_syscall_print_unavailable_exiting(tcp);
-		tcp->flags &= ~TCB_INSYSCALL;
-		tcp->sys_func_rval = 0;
-		free_tcb_priv_data(tcp);
-		return res;
+		goto ret;
 	}
 	tcp->s_prev_ent = tcp->s_ent;
 
@@ -959,11 +956,13 @@ trace_syscall_exiting(struct tcb *tcp)
 		unwind_print_stacktrace(tcp);
 #endif
 
+	res = 0;
+
  ret:
 	tcp->flags &= ~TCB_INSYSCALL;
 	tcp->sys_func_rval = 0;
 	free_tcb_priv_data(tcp);
-	return 0;
+	return res;
 }
 
 int
