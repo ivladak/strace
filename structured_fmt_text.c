@@ -70,6 +70,12 @@ s_print_xlat_text(struct s_xlat *x, uint64_t value, uint64_t mask,
 				tprintf("<<%d", (int)abs(x->scale));
 		}
 	}
+
+	if ((x->arg.syscall->comment_level > show_arg_comments) &&
+	    x->arg.comment && !(flags & SPXF_FIRST_XLAT) &&
+	    (flags & SPXF_XLAT_TAIL)) {
+		tprintf(" /* %s */", x->arg.comment);
+	}
 }
 
 void
