@@ -552,9 +552,7 @@ struct s_xlat *
 s_xlat_append(enum s_type type, const char *name, const struct xlat *x,
 	uint64_t val, const char *dflt, bool flags, int8_t scale)
 {
-	struct s_arg *last_arg = list_tail(
-		&s_syscall_insertion_point(current_tcp->s_syscall)->args,
-		struct s_arg, entry);
+	struct s_arg *last_arg = s_syscall_get_last_arg(current_tcp->s_syscall);
 	struct s_xlat *last_xlat;
 	struct s_xlat *res;
 
