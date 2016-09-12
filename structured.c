@@ -848,8 +848,8 @@ s_process_xlat_flags(struct s_xlat *arg, s_print_xlat_fn cb, void *cb_data,
 {
 	int n;
 	const struct xlat *xlat;
-	uint64_t flags;
-	uint64_t lookup_flags;
+	uint64_t val;
+	uint64_t lookup_val;
 
 	if (arg->val == 0 && arg->x && arg->x->val == 0 && arg->x->str) {
 		cb(arg, arg->val, 0, arg->x->str,
@@ -864,30 +864,30 @@ s_process_xlat_flags(struct s_xlat *arg, s_print_xlat_fn cb, void *cb_data,
 	}
 
 	xlat = arg->x;
-	flags = arg->val;
-	lookup_flags = (arg->scale > 0) ? (flags >> arg->scale) : flags;
+	val = arg->val;
+	lookup_val = (arg->scale > 0) ? (val >> arg->scale) : val;
 
 	for (n = 0; xlat->str; xlat++) {
-		if (xlat->val && (lookup_flags & xlat->val) == xlat->val) {
+		if (xlat->val && (lookup_val & xlat->val) == xlat->val) {
 			uint64_t cb_val = (arg->scale > 0) ?
 				(xlat->val << arg->scale) : xlat->val;
 
 			cb(arg, cb_val, cb_val, xlat->str,
 				first ? SPXF_FIRST : 0, cb_data);
 			first = false;
-			flags &= ~cb_val;
-			lookup_flags &= ~xlat->val;
+			val &= ~cb_val;
+			lookup_val &= ~xlat->val;
 			n++;
 		}
 	}
 
 	if (n) {
-		if (flags) {
-			cb(arg, flags, ~0, NULL, 0, cb_data);
+		if (val) {
+			cb(arg, val, ~0, NULL, 0, cb_data);
 			n++;
 		}
 	} else {
-		cb(arg, flags, ~0, arg->dflt,
+		cb(arg, val, ~0, arg->dflt,
 			(first ? SPXF_FIRST : 0) | SPXF_DEFAULT, cb_data);
 	}
 
