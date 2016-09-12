@@ -86,6 +86,7 @@ check_PROGRAMS = \
 	clock_adjtime \
 	clock_nanosleep \
 	clock_xettime \
+	clone \
 	copy_file_range \
 	count-f \
 	creat \
@@ -423,6 +424,7 @@ DECODER_TESTS = \
 	clock_adjtime.test \
 	clock_nanosleep.test \
 	clock_xettime.test \
+	clone.test \
 	copy_file_range.test \
 	creat.test \
 	dup.test \
