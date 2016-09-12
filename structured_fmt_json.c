@@ -34,6 +34,10 @@ s_print_xlat_json(struct s_xlat *x, uint64_t value, uint64_t mask,
 	if (str && value)
 		json_append_member(obj, "str", json_mkstring_static(str));
 
+	if (x->arg.comment)
+		json_append_member(obj, "comment",
+			json_mkstring_static(x->arg.comment));
+
 	json_append_element(parent, obj);
 }
 
@@ -65,8 +69,12 @@ static JsonNode *
 s_val_print(struct s_arg *arg)
 {
 	JsonNode *new_obj = json_mkobject();
+
 	json_append_member(new_obj, "name",
 		arg->name ? json_mkstring_static(arg->name) : json_mknull());
+	if (arg->comment)
+		json_append_member(new_obj, "comment",
+			json_mkstring_static(arg->comment));
 
 	switch (arg->type) {
 #define PRINT_INT(TYPE, ENUM) \

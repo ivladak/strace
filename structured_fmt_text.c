@@ -479,6 +479,9 @@ s_val_print(struct s_arg *arg)
 		tprints("[!!! unknown value type]");
 		break;
 	}
+
+	if ((arg->syscall->comment_level > show_arg_comments) && arg->comment)
+		tprintf(" /* %s */", arg->comment);
 }
 
 static void
@@ -501,6 +504,9 @@ s_syscall_text_print_exiting(struct tcb *tcp)
 	struct s_arg *tmp;
 
 	list_foreach_safe(arg, &syscall->args.args, entry, tmp) {
+		if ((syscall->name_level > show_arg_names) && arg->name)
+			tprintf("%s=", arg->name);
+
 		s_val_print(arg);
 
 		if (&tmp->entry != &syscall->args.args)
