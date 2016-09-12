@@ -550,7 +550,8 @@ extern struct s_changeable *s_changeable_new_and_insert(const char *name,
 
 struct s_xlat *
 s_xlat_append(enum s_type type, const char *name, const struct xlat *x,
-	uint64_t val, const char *dflt, bool flags, int8_t scale)
+	uint64_t val, const char *dflt, bool flags, int8_t scale,
+	const char *comment)
 {
 	struct s_arg *last_arg = s_syscall_get_last_arg(current_tcp->s_syscall);
 	struct s_xlat *last_xlat;
@@ -564,6 +565,7 @@ s_xlat_append(enum s_type type, const char *name, const struct xlat *x,
 			flags, scale, false);
 
 	res = s_xlat_new(type, name, x, val, dflt, flags, scale, false);
+	res->arg.comment = comment;
 
 	last_xlat = S_ARG_TO_TYPE(last_arg, xlat);
 

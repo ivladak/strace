@@ -444,7 +444,7 @@ extern struct s_changeable *s_changeable_new_and_insert(const char *name,
 
 extern struct s_xlat *s_xlat_append(enum s_type type, const char *name,
 	const struct xlat *x, uint64_t val, const char *dflt, bool flags,
-	int8_t scale);
+	int8_t scale, const char *comment);
 extern struct s_struct *s_struct_set_aux_str(struct s_struct *s,
 	const char *aux_str);
 extern struct s_struct *s_struct_set_own_aux_str(struct s_struct *s,

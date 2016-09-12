@@ -693,9 +693,10 @@ s_push_xlat(const char *name, const struct xlat *x, const char *dflt,
 
 static inline void
 s_append_xlat(enum s_type type, const char *name, const struct xlat *x,
-	uint64_t val, const char *dflt, bool flags, int8_t scale)
+	uint64_t val, const char *dflt, bool flags, int8_t scale,
+	const char *comment)
 {
-	s_xlat_append(type, name, x, val, dflt, flags, scale);
+	s_xlat_append(type, name, x, val, dflt, flags, scale, comment);
 }
 
 #define DEF_XLAT_FUNCS(WHAT, TYPE, ENUM, FLAGS_TYPE, FLAGS, UMOVE_FUNC) \
@@ -753,16 +754,16 @@ s_append_xlat(enum s_type type, const char *name, const struct xlat *x,
 		TYPE val, const char *dflt) \
 	{ \
 		s_append_xlat(S_TYPE_##FLAGS_TYPE, name, x, val, dflt, \
-			FLAGS, 0); \
+			FLAGS, 0, NULL); \
 	} \
 	\
 	static inline void \
-	s_append_##WHAT##_##ENUM##_scaled(const char *name, \
+	s_append_##WHAT##_##ENUM##_ex(const char *name, \
 		const struct xlat *x, TYPE val, const char *dflt, \
-		int8_t scale) \
+		int8_t scale, const char *comment) \
 	{ \
 		s_append_xlat(S_TYPE_##FLAGS_TYPE, name, x, val, dflt, \
-			FLAGS, scale); \
+			FLAGS, scale, comment); \
 	} \
 
 #define DEF_XLAT_COMMON_FUNCS(TYPE, ENUM, FLAGS_TYPE, UMOVE_FUNC) \
@@ -804,12 +805,12 @@ s_insert_xlat_flags(enum s_type ftype, enum s_type vtype, const char *name,
 			s_insert_xlat(vtype, name, vx, val, val_dflt, false,
 				xlat_scale, false);
 			s_append_xlat(ftype, name, fx, flags, flags_dflt,
-				true, 0);
+				true, 0, NULL);
 		} else {
 			s_insert_xlat(ftype, name, fx, flags, flags_dflt,
 				true, 0, false);
 			s_append_xlat(vtype, name, vx, val, val_dflt, false,
-				xlat_scale);
+				xlat_scale, NULL);
 		}
 	}
 }
