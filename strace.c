@@ -87,9 +87,9 @@ bool Tflag = 0;
 bool iflag = 0;
 bool count_wallclock = 0;
 unsigned int qflag = 0;
-static unsigned int tflag = 0;
-static bool rflag = 0;
-static bool print_pid_pfx = 0;
+unsigned int tflag = 0;
+bool rflag = 0;
+bool print_pid_pfx = 0;
 
 /* -I n */
 enum {
@@ -153,7 +153,7 @@ unsigned int max_strlen = DEFAULT_STRLEN;
 static int acolumn = DEFAULT_ACOLUMN;
 static char *acolumn_spaces;
 
-static char *outfname = NULL;
+char *outfname = NULL;
 /* If -ff, points to stderr. Else, it's our common output log */
 static FILE *shared_log;
 
@@ -161,7 +161,8 @@ struct tcb *printing_tcp = NULL;
 struct tcb *current_tcp;
 
 static struct tcb **tcbtab;
-static unsigned int nprocs, tcbtabsize;
+unsigned int nprocs;
+static unsigned int tcbtabsize;
 static const char *progname;
 
 unsigned os_release; /* generated from uname()'s u.release */
@@ -632,6 +633,8 @@ line_ended(void)
 void
 printleader(struct tcb *tcp)
 {
+	struct timeval tv, dtv;
+
 	/* If -ff, "previous tcb we printed" is always the same as current,
 	 * because we have per-tcb output files.
 	 */
@@ -640,15 +643,14 @@ printleader(struct tcb *tcp)
 
 	if (printing_tcp) {
 		current_tcp = printing_tcp;
-		if (printing_tcp->curcol != 0 && (followfork < 2 || printing_tcp == tcp)) {
+		if (followfork < 2 || printing_tcp == tcp) {
 			/*
 			 * case 1: we have a shared log (i.e. not -ff), and last line
 			 * wasn't finished (same or different tcb, doesn't matter).
 			 * case 2: split log, we are the same tcb, but our last line
 			 * didn't finish ("SIGKILL nuked us after syscall entry" etc).
 			 */
-			tprints(" <unfinished ...>\n");
-			printing_tcp->curcol = 0;
+			s_syscall_print_unfinished(current_tcp);
 		}
 	}
 
@@ -656,40 +658,20 @@ printleader(struct tcb *tcp)
 	current_tcp = tcp;
 	current_tcp->curcol = 0;
 
-	if (print_pid_pfx)
-		tprintf("%-5d ", tcp->pid);
-	else if (nprocs > 1 && !outfname)
-		tprintf("[pid %5u] ", tcp->pid);
-
 	if (tflag) {
-		char str[sizeof("HH:MM:SS")];
-		struct timeval tv, dtv;
 		static struct timeval otv;
 
 		gettimeofday(&tv, NULL);
+
 		if (rflag) {
 			if (otv.tv_sec == 0)
 				otv = tv;
 			tv_sub(&dtv, &tv, &otv);
-			tprintf("%6ld.%06ld ",
-				(long) dtv.tv_sec, (long) dtv.tv_usec);
 			otv = tv;
 		}
-		else if (tflag > 2) {
-			tprintf("%ld.%06ld ",
-				(long) tv.tv_sec, (long) tv.tv_usec);
-		}
-		else {
-			time_t local = tv.tv_sec;
-			strftime(str, sizeof(str), "%T", localtime(&local));
-			if (tflag > 1)
-				tprintf("%s.%06ld ", str, (long) tv.tv_usec);
-			else
-				tprintf("%s ", str);
-		}
 	}
-	if (iflag)
-		print_pc(tcp);
+
+	s_syscall_print_leader(current_tcp, &tv, &dtv);
 }
 
 void

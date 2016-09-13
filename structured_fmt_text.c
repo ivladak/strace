@@ -491,6 +491,46 @@ s_val_print(struct s_arg *arg)
 }
 
 static void
+s_syscall_text_print_unfinished(struct tcb *tcp)
+{
+	if (printing_tcp->curcol)
+		tprints(" <unfinished ...>\n");
+	printing_tcp->curcol = 0;
+}
+
+static void
+s_syscall_text_print_leader(struct tcb *tcp, struct timeval *tv,
+	struct timeval *dtv)
+{
+	if (print_pid_pfx)
+		tprintf("%-5d ", tcp->pid);
+	else if (nprocs > 1 && !outfname)
+		tprintf("[pid %5u] ", tcp->pid);
+
+	if (tflag) {
+		char str[sizeof("HH:MM:SS")];
+
+		if (rflag) {
+			tprintf("%6ld.%06ld ",
+				(long) dtv->tv_sec, (long) dtv->tv_usec);
+		} else if (tflag > 2) {
+			tprintf("%ld.%06ld ",
+				(long) tv->tv_sec, (long) tv->tv_usec);
+		}
+		else {
+			time_t local = tv->tv_sec;
+			strftime(str, sizeof(str), "%T", localtime(&local));
+			if (tflag > 1)
+				tprintf("%s.%06ld ", str, (long) tv->tv_usec);
+			else
+				tprintf("%s ", str);
+		}
+	}
+	if (iflag)
+		print_pc(tcp);
+}
+
+static void
 s_syscall_text_print_before(struct tcb *tcp)
 {
 	tprintf("%s(", tcp->s_ent->sys_name);
@@ -747,6 +787,8 @@ s_text_print_message(struct tcb *tcp, enum s_msg_type type, const char *msg,
 
 struct s_printer s_printer_text = {
 	.name = "text",
+	.print_unfinished = s_syscall_text_print_unfinished,
+	.print_leader = s_syscall_text_print_leader,
 	.print_before = s_syscall_text_print_before,
 	.print_entering = s_syscall_text_print_entering,
 	.print_exiting  = s_syscall_text_print_exiting,

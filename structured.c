@@ -918,6 +918,22 @@ s_process_xlat(struct s_xlat *arg, s_print_xlat_fn cb, void *cb_data)
 }
 
 void
+s_syscall_print_unfinished(struct tcb *tcp)
+{
+	s_syscall_new(tcp, S_SCT_SYSCALL);
+	if (s_printer_cur->print_unfinished)
+		s_printer_cur->print_unfinished(tcp);
+}
+
+void
+s_syscall_print_leader(struct tcb *tcp, struct timeval *tv, struct timeval *dtv)
+{
+	s_syscall_new(tcp, S_SCT_SYSCALL);
+	if (s_printer_cur->print_leader)
+		s_printer_cur->print_leader(tcp, tv, dtv);
+}
+
+void
 s_syscall_print_before(struct tcb *tcp)
 {
 	s_syscall_new(tcp, S_SCT_SYSCALL);

@@ -359,6 +359,9 @@ struct s_changeable {
 
 struct s_printer {
 	const char *name;
+	void (*print_unfinished)(struct tcb *tcp);
+	void (*print_leader)(struct tcb *tcp, struct timeval *tv,
+		struct timeval *dtv);
 	void (*print_before)(struct tcb *tcp);
 	void (*print_entering)(struct tcb *tcp);
 	void (*print_exiting)(struct tcb *tcp);
@@ -478,6 +481,9 @@ extern void s_syscall_set_comment_level(struct s_syscall *s,
 extern void s_process_xlat(struct s_xlat *arg, s_print_xlat_fn cb,
 	void *cb_data);
 
+extern void s_syscall_print_unfinished(struct tcb *tcp);
+extern void s_syscall_print_leader(struct tcb *tcp, struct timeval *tv,
+	struct timeval *dtv);
 extern void s_syscall_print_before(struct tcb *tcp);
 extern void s_syscall_print_entering(struct tcb *tcp);
 extern void s_syscall_init_exiting(struct tcb *tcp);

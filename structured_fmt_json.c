@@ -398,10 +398,56 @@ s_val_print(struct s_arg *arg)
 }
 
 static void
+s_syscall_json_print_unfinished(struct tcb *tcp)
+{
+	if (root_node) {
+		json_append_member(root_node, "unfinished", json_mkbool(true));
+
+		tprints(json_stringify(root_node, "\t"));
+		fflush(tcp->outf);
+	}
+}
+
+static void
+s_syscall_json_print_leader(struct tcb *tcp, struct timeval *tv,
+	struct timeval *dtv)
+{
+	json_delete(root_node);
+	root_node = json_mkobject();
+
+	json_append_member(root_node, "pid", json_mknumber(tcp->pid));
+
+	if (tflag) {
+		if (rflag)
+			json_append_member(root_node, "time_delta",
+				json_mknumber(
+					dtv->tv_sec + dtv->tv_usec / 1e6));
+
+		if (tflag > 2)
+			json_append_member(root_node, "timestamp",
+				json_mknumber(tv->tv_sec + tv->tv_usec / 1e6));
+		else {
+			time_t local = tv->tv_sec;
+			char *ts_str = xmalloc(sizeof("HH:MM:SS.123456"));
+
+			strftime(ts_str, sizeof("HH:MM:SS"), "%T",
+				localtime(&local));
+			snprintf(ts_str + sizeof("HH:MM:SS") - 1,
+				sizeof(".123456"), ".%06ld", tv->tv_usec);
+
+			json_append_member(root_node, "timestamp",
+				json_mkstring_own(ts_str));
+		}
+	}
+}
+
+static void
 s_syscall_json_print_before(struct tcb *tcp)
 {
-	root_node = json_mkobject();
-	json_append_member(root_node, "name", json_mkstring(tcp->s_ent->sys_name));
+	assert(root_node);
+
+	json_append_member(root_node, "name",
+		json_mkstring(tcp->s_ent->sys_name));
 }
 
 static void
@@ -597,12 +643,16 @@ s_syscall_json_print_tv(struct tcb *tcp, struct timeval *tv)
 static void
 s_syscall_json_print_resumed(struct tcb *tcp)
 {
+	assert(root_node);
+
+	json_append_member(root_node, "resumed", json_mkbool(true));
 }
 
 static void
 s_syscall_json_print_unavailable_entering(struct tcb *tcp, int scno_good)
 {
-	root_node = json_mkobject();
+	assert(root_node);
+
 	json_append_member(root_node, "type",
 		json_mkstring_static(
 			s_syscall_type_names[tcp->s_syscall->type]));
@@ -683,6 +733,8 @@ s_json_print_message(struct tcb *tcp, enum s_msg_type type, const char *msg,
 
 struct s_printer s_printer_json = {
 	.name = "json",
+	.print_unfinished = s_syscall_json_print_unfinished,
+	.print_leader = s_syscall_json_print_leader,
 	.print_before = s_syscall_json_print_before,
 	.print_entering = s_syscall_json_print_entering,
 	.print_exiting  = s_syscall_json_print_exiting,

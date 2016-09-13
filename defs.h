@@ -398,6 +398,9 @@ extern bool Tflag;
 extern bool iflag;
 extern bool count_wallclock;
 extern unsigned int qflag;
+extern unsigned int tflag;
+extern bool rflag;
+extern bool print_pid_pfx;
 extern bool not_failing_only;
 extern unsigned int show_fd_path;
 extern enum s_syscall_show_arg show_arg_names;
@@ -733,8 +736,10 @@ printxval_long(const struct xlat *x, const unsigned long val, const char *dflt)
  * strace -oLOG -f[f] test/sigkill_rain
  * strace -oLOG -f[f] -p "`pidof web_browser`"
  */
+extern char *outfname;
 extern struct tcb *printing_tcp;
 extern struct tcb *current_tcp;
+extern unsigned int nprocs;
 extern void printleader(struct tcb *);
 extern void line_ended(void);
 extern void tabto(void);
