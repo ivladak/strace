@@ -920,9 +920,9 @@ s_process_xlat(struct s_xlat *arg, s_print_xlat_fn cb, void *cb_data)
 void
 s_syscall_print_before(struct tcb *tcp)
 {
+	s_syscall_new(tcp, S_SCT_SYSCALL);
 	if (s_printer_cur->print_before)
 		s_printer_cur->print_before(tcp);
-	s_syscall_new(tcp, S_SCT_SYSCALL);
 }
 
 void
@@ -954,10 +954,11 @@ s_syscall_print_exiting(struct tcb *tcp)
 void
 s_syscall_print_after(struct tcb *tcp)
 {
-	s_syscall_free(tcp);
-
 	if (s_printer_cur->print_after)
 		s_printer_cur->print_after(tcp);
+
+	s_syscall_free(tcp);
+	tcp->s_syscall = NULL;
 }
 
 void
