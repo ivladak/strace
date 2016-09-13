@@ -612,17 +612,18 @@ s_syscall_json_print_signal(struct tcb *tcp)
 {
 	struct s_syscall *syscall = tcp->s_syscall;
 	struct s_arg *arg;
+	JsonNode *signal_node = json_mkobject();
 
-	root_node = json_mkobject();
-	json_append_member(root_node, "type",
+	json_append_member(signal_node, "type",
 		json_mkstring_static(
 			s_syscall_type_names[tcp->s_syscall->type]));
 
 	list_foreach(arg, &syscall->args.args, entry) {
-		json_append_member(root_node, arg->name, s_val_print(arg));
+		json_append_member(signal_node, arg->name, s_val_print(arg));
 	}
 
-	tprints(json_stringify(root_node, "\t"));
+	tprints(json_stringify(signal_node, "\t"));
+	json_delete(signal_node);
 }
 
 static void
@@ -633,20 +634,18 @@ s_json_print_message(struct tcb *tcp, enum s_msg_type type, const char *msg,
 		[S_MSG_INFO] = "info",
 		[S_MSG_ERROR] = "error"
 	};
-	JsonNode *root_node;
+	JsonNode *msg_node = json_mkobject();
 	char *buf = NULL;
 	ssize_t size;
 	va_list args_copy;
 
-	root_node = json_mkobject();
-
-	json_append_member(root_node, "type", json_mkstring_static("message"));
+	json_append_member(msg_node, "type", json_mkstring_static("message"));
 
 	if ((type < ARRAY_SIZE(msg_type_names)) && msg_type_names[type])
-		json_append_member(root_node, "msg_type",
+		json_append_member(msg_node, "msg_type",
 			json_mkstring_static(msg_type_names[type]));
 	else
-		json_append_member(root_node, "msg_type",
+		json_append_member(msg_node, "msg_type",
 			json_mkstring_static("unknown"));
 
 	va_copy(args_copy, args);
@@ -654,18 +653,19 @@ s_json_print_message(struct tcb *tcp, enum s_msg_type type, const char *msg,
 	va_end(args_copy);
 
 	if (size < 0) {
-		json_append_member(root_node, "error",
+		json_append_member(msg_node, "error",
 			json_mkstring_static("printf"));
-		json_append_member(root_node, "msg_format",
+		json_append_member(msg_node, "msg_format",
 			json_mkstring_static(msg));
 	} else {
 		buf = xmalloc(size + 1);
 		vsnprintf(buf, size + 1, msg, args);
 
-		json_append_member(root_node, "msg", json_mkstring_own(buf));
+		json_append_member(msg_node, "msg", json_mkstring_own(buf));
 	}
 
-	tprints(json_stringify(root_node, "\t"));
+	tprints(json_stringify(msg_node, "\t"));
+	json_delete(msg_node);
 }
 
 struct s_printer s_printer_json = {
