@@ -1,3 +1,4 @@
+#include <assert.h>
 #include <fcntl.h>
 #include <stdarg.h>
 
@@ -406,6 +407,8 @@ s_syscall_json_print_before(struct tcb *tcp)
 static void
 s_syscall_json_print_entering(struct tcb *tcp)
 {
+	assert(root_node);
+
 	json_append_member(root_node, "type",
 		json_mkstring_static(
 			s_syscall_type_names[tcp->s_syscall->type]));
@@ -417,6 +420,8 @@ s_syscall_json_print_exiting(struct tcb *tcp)
 	struct s_syscall *syscall = tcp->s_syscall;
 	struct s_arg *arg;
 	JsonNode *args_node = json_mkarray();
+
+	assert(root_node);
 
 	list_foreach(arg, &syscall->args.args, entry) {
 		json_append_element(args_node, s_val_print(arg));
@@ -430,6 +435,8 @@ s_syscall_json_print_after(struct tcb *tcp)
 {
 	long u_error = tcp->u_error;
 	int sys_res = tcp->sys_res;
+
+	assert(root_node);
 
 	if (!(sys_res & RVAL_NONE) && u_error) {
 		switch (u_error) {
@@ -572,12 +579,16 @@ s_syscall_json_print_after(struct tcb *tcp)
 	tprints(json_stringify(root_node, "\t"));
 	fflush(tcp->outf);
 	json_delete(root_node);
+	root_node = NULL;
 }
 
 static void
 s_syscall_json_print_tv(struct tcb *tcp, struct timeval *tv)
 {
 	JsonNode *tv_node = json_mkobject();
+
+	assert(root_node);
+
 	json_append_member(tv_node, "sec", json_mknumber(tv->tv_sec));
 	json_append_member(tv_node, "usec", json_mknumber(tv->tv_usec));
 	json_append_member(root_node, "time", tv_node);
@@ -602,6 +613,8 @@ s_syscall_json_print_unavailable_entering(struct tcb *tcp, int scno_good)
 static void
 s_syscall_json_print_unavailable_exiting(struct tcb *tcp)
 {
+	assert(root_node);
+
 	json_append_member(root_node, "return", json_mkstring_static("?"));
 	json_append_member(root_node, "retstring",
 		json_mkstring_static("<unavailable>"));
