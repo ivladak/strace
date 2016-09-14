@@ -206,8 +206,8 @@ SYS_FUNC(ptrace)
 			s_push_sigmask("data", addr);
 			break;
 		case PTRACE_SETREGSET:
-			// XXX fix: tprint_iov(tcp, /*len:*/ 1, data, IOV_DECODE_ADDR);
-			s_push_addr("data");
+			// XXX fix: no test
+			s_push_iov("data", 1, IOV_DECODE_ADDR);
 			break;
 #ifndef IA64
 		case PTRACE_PEEKDATA:
