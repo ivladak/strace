@@ -99,13 +99,23 @@ s_arg_insert(struct s_syscall *syscall, struct s_arg *arg, int force_arg)
 {
 	struct s_args_list *ins_point = s_syscall_insertion_point(syscall);
 
-	if (entering(syscall->tcp) || !syscall->last_changeable ||
+	if (entering(syscall->tcp) || !syscall->next_ins_changeable ||
 	    (ins_point != &syscall->args)) {
 		if (force_arg >= 0) {
 			arg->arg_num = force_arg;
 		} else if (ins_point == &syscall->args) {
-			arg->arg_num = syscall->last_arg;
-			syscall->last_arg = syscall->cur_arg;
+			assert(syscall->next_ins_idx < MAX_ARGS);
+			if (syscall->next_ins_idx > syscall->next_get_idx) {
+				unsigned long long dummy;
+
+				/* error_msg("s_arg_insert warning: performing "
+					"insert without advance\n"); */
+				s_syscall_cur_arg_advance(syscall, arg->type,
+					&dummy);
+			}
+			assert(syscall->next_ins_idx <= syscall->next_get_idx);
+			arg->arg_num = syscall->arg_idx[syscall->next_ins_idx];
+			syscall->next_ins_idx++;
 		} else {
 			arg->arg_num = -1;
 		}
@@ -118,10 +128,13 @@ s_arg_insert(struct s_syscall *syscall, struct s_arg *arg, int force_arg)
 			list_append(&syscall->changeable_args, &arg->chg_entry);
 		}
 	} else {
-		struct s_arg *chg = syscall->last_changeable;
+		struct s_arg *chg = syscall->next_ins_changeable;
 		struct s_changeable *s_ch = S_ARG_TO_TYPE(chg, changeable);
 
-		syscall->last_changeable = list_next(chg, chg_entry);
+		syscall->next_ins_changeable = list_next(chg, chg_entry);
+		if (&syscall->next_ins_changeable->chg_entry ==
+		    &syscall->changeable_args)
+			syscall->next_ins_changeable = NULL;
 
 		assert(!s_ch->exiting);
 		s_ch->exiting = arg;
@@ -656,7 +669,8 @@ s_syscall_new(struct tcb *tcp, enum s_syscall_type sc_type)
 
 	syscall->tcp = tcp;
 	syscall->type = sc_type;
-	syscall->last_arg = syscall->cur_arg = 0;
+	syscall->next_get_idx = syscall->next_ins_idx = 0;
+	syscall->arg_idx[0] = 0;
 	syscall->name_level = S_SAN_DEFAULT;
 	syscall->comment_level = S_SAN_DEFAULT;
 
@@ -773,19 +787,26 @@ s_syscall_cur_arg_advance(struct s_syscall *syscall, enum s_type type,
 	static unsigned long long dummy_val;
 	unsigned long long *local_val = val ? val : &dummy_val;
 
-	if (exiting(syscall->tcp) && syscall->last_changeable) {
-		int chg_arg = syscall->last_changeable->arg_num;
+	if (exiting(syscall->tcp) && syscall->next_get_changeable) {
+		int chg_arg = syscall->next_get_changeable->arg_num;
 
 		assert(chg_arg >= 0);
 
-		syscall->cur_arg = chg_arg;
+		syscall->arg_idx[syscall->next_get_idx] = chg_arg;
+
+		syscall->next_get_changeable =
+			list_next(syscall->next_get_changeable, chg_entry);
+		if (&syscall->next_get_changeable->chg_entry ==
+		    &syscall->changeable_args)
+			syscall->next_get_changeable = NULL;
 	}
 
-	syscall->last_arg = syscall->cur_arg;
+	assert(syscall->next_get_idx < MAX_ARGS);
 
 	if (S_TYPE_SIZE(type) == S_TYPE_SIZE_ll) {
-		syscall->cur_arg = getllval(syscall->tcp, local_val,
-			syscall->cur_arg);
+		syscall->arg_idx[syscall->next_get_idx + 1] =
+			getllval(syscall->tcp, local_val,
+			syscall->arg_idx[syscall->next_get_idx]);
 	} else {
 		unsigned long long mask = ~0LLU;
 
@@ -808,11 +829,15 @@ s_syscall_cur_arg_advance(struct s_syscall *syscall, enum s_type type,
 			break;
 		}
 
-		*local_val = syscall->tcp->u_arg[syscall->cur_arg] & mask;
-		syscall->cur_arg++;
+		*local_val = syscall->tcp->u_arg[
+			syscall->arg_idx[syscall->next_get_idx]] & mask;
+		syscall->arg_idx[syscall->next_get_idx + 1] =
+			syscall->arg_idx[syscall->next_get_idx] + 1;
 	}
 
-	return syscall->cur_arg;
+	syscall->next_get_idx++;
+
+	return syscall->arg_idx[syscall->next_get_idx];
 }
 
 void
@@ -944,7 +969,8 @@ s_syscall_print_before(struct tcb *tcp)
 void
 s_syscall_print_entering(struct tcb *tcp)
 {
-	tcp->s_syscall->last_changeable =
+	tcp->s_syscall->next_get_changeable =
+		tcp->s_syscall->next_ins_changeable =
 		list_head(&tcp->s_syscall->changeable_args, struct s_arg,
 			chg_entry);
 
@@ -955,9 +981,14 @@ s_syscall_print_entering(struct tcb *tcp)
 void
 s_syscall_init_exiting(struct tcb *tcp)
 {
-	tcp->s_syscall->last_changeable =
-		list_head(&tcp->s_syscall->changeable_args, struct s_arg,
-			chg_entry);
+	struct s_syscall *syscall = tcp->s_syscall;
+
+	syscall->next_get_changeable = syscall->next_ins_changeable =
+		list_head(&syscall->changeable_args, struct s_arg, chg_entry);
+
+	/* For the case when no changeable arguments have been added */
+	syscall->arg_idx[0] = syscall->arg_idx[syscall->next_get_idx];
+	syscall->next_get_idx = syscall->next_ins_idx = 0;
 }
 
 void

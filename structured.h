@@ -273,10 +273,12 @@ struct s_args_list {
 
 struct s_syscall {
 	struct tcb *tcp;
-	int cur_arg;
-	int last_arg;
+	int arg_idx[MAX_ARGS + 1];
+	int next_get_idx;
+	int next_ins_idx;
 	struct s_arg *last_arg_inserted;
-	struct s_arg *last_changeable;
+	struct s_arg *next_get_changeable;
+	struct s_arg *next_ins_changeable;
 	struct s_args_list args;
 	struct list_item changeable_args;
 	enum s_type ret_type;
