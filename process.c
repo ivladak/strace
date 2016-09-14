@@ -47,6 +47,7 @@
 #include "ptrace.h"
 #include "regs.h"
 #include "seccomp_structured.h"
+#include "structured_iov.h"
 #include "structured_sigmask.h"
 #include "xlat/ptrace_cmds.h"
 #include "xlat/ptrace_setoptions_flags.h"

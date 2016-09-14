@@ -226,6 +226,7 @@ strace_SOURCES =	\
 	structured_fmt_text.h	\
 	structured_fmt_json.c	\
 	structured_fmt_json.h	\
+	structured_iov.h	\
 	structured_sigmask.c	\
 	structured_sigmask.h	\
 	swapon.c	\

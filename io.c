@@ -33,6 +33,7 @@
 #include <sys/uio.h>
 
 #include "netlink_structured.h"
+#include "structured_iov.h"
 
 SYS_FUNC(read)
 {
