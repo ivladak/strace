@@ -1030,8 +1030,7 @@ s_syscall_print_signal(struct tcb *tcp, const void *si_void, unsigned sig)
 }
 
 void
-s_print_message(struct tcb *tcp, enum s_msg_type type, const char *msg,
-	...)
+s_print_message(struct tcb *tcp, enum s_msg_type type, const char *msg, ...)
 {
 	va_list args;
 
