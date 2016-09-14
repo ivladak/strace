@@ -52,9 +52,16 @@ SYS_FUNC(read)
 
 SYS_FUNC(write)
 {
+	unsigned long buf;
+	unsigned long count;
+
 	s_push_fd("fd");
-	s_push_str("buf", tcp->u_arg[2]);
-	s_push_lu("count");
+
+	buf = s_get_cur_arg(S_TYPE_addr);
+	count = s_get_cur_arg(S_TYPE_lu);
+
+	s_insert_str("buf", buf, count);
+	s_insert_lu("count", count);
 
 	return RVAL_DECODED;
 }
@@ -217,7 +224,10 @@ SYS_FUNC(readv)
 		s_changeable_void("iov");
 		s_push_lu("iovcnt");
 	} else {
-		s_push_iov_upto("iov", tcp->u_arg[2], IOV_DECODE_STR,
+		unsigned long iov = s_get_cur_arg(S_TYPE_addr);
+		unsigned long iovcnt = s_get_cur_arg(S_TYPE_lu);
+
+		s_insert_iov_upto("iov", iov, iovcnt, IOV_DECODE_STR,
 			tcp->u_rval);
 	}
 	return 0;
@@ -225,9 +235,16 @@ SYS_FUNC(readv)
 
 SYS_FUNC(writev)
 {
+	unsigned long iov;
+	unsigned long iovcnt;
+
 	s_push_fd("fd");
-	s_push_iov("iov", tcp->u_arg[2], IOV_DECODE_STR);
-	s_push_lu("iovcnt");
+
+	iov = s_get_cur_arg(S_TYPE_addr);
+	iovcnt = s_get_cur_arg(S_TYPE_lu);
+
+	s_insert_iov("iov", iov, iovcnt, IOV_DECODE_STR);
+	s_insert_lu("iovcnt", iovcnt);
 
 	return RVAL_DECODED;
 }
@@ -250,9 +267,16 @@ SYS_FUNC(pread)
 
 SYS_FUNC(pwrite)
 {
+	unsigned long buf;
+	unsigned long count;
+
 	s_push_fd("fd");
-	s_push_str("buf", tcp->u_arg[2]);
-	s_push_lu("count");
+
+	buf = s_get_cur_arg(S_TYPE_addr);
+	count = s_get_cur_arg(S_TYPE_lu);
+
+	s_insert_str("buf", buf, count);
+	s_insert_lu("count", count);
 	s_push_lld("offset");
 
 	return RVAL_DECODED;
@@ -271,7 +295,10 @@ do_preadv(bool flags)
 		if (flags)
 			s_push_flags_int("flags", rwf_flags, "RWF_???");
 	} else {
-		s_push_iov_upto("iov", current_tcp->u_arg[2], IOV_DECODE_STR,
+		unsigned long iov = s_get_cur_arg(S_TYPE_addr);
+		unsigned long iovcnt = s_get_cur_arg(S_TYPE_lu);
+
+		s_insert_iov_upto("iov", iov, iovcnt, IOV_DECODE_STR,
 			current_tcp->u_rval);
 	}
 	return 0;
@@ -290,9 +317,16 @@ SYS_FUNC(preadv2)
 static int
 do_pwritev(bool flags)
 {
+	unsigned long iov;
+	unsigned long iovcnt;
+
 	s_push_fd("fd");
-	s_push_iov("iov", current_tcp->u_arg[2], IOV_DECODE_STR);
-	s_push_lu("iovcnt");
+
+	iov = s_get_cur_arg(S_TYPE_addr);
+	iovcnt = s_get_cur_arg(S_TYPE_lu);
+
+	s_insert_iov("iov", iov, iovcnt, IOV_DECODE_STR);
+	s_insert_lu("iovcnt", iovcnt);
 	s_push_lld_lu_pair("pos");
 	if (flags)
 		s_push_flags_int("flags", rwf_flags, "RWF_???");
@@ -336,9 +370,16 @@ SYS_FUNC(splice)
 
 SYS_FUNC(vmsplice)
 {
+	unsigned long iov;
+	unsigned long nr_regs;
+
 	s_push_fd("fd");
-	s_push_iov("iov", tcp->u_arg[2], IOV_DECODE_STR);
-	s_push_lu("nr_regs");
+
+	iov = s_get_cur_arg(S_TYPE_addr);
+	nr_regs = s_get_cur_arg(S_TYPE_lu);
+
+	s_insert_iov("iov", iov, nr_regs, IOV_DECODE_STR);
+	s_insert_lu("nr_regs", nr_regs);
 	s_push_flags_int("flags", splice_flags, "SPLICE_F_???");
 
 	return RVAL_DECODED;
