@@ -219,7 +219,7 @@ SYS_FUNC(ptrace)
 		case PTRACE_PEEKSIGINFO:
 		case PTRACE_SECCOMP_GET_FILTER:
 			if (verbose(tcp)) {
-				/* print data on exiting syscall */
+				s_changeable_void("data");
 				return 0;
 			}
 			/* fall through */
