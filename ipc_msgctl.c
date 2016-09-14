@@ -48,6 +48,7 @@ typedef struct msqid64_ds msqid_ds_t;
 
 #include MPERS_DEFS
 
+#include "xlat/ipc_cmd_flags.h"
 #include "xlat/msgctl_flags.h"
 
 static int
@@ -87,7 +88,8 @@ SYS_FUNC(msgctl)
 {
 	if (entering(tcp)) {
 		s_push_d("msqid");
-		s_insert_xlat_int("cmd", msgctl_flags, tcp->u_arg[1], "MSG_???");
+		s_push_xlat_flags_int("cmd", ipc_cmd_flags, msgctl_flags,
+			~IPC_64, NULL, "MSG_???", false, 0);
 	} else {
 		const long addr = tcp->u_arg[indirect_ipccall(tcp) ? 3 : 2];
 		int cmd = tcp->u_arg[1];
