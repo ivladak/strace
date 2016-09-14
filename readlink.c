@@ -38,6 +38,8 @@ decode_readlink(struct tcb *tcp)
 {
 	if (entering(tcp)) {
 		s_push_path("pathname");
+		s_changeable_void("buf");
+		s_push_lu("bufsiz");
 	} else {
 		if (syserror(tcp))
 			s_push_addr("buf");
@@ -50,7 +52,6 @@ decode_readlink(struct tcb *tcp)
 			 * past return buffer's end.
 			 */
 			s_push_str("buf", tcp->u_rval);
-		s_push_lu("bufsiz");
 	}
 	return 0;
 }
