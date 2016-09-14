@@ -195,7 +195,8 @@ SYS_FUNC(ptrace)
 #ifdef PTRACE_OLDSETOPTIONS
 		case PTRACE_OLDSETOPTIONS:
 #endif
-			s_push_flags_long("data", ptrace_setoptions_flags, "PTRACE_O_???");
+			s_push_flags_long("data", ptrace_setoptions_flags,
+				"PTRACE_O_???");
 			break;
 		case PTRACE_SETSIGINFO:
 			s_push_siginfo("data");
