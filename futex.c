@@ -63,6 +63,7 @@ SYS_FUNC(futex)
 		s_push_timespec("timeout");
 		break;
 	case FUTEX_LOCK_PI:
+		s_push_empty(S_TYPE_u);
 		s_push_timespec("timeout");
 		break;
 	case FUTEX_WAIT_BITSET:
