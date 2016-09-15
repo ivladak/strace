@@ -66,7 +66,7 @@ s_print_xlat_text(struct s_xlat *x, uint64_t value, uint64_t mask,
 				tprintf("<<%d", (int)x->scale);
 		} else {
 			tprintf(fmt, descaled_val);
-			if (descaled_val && x->scale)
+			if ((x->scale > 0) || (descaled_val && x->scale))
 				tprintf("<<%d", (int)abs(x->scale));
 		}
 	}
