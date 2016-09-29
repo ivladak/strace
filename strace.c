@@ -126,9 +126,6 @@ static int post_attach_sigstop = TCB_IGNORE_ONE_SIGSTOP;
 # define use_seize 0
 #endif
 
-/* Sometimes we want to print only succeeding syscalls. */
-bool not_failing_only = 0;
-
 /* Show path associated with fd arguments */
 unsigned int show_fd_path = 0;
 
@@ -1557,7 +1554,7 @@ get_os_release(void)
 }
 
 void
-set_printer_or_die(char *optarg)
+set_printer_or_die(const char *optarg)
 {
 	struct s_printer **cur = s_printers;
 	for (; *cur; cur++) {
@@ -1691,7 +1688,7 @@ init(int argc, char *argv[])
 			exit(0);
 			break;
 		case 'z':
-			not_failing_only = 1;
+			set_printer_or_die("succeeding");
 			break;
 		case 'a':
 			acolumn = string_to_uint(optarg);

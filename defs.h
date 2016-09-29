@@ -401,7 +401,6 @@ extern unsigned int qflag;
 extern unsigned int tflag;
 extern bool rflag;
 extern bool print_pid_pfx;
-extern bool not_failing_only;
 extern unsigned int show_fd_path;
 extern enum s_syscall_show_arg show_arg_names;
 extern enum s_syscall_show_arg show_arg_comments;

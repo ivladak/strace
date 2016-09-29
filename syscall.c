@@ -924,16 +924,6 @@ trace_syscall_exiting(struct tcb *tcp)
 	if (tcp->qual_flg & QUAL_RAW) {
 		/* tcp->sys_res = printargs(tcp); - but it's nop on sysexit */
 	} else {
-	/* FIXME: not_failing_only (IOW, option -z) is broken:
-	 * failure of syscall is known only after syscall return.
-	 * Thus we end up with something like this on, say, ENOENT:
-	 *     open("doesnt_exist", O_RDONLY <unfinished ...>
-	 *     {next syscall decode}
-	 * whereas the intended result is that open(...) line
-	 * is not shown at all.
-	 */
-		if (not_failing_only && tcp->u_error)
-			goto ret;	/* ignore failed syscalls */
 		if (tcp->sys_func_rval & RVAL_DECODED)
 			tcp->sys_res = tcp->sys_func_rval;
 		else {
